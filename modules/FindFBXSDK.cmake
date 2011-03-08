@@ -1,38 +1,40 @@
+SET(FBX_FOUND FALSE)
+SET(FBX_INCLUDE_DIR "NOTFOUND")
+SET(FBX_LIBRARIES "NOTFOUND")
+
 IF( WIN32 )
-        FIND_PATH(DX3D10_INCLUDE_PATH d3d10.h
-                PATHS
-                        "$ENV{DXSDK_DIR}/Include"
-                DOC "The directory where D3D10.h resides")
+	FIND_PATH(FBX_SDK_DIR include/fbxsdk.h PATHS
+		"[HKEY_LOCAL_MACHINE\\SOFTWARE\\Autodesk FBX SDK 2011.3.1;Install_Dir]"
+		"[HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Autodesk FBX SDK 2011.3.1;Install_Dir]")
 
-        FIND_PATH(DX3DX10_INCLUDE_PATH d3dx10.h
-                PATHS
-                        "$ENV{DXSDK_DIR}/Include"
-                DOC "The directory where D3Dx10.h resides")
-
-        FIND_PATH(DXGI_INCLUDE_PATH DXGI.h
-                PATHS
-                        "$ENV{DXSDK_DIR}/Include"
-                DOC "The directory where DXGI.h resides")
-
-        FIND_LIBRARY(D3D10_LIBRARY d3d10.lib
-                PATHS
-                        "$ENV{DXSDK_DIR}/Lib/x86"
-                DOC "The directory where d3d10.lib resides")
-
-        FIND_LIBRARY(D3DX10_LIBRARY d3dx10.lib
-                PATHS
-                        "$ENV{DXSDK_DIR}/Lib/x86"
-                DOC "The directory where d3dx10.lib resides")
-
-        FIND_LIBRARY(D3DX10D_LIBRARY d3dx10d.lib
-                PATHS
-                        "$ENV{DXSDK_DIR}/Lib/x86"
-                DOC "The directory where d3dx10d.lib resides")
-
-        FIND_LIBRARY(DXGI_LIBRARY DXGI.lib
-                PATHS
-                        "$ENV{DXSDK_DIR}/Lib/x86"
-                DOC "The directory where DXGI.lib resides")
-
-        SET( DX10_LIBRARIES ${D3DX10_LIBRARY} ${D3DX10D_LIBRARY} ${DXGI_LIBRARY} )
+	IF(FBX_SDK_DIR)
+		SET(FBX_FOUND TRUE)	
+		IF( MSVC80 )
+			FIND_LIBRARY(FBX_LIBRARY fbxsdk_20113_1.lib PATHS "${FBX_SDK_DIR}\\lib\\vs2005")
+			FIND_LIBRARY(FBX_DEBUG_LIBRARY fbxsdk_20113_1d.lib PATHS "${FBX_SDK_DIR}\\lib\\vs2005")
+			SET(FBX_LIBRARY_DIR "${FBX_SDK_DIR}\\lib\\vs2005")
+		ENDIF( MSVC80 )	
+	
+		IF( MSVC90 )
+			FIND_LIBRARY(FBX_LIBRARY fbxsdk_20113_1.lib PATHS "${FBX_SDK_DIR}\\lib\\vs2008")
+			FIND_LIBRARY(FBX_DEBUG_LIBRARY fbxsdk_20113_1d.lib PATHS "${FBX_SDK_DIR}\\lib\\vs2008")
+			SET(FBX_LIBRARY_DIR "${FBX_SDK_DIR}\\lib\\vs2008")
+		ENDIF( MSVC90 )	
+	
+		IF( MSVC10 )
+			FIND_LIBRARY(FBX_LIBRARY fbxsdk_20113_1.lib PATHS "${FBX_SDK_DIR}\\lib\\vs2010")
+			FIND_LIBRARY(FBX_DEBUG_LIBRARY fbxsdk_20113_1d.lib PATHS "${FBX_SDK_DIR}\\lib\\vs2010")
+			SET(FBX_LIBRARY_DIR "${FBX_SDK_DIR}\\lib\\vs2010")
+		ENDIF( MSVC10 )
+	
+		SET(FBX_LIBRARIES ${FBX_LIBRARY} ${FBX_DEBUG_LIBRARY})
+		SET(FBX_INCLUDE_DIR "${FBX_SDK_DIR}\\include")
+	ENDIF( FBX_SDK_DIR )
+	
 ENDIF( WIN32 )
+
+IF(FBX_FOUND)
+    MESSAGE(STATUS "Found Autodesk FBX SDK")
+ELSE(FBX_FOUND)
+    MESSAGE(FATAL_ERROR "Could NOT find Autodesk FBX SDK. Please make sure the FBX SDK 2011.3.1 or higher is installed.")
+ENDIF(FBX_FOUND)

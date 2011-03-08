@@ -1,44 +1,38 @@
-IF( WIN32 )
+SET(PHYSX_FOUND FALSE)
+SET(PHYSX_INCLUDE_DIR "NOTFOUND")
+SET(PHYSX_LIBRARIES "NOTFOUND")
 
-        FIND_PATH(PHYSX_INCLUDE_PATH NxPhysics.h
-                PATHS
-                        "$ENV{PROGRAMFILES}/NVIDIA Corporation/NVIDIA PhysX SDK/v2.8.3/SDKs/Physics/include"
-                DOC "The directory where NxPhysics.h resides")
+IF(WIN32)
 
-        FIND_PATH(PHYSXLOADER_INCLUDE_PATH PhysXLoader.h
-                PATHS
-                        "$ENV{PROGRAMFILES}/NVIDIA Corporation/NVIDIA PhysX SDK/v2.8.3/SDKs/PhysXLoader/include"
-                DOC "The directory where PhysXLoader.h resides")
+FIND_PATH(PHYSX_SDK_DIR SDKs\\Physics\\include\\NxPhysics.h PATHS
+"$ENV{PROGRAMFILES}\\NVIDIA Corporation\\NVIDIA PhysX SDK\\v2.8.4_win"
+"$ENV{PROGRAMW6432}\\NVIDIA Corporation\\NVIDIA PhysX SDK\\v2.8.4_win"
+"$ENV{PROGRAMFILES}\\NVIDIA Corporation\\NVIDIA PhysX SDK\\v2.8.3"
+"$ENV{PROGRAMW6432}\\NVIDIA Corporation\\NVIDIA PhysX SDK\\v2.8.3"
+)
 
-        FIND_PATH(PHYSXCHARACTER_INCLUDE_PATH NxControllerManager.h
-                PATHS
-                        "$ENV{PROGRAMFILES}/NVIDIA Corporation/NVIDIA PhysX SDK/v2.8.3/SDKs/NxCharacter/include"
-                DOC "The directory where NxControllerManager.h resides")
+IF(PHYSX_SDK_DIR)
+    SET(PHYSX_FOUND TRUE)
+    SET(PHYSX_BINARY_DIR "${PHYSX_SDK_DIR}\\Bin\\win32")
+	SET(PHYSX_LIBRARY_DIR "${PHYSX_SDK_DIR}\\SDKs\\lib\\Win32")
+    SET(PHYSX_INCLUDE_DIR "${PHYSX_SDK_DIR}\\SDKs\\Physics\\include")
+    SET(PHYSX_LOADER_INCLUDE_DIR "${PHYSX_SDK_DIR}\\SDKs\\PhysXLoader\\include")
+    SET(PHYSX_FOUNDATION_INCLUDE_DIR "${PHYSX_SDK_DIR}\\SDKs\\Foundation\\include")
+    SET(PHYSX_COOKING_INCLUDE_DIR "${PHYSX_SDK_DIR}\\SDKs\\Cooking\\include")
+    SET(PHYSX_CHARACTER_INCLUDE_DIR "${PHYSX_SDK_DIR}\\SDKs\\NxCharacter\\include")
+	FIND_LIBRARY(PHYSX_LOADER_LIBRARY PhysXLoader.lib PATHS "${PHYSX_SDK_DIR}\\SDKs\\lib\\Win32")
+	FIND_LIBRARY(PHYSX_COOKING_LIBRARY NAMES PhysXCooking.lib PATHS "${PHYSX_SDK_DIR}\\SDKs\\lib\\Win32")
+	FIND_LIBRARY(PHYSX_CHARACTER_LIBRARY NAMES NxCharacter.lib PATHS "${PHYSX_SDK_DIR}\\SDKs\\lib\\Win32")	
+    SET(PHYSX_LIBRARIES ${PHYSX_LOADER_LIBRARY} ${PHYSX_COOKING_LIBRARY} ${PHYSX_CHARACTER_LIBRARY})
+    SET(PHYSX_INCLUDE_DIRS ${PHYSX_LOADER_INCLUDE_DIR} ${PHYSX_INCLUDE_DIR} ${PHYSX_FOUNDATION_INCLUDE_DIR} ${PHYSX_COOKING_INCLUDE_DIR} ${PHYSX_CHARACTER_INCLUDE_DIR})
+ELSE(PHYSX_SDK_DIR)
+    SET(PHYSX_FOUND FALSE)
+ENDIF(PHYSX_SDK_DIR)
 
-        FIND_PATH(PHYSXCOOKING_INCLUDE_PATH NxCooking.h
-                PATHS
-                        "$ENV{PROGRAMFILES}/NVIDIA Corporation/NVIDIA PhysX SDK/v2.8.3/SDKs/Cooking/include"
-                DOC "The directory where NxCooking.h resides")
-				
-        FIND_PATH(PHYSXFOUNDATION_INCLUDE_PATH NxStreamDefault.h
-                PATHS
-                        "$ENV{PROGRAMFILES}/NVIDIA Corporation/NVIDIA PhysX SDK/v2.8.3/SDKs/Foundation/include"
-                DOC "The directory where NxStreamDefault.h resides")
+ENDIF(WIN32)
 
-        FIND_PATH(PHYSXLOADER_LIBRARY PhysXLoader.lib
-                PATHS
-                        "$ENV{PROGRAMFILES}/NVIDIA Corporation/NVIDIA PhysX SDK/v2.8.3/SDKs/lib/Win32"
-                DOC "The directory where d3d10.lib resides")
-
-        FIND_PATH(PHYSXCOOKING_LIBRARY PhysXCooking.lib
-                PATHS
-                        "$ENV{PROGRAMFILES}/NVIDIA Corporation/NVIDIA PhysX SDK/v2.8.3/SDKs/lib/Win32"
-                DOC "The directory where PhysXCooking.lib resides")
-
-        FIND_PATH(PHYSXCHARACTER_LIBRARY NxCharacter.lib
-                PATHS
-                        "$ENV{PROGRAMFILES}/NVIDIA Corporation/NVIDIA PhysX SDK/v2.8.3/SDKs/lib/Win32"
-                DOC "The directory where NxCharacter.lib resides")
-
-        SET( DX10_LIBRARIES ${PHYSXLOADER_LIBRARY} ${PHYSXCOOKING_LIBRARY} ${PHYSXCHARACTER_LIBRARY} )
-ENDIF( WIN32 )
+IF(PHYSX_FOUND)
+    MESSAGE(STATUS "Found nVidia PhysX")
+ELSE(PHYSX_FOUND)
+    MESSAGE(FATAL_ERROR "Could NOT find nVidia PhysX. Please make sure the PhysX SDK v2.8.3 or higher is installed in it's default location.")
+ENDIF(PHYSX_FOUND)

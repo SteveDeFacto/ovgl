@@ -71,7 +71,7 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	Inst = Ovgl::Create( 0 );
 	RenderTarget = Inst->CreateRenderTarget(hWnd, NULL, 0);
 	Scene = Inst->CreateScene( "", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
-	Scene->Load( "..\\..\\data\\meshes\\test3.che", 0 );
+	Scene->Load( "..\\..\\data\\meshes\\test3.bin", 0 );
 	Camera = Scene->CreateCamera(  &Ovgl::MatrixTranslation( 0.0f, 0.0f, 5.0f ) );
 	RenderTarget->view = Camera;
 	DWORD previousTime = timeGetTime();

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.6)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}\\modules")
+
+find_package( DX10 )
+find_package( PhysX )
+find_package( FBXSDK )
 
 add_definitions(-DUNICODE -D_UNICODE)
 set(OVGL_VERSION 0.2.5)
@@ -14,8 +18,8 @@ if(OVGL_BUILD_SHARED)
 endif(OVGL_BUILD_SHARED)
 
 if(OVGL_BUILD_EXAMPLES)
-  add_subdirectory(examples/HelloWorld)
-  add_subdirectory(examples/FPS)
+  add_subdirectory(examples\\HelloWorld)
+  add_subdirectory(examples\\FPS)
 endif(OVGL_BUILD_EXAMPLES)
 
 if(OVGL_INSTALL_DOC)

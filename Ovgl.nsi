@@ -64,10 +64,10 @@ Section "Ovgl Core (required)"
   File /oname=lib\fbxsdk_20113_1.dll lib\fbxsdk_20113_1.dll
   File /oname=lib\fbxsdk_20113_1d.dll lib\fbxsdk_20113_1d.dll
   File /oname=lib\NxCharacter.dll lib\NxCharacter.dll
-  File /r /x .svn include
+  File /r /x .svn /x *.cpp ovgl
   File /r /x .svn docs
   File /r /x .svn data
-  File /r /x .svn samples
+  File /r /x .svn examples
   File /r redist
 
   ; Write the installation path into the registry

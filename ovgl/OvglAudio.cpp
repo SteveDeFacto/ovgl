@@ -28,7 +28,7 @@ Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emit
 	Ovgl::AudioInstance* instance = new Ovgl::AudioInstance;
 	instance->emitter = emitter;
 	instance->paused = false;
-	for( UINT r = 0; r < Inst->RenderTargets.size(); r++ )
+	for( UINT r = 0; r < this->Inst->RenderTargets.size(); r++ )
 	{
 		for( UINT s = 0; s < Inst->Scenes.size(); s++ )
 		{

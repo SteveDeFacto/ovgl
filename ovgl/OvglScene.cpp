@@ -591,20 +591,23 @@ void Ovgl::Scene::Update( DWORD UpdateTime )
 		{
 			if(cameras[c]->voices[i] != NULL)
 			{
-				XAUDIO2_VOICE_STATE state = {0};
-				cameras[c]->voices[i]->voice->GetState(&state);
-				if(state.BuffersQueued != 0)
+				if(cameras[c]->voices[i]->instance->emitter != NULL)
 				{
-					Ovgl::Matrix44* ematrix = &cameras[c]->voices[i]->instance->emitter->getPose();
-					X3DAUDIO_EMITTER emitter = {0};
-					emitter.ChannelCount = 1;
-					emitter.CurveDistanceScaler = 14.0f;
-					emitter.pVolumeCurve = (X3DAUDIO_DISTANCE_CURVE*)&X3DAudioDefault_LinearCurve;
-					emitter.OrientFront = D3DXVECTOR3( ematrix->_31, ematrix->_32, ematrix->_33);
-					emitter.OrientTop = D3DXVECTOR3( ematrix->_21, ematrix->_22, ematrix->_23);
-					emitter.Position = D3DXVECTOR3( ematrix->_41, ematrix->_42, ematrix->_43);
-					X3DAudioCalculate( this->Inst->X3DAudio, &listener, &emitter, X3DAUDIO_CALCULATE_MATRIX | X3DAUDIO_CALCULATE_LPF_DIRECT, this->Inst->DSPSettings );
-					cameras[c]->voices[i]->voice->SetOutputMatrix( this->Inst->MasteringVoice, 2, this->Inst->DeviceDetails->OutputFormat.Format.nChannels, this->Inst->DSPSettings->pMatrixCoefficients );
+					XAUDIO2_VOICE_STATE state = {0};
+					cameras[c]->voices[i]->voice->GetState(&state);
+					if(state.BuffersQueued != 0)
+					{
+						Ovgl::Matrix44* ematrix = &cameras[c]->voices[i]->instance->emitter->getPose();
+						X3DAUDIO_EMITTER emitter = {0};
+						emitter.ChannelCount = 1;
+						emitter.CurveDistanceScaler = 14.0f;
+						emitter.pVolumeCurve = (X3DAUDIO_DISTANCE_CURVE*)&X3DAudioDefault_LinearCurve;
+						emitter.OrientFront = D3DXVECTOR3( ematrix->_31, ematrix->_32, ematrix->_33);
+						emitter.OrientTop = D3DXVECTOR3( ematrix->_21, ematrix->_22, ematrix->_23);
+						emitter.Position = D3DXVECTOR3( ematrix->_41, ematrix->_42, ematrix->_43);
+						X3DAudioCalculate( this->Inst->X3DAudio, &listener, &emitter, X3DAUDIO_CALCULATE_MATRIX | X3DAUDIO_CALCULATE_LPF_DIRECT, this->Inst->DSPSettings );
+						cameras[c]->voices[i]->voice->SetOutputMatrix( this->Inst->MasteringVoice, 2, this->Inst->DeviceDetails->OutputFormat.Format.nChannels, this->Inst->DSPSettings->pMatrixCoefficients );
+					}
 				}
 			}
 		}

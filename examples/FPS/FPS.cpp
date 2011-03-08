@@ -138,18 +138,16 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
     wcex.hCursor = LoadCursor( NULL, IDC_ARROW );
     wcex.lpszClassName = L"DefaultWindowClass";
     RegisterClassEx( &wcex );
+	hWnd = NULL;
 	hWnd = CreateWindow( L"DefaultWindowClass", L"test", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wcex.hInstance, NULL );
-	UnregisterClass( L"DefaultWindowClass", NULL );
 	ShowWindow( hWnd, SW_SHOW );
 	Inst = Ovgl::Create( 0 );
 	RenderTarget = Inst->CreateRenderTarget(hWnd, NULL, 0);
 	Buffer = Inst->CreateAudioBuffer( "..\\..\\media\\audio\\glacier.ogg" );
-	Scene = Inst->CreateScene( "", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
-	Scene->Load( "..\\..\\media\\meshes\\test3.che", 0 );
+	Scene = Inst->CreateScene( "..\\..\\media\\meshes\\test3.bin", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
 	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( -75.0f, 5.0f, 0.0f ) );
 	RenderTarget->view = Actor->camera;
-	Emitter = Scene->CreateEmitter( &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ) );
-	Buffer->CreateAudioInstance( Emitter );
+	Buffer->CreateAudioInstance( NULL );
 	DWORD previousTime = timeGetTime();
 	// Main message loop
     MSG msg = {0};
@@ -182,5 +180,6 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
         }
     }
 	Inst->Release();
+	UnregisterClass( L"DefaultWindowClass", NULL );
 	return 0;
 }

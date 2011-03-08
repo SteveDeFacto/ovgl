@@ -21,7 +21,17 @@ copy "..\\..\\lib\\ovgl.dll" "..\\..\\bin\\HelloWorld\\ovgl.dll";
 COMMAND
 copy "..\\..\\lib\\ovgld.dll" "..\\..\\bin\\HelloWorld\\ovgld.dll";
 COMMAND
+copy "..\\..\\lib\\cudart32_30_9.dll" "..\\..\\bin\\HelloWorld\\cudart32_30_9.dll";
+COMMAND
 copy "..\\..\\lib\\NxCharacter.dll" "..\\..\\bin\\HelloWorld\\NxCharacter.dll";
+COMMAND
+copy "..\\..\\lib\\PhysXLoader.dll" "..\\..\\bin\\HelloWorld\\PhysXLoader.dll";
+COMMAND
+copy "..\\..\\lib\\PhysXCore.dll" "..\\..\\bin\\HelloWorld\\PhysXCore.dll";
+COMMAND
+copy "..\\..\\lib\\PhysXCooking.dll" "..\\..\\bin\\HelloWorld\\PhysXCooking.dll";
+COMMAND
+copy "..\\..\\lib\\PhysXDevice.dll" "..\\..\\bin\\HelloWorld\\PhysXDevice.dll";
 COMMAND
 copy "..\\..\\lib\\fbxsdk_20113_1.dll" "..\\..\\bin\\HelloWorld\\fbxsdk_20113_1.dll";
 COMMAND
