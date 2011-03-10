@@ -5,23 +5,22 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}\\modules")
 find_package( DX10 )
 find_package( PhysX )
 find_package( FBXSDK )
+find_package( Ogg )
 
 add_definitions(-DUNICODE -D_UNICODE)
 set(OVGL_VERSION 0.2.5)
 
-option(OVGL_BUILD_DOC "Build Ovgl documentation" OFF)
-option(OVGL_BUILD_SHARED "Build Ovgl libraries" ON)
+option(OVGL_BUILD_DOC "Auto build documentation evertime Ovgl is compiled?" OFF)
+option(OVGL_BUILD_EDITOR "Build Ovgl examples" ON)
 option(OVGL_BUILD_EXAMPLES "Build Ovgl examples" ON)
 
-if(OVGL_BUILD_SHARED)
-  add_subdirectory(ovgl)
-endif(OVGL_BUILD_SHARED)
+add_subdirectory(ovgl)
+
+if(OVGL_BUILD_EDITOR)
+	add_subdirectory(editor)
+endif(OVGL_BUILD_EDITOR)
 
 if(OVGL_BUILD_EXAMPLES)
-  add_subdirectory(examples\\HelloWorld)
-  add_subdirectory(examples\\FPS)
+	add_subdirectory(examples\\HelloWorld)
+	add_subdirectory(examples\\FPS)
 endif(OVGL_BUILD_EXAMPLES)
-
-if(OVGL_INSTALL_DOC)
-  add_subdirectory(docs)
-endif(OVGL_INSTALL_DOC)

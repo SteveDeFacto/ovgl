@@ -6,19 +6,20 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ".\\..\\lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ".\\..\\lib")
 set(CMAKE_DEBUG_POSTFIX "d")
 
-include_directories( ${DX3D10_INCLUDE_PATH}
+include_directories(${DX3D10_INCLUDE_PATH}
 ${FBX_INCLUDE_DIR}
-"$ENV{PROGRAMFILES}\\OGG\\include"
+${OGG_INCLUDE_DIR}
+${VORBIS_INCLUDE_DIR}
 ${PHYSX_INCLUDE_DIR}
 ${PHYSX_LOADER_INCLUDE_DIR}
 ${PHYSX_FOUNDATION_INCLUDE_DIR}
 ${PHYSX_COOKING_INCLUDE_DIR}
 ${PHYSX_CHARACTER_INCLUDE_DIR})
 
-link_directories( ${D3D10_LIBRARY}
+link_directories(${D3D10_LIBRARY}
 ${FBX_LIBRARY_DIR}
-"$ENV{PROGRAMFILES}\\OGG\\libvorbis-1.3.1\\bin"
-"$ENV{PROGRAMFILES}\\OGG\\libogg-1.2.0\\bin"
+${OGG_LIBRARY_DIR}
+${VORBIS_LIBRARY_DIR}
 ${PHYSX_LIBRARY_DIR})
 
 add_library( Ovgl SHARED "OvglAudio.h"
@@ -52,3 +53,8 @@ optimized "fbxsdk_20113_1.lib"
 debug "fbxsdk_20113_1d.lib")
 
 add_definitions( -DNOMINMAX -DWIN32_LEAN_AND_MEAN -DKFBX_DLLINFO )
+
+if(OVGL_BUILD_DOC)
+	find_package( Doxygen )
+	add_custom_command( TARGET Ovgl POST_BUILD COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_SOURCE_DIR}\\ovgl\\Doxyfile" )
+endif(OVGL_BUILD_DOC)	

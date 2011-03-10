@@ -39,10 +39,6 @@
 #include <xaudio2fx.h>
 #include <x3daudio.h>
 
-// OGG Headers
-#include <vorbis/codec.h>
-#include <vorbis/vorbisfile.h>
-
 // DirectX Headers
 #include <d3d10.h>
 #include <d3dx10.h>
@@ -58,3 +54,7 @@
 
 // FBX Headers
 #include <fbxsdk.h>
+
+// OGG Headers
+#include <vorbis/codec.h>
+#include <vorbis/vorbisfile.h>
