@@ -31,7 +31,6 @@ Ovgl::Emitter*				Emitter;
 bool						g_Active;
 bool						g_Sizing;
 
-// Window procedure which is used for all standard windows.
 LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
    switch( message )
@@ -145,7 +144,7 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	RenderTarget = Inst->CreateRenderTarget(hWnd, NULL, 0);
 	Buffer = Inst->CreateAudioBuffer( "..\\..\\media\\audio\\glacier.ogg" );
 	Scene = Inst->CreateScene( "..\\..\\media\\meshes\\test3.bin", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
-	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( -75.0f, 5.0f, 0.0f ) );
+	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( -78.0f, 5.0f, 0.0f ) );
 	RenderTarget->view = Actor->camera;
 	Buffer->CreateAudioInstance( NULL );
 	DWORD previousTime = timeGetTime();
@@ -174,6 +173,14 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 				long my = Point.y - ((WindowRect.top +  WindowRect.bottom) / 2);
 				Actor->direction.z = Actor->direction.z + (mx / 1000.0f);
 				Actor->direction.y = Actor->direction.y + (my / 1000.0f);
+				if(Actor->direction.y < Ovgl::DegToRad(-90.0f))
+				{
+					Actor->direction.y = Ovgl::DegToRad(-90.0f);
+				}
+				else if(Actor->direction.y > Ovgl::DegToRad(90.0f))
+				{
+					Actor->direction.y = Ovgl::DegToRad(90.0f);
+				}
 				SetCursorPos( (WindowRect.left + WindowRect.right) / 2, (WindowRect.top +  WindowRect.bottom) / 2 );
 			}
 			previousTime = currentTime;

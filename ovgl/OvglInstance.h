@@ -80,6 +80,14 @@ namespace Ovgl
 		class RenderTarget;
 		class Effect;
 
+		class GlobalsClass
+		{
+		public:
+			std::vector<Instance*> InstanceList;
+		};
+
+		extern GlobalsClass Globals;
+
 		class __declspec(dllexport) Effect
 		{
 		public:

@@ -16,140 +16,6 @@
 * @brief None.
 */
 
-//namespace Ovgl
-//{
-//	#define AxPi (3.14159265358979323846)
-//	
-//	extern "C"
-//	{
-//		class Matrix33;
-//		class Matrix44;
-//		class Vector2;
-//		class Vector3;
-//		class Vector4;
-//
-//		class __declspec(dllexport) Vector2
-//		{
-//		public:
-//		    union
-//			{
-//		        struct
-//				{
-//		            float x, y;
-//		     };
-//		     float data[2];
-//		    };
-//		};
-//
-//		class __declspec(dllexport) Vector3
-//		{
-//		public:
-//			union
-//			{
-//				struct
-//				{
-//			        float x, y, z;
-//				};
-//			    float data[3];
-//			};
-//			Vector3 operator - ( const Vector3& ) const;
-//			Vector3 operator + ( const Vector3& ) const;
-//			Vector3 operator / ( const Vector3& ) const;
-//			Vector3 operator * ( const Vector3& ) const;
-//			Vector3 operator / ( const float& ) const;
-//			Vector3 operator * ( const float& ) const;
-//			void toDoubles( double* data );
-//			void fromDoubles( double* data );
-//		};
-//
-//		class __declspec(dllexport) Vector4
-//		{
-//		public:
-//			union
-//			{
-//				struct
-//				{
-//	            float x, y, z, w;
-//				};
-//				float data[4];
-//		    };
-//			Vector4 operator - ( const Vector4& ) const;
-//			Vector4 operator + ( const Vector4& ) const;
-//			Vector4 operator / ( const Vector4& ) const;
-//			Vector4 operator * ( const Vector4& ) const;
-//			Vector4 operator / ( const float& ) const;
-//			Vector4 operator * ( const float& ) const;
-//			void toDoubles( double* data );
-//			void fromDoubles( double* data );
-//		};
-//	
-//		class __declspec(dllexport) Matrix33
-//		{
-//		public:
-//			union
-//			{
-//				struct
-//				{
-//		            float _11, _12, _13;
-//		            float _21, _22, _23;
-//		            float _31, _32, _33;
-//		        };
-//				float m[3][3];
-//			};
-//			Matrix33 operator * ( const Matrix33& ) const;
-//			Matrix44 to4x4();
-//			void toDoubles( double* data );
-//			void fromDoubles( double* data );
-//		};
-//
-//		class __declspec(dllexport) Matrix44
-//		{
-//		public:
-//			union
-//			{
-//				struct
-//				{
-//					float _11, _12, _13, _14;
-//					float _21, _22, _23, _24;
-//					float _31, _32, _33, _34;
-//					float _41, _42, _43, _44;
-//				};
-//				float m[4][4];
-//			};
-//	
-//			Matrix44 operator * ( const Matrix44& ) const;
-//			Matrix33 to3x3();
-//			void toDoubles( double* data );
-//			void fromDoubles( double* data );
-//		};
-//	
-//		__declspec(dllexport) Matrix44 MatrixIdentity();
-//		__declspec(dllexport) Matrix44 MatrixInverse( Vector4* in_vec, Matrix44* in_mat );
-//		__declspec(dllexport) Matrix44 MatrixScaling( float x, float y, float z );
-//		__declspec(dllexport) Matrix44 MatrixTranslation( float x, float y, float z );
-//		__declspec(dllexport) Matrix44 MatrixRotationX( float angle );
-//		__declspec(dllexport) Matrix44 MatrixRotationY( float angle );
-//		__declspec(dllexport) Matrix44 MatrixRotationZ( float angle );
-//		__declspec(dllexport) Matrix44 MatrixRotationYawPitchRoll( float yaw, float pitch, float roll );
-//		__declspec(dllexport) Matrix44 MatrixRotationAxis( Vector3* axis, float angle );
-//		__declspec(dllexport) Matrix44 MatrixRotationQuaternion(Vector4* q);
-//		__declspec(dllexport) Matrix44 MatrixPerspectiveLH( float ViewWidth, float ViewHeight, float NearZ, float FarZ );
-//		__declspec(dllexport) Vector4 QuaternionRotationMatrix( Matrix44* matrix );
-//		__declspec(dllexport) Vector4 QuaternionRotationAxis( Vector3* axis, float angle );
-//		__declspec(dllexport) Vector4 Vector4Set( float w, float x, float y, float z );
-//		__declspec(dllexport) Vector4 Vector4Lerp( Vector4& vec1, Vector4& vec2, float u);
-//		__declspec(dllexport) Vector3 Vector3Set( float x, float y, float z );
-//		__declspec(dllexport) float Distance( Vector3* vector1, Vector3* vector2);
-//		__declspec(dllexport) float Vector3Dot( Vector3* vec1, Vector3* vec2 );
-//		__declspec(dllexport) Vector3 Vector3Cross( Vector3* vec1, Vector3* vec2 );
-//		__declspec(dllexport) Vector3 Vector3Transform( Vector3* vector, Matrix44* matrix );
-//		__declspec(dllexport) Vector3 Vector3Normalize( Vector3* vector );
-//		__declspec(dllexport) Vector3 Vector3Center( std::vector<Vector3>& vertices );
-//		__declspec(dllexport) Vector2 Vector2Set( float x, float y );
-//		__declspec(dllexport) float Lerp( float vec1, float vec2, float u);
-//	};
-//};
-
 namespace Ovgl
 {
 	#define OvglPi (3.14159265358979323846)
@@ -244,13 +110,14 @@ namespace Ovgl
 		__declspec(dllexport) Vector4 Vector4Set( float w, float x, float y, float z );
 		__declspec(dllexport) Vector4 Vector4Lerp( Vector4& vec1, Vector4& vec2, float u);
 		__declspec(dllexport) Vector3 Vector3Set( float x, float y, float z );
-		__declspec(dllexport) float Distance( Vector3* vector1, Vector3* vector2);
-		__declspec(dllexport) float Vector3Dot( Vector3* vec1, Vector3* vec2 );
 		__declspec(dllexport) Vector3 Vector3Cross( Vector3* vec1, Vector3* vec2 );
 		__declspec(dllexport) Vector3 Vector3Transform( Vector3* vector, Matrix44* matrix );
 		__declspec(dllexport) Vector3 Vector3Normalize( Vector3* vector );
 		__declspec(dllexport) Vector3 Vector3Center( std::vector<Vector3>& vertices );
 		__declspec(dllexport) Vector2 Vector2Set( float x, float y );
+		__declspec(dllexport) float Distance( Vector3* vector1, Vector3* vector2);
+		__declspec(dllexport) float Vector3Dot( Vector3* vec1, Vector3* vec2 );
 		__declspec(dllexport) float Lerp( float vec1, float vec2, float u);
+		__declspec(dllexport) float DegToRad( float degree);
 	};
 };
