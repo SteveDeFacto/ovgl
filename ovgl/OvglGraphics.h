@@ -20,6 +20,8 @@
 struct IDXGISwapChain;
 struct ID3D10DepthStencilView;
 struct D3D10_VIEWPORT;
+struct _D3DX10_SPRITE;
+typedef struct _D3DX10_SPRITE D3DX10_SPRITE;
 
 namespace Ovgl
 {
@@ -31,17 +33,38 @@ namespace Ovgl
 		class __declspec(dllexport) RenderTarget
 		{
 		public:
-			Instance*					Inst;
-			Camera*						view;
-			HWND						hWnd;
-			IDXGISwapChain*				SwapChain;
-			ID3D10RenderTargetView*		RenderTargetView;
-			ID3D10DepthStencilView*		DepthStencilView;
-			D3D10_VIEWPORT*				ViewPort;
-			bool						GetFullscreen();
-			void						SetFullscreen( bool state );
-			void						Release();
-			void						Update();
+			Instance* Inst;
+			Camera* view;
+			HWND hWnd;
+			IDXGISwapChain* SwapChain;
+			ID3D10RenderTargetView* RenderTargetView;
+			ID3D10DepthStencilView* DepthStencilView;
+			Ovgl::Vector4 Rect;
+			std::vector<Ovgl::Interface*> Interfaces;
+			Ovgl::Interface* CreateSprite( const std::string& file, Ovgl::Vector4* rect );
+			Ovgl::Interface* CreateText( const std::string& text, Ovgl::Vector4* rect );
+			bool GetFullscreen();
+			void SetFullscreen( bool state );
+			void Release();
+			void Update();
+		};
+
+		class Interface
+		{
+		public:
+			D3DX10_SPRITE*						Sprite;
+			Ovgl::RenderTarget*					RenderTarget;
+			int									CSize;
+			std::string							Text;
+			std::string							Font;
+			float								Size;
+			bool								Bold;
+			bool								Italic;
+			Ovgl::Vector4						Rect;
+			bool								Enabled;
+			bool								Over;
+			void UpdateText();
+			void Release();
 		};
 	}
 }

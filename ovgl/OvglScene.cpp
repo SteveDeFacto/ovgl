@@ -28,18 +28,19 @@ class ControllerHitReport : public NxUserControllerHitReport
 public:
 	virtual NxControllerAction  onShapeHit(const NxControllerShapeHit& hit)
 	{
-		NxActor& actor = hit.shape->getActor();
-		NxF32 coeff = actor.getMass() * hit.length * 30.0f;
-		actor.addForceAtLocalPos(hit.dir*coeff, NxVec3(0,0,0), NX_IMPULSE);
+		NxActor& shape = hit.shape->getActor();
+		NxF32 coeff = shape.getMass() * hit.length * 30.0f;
+		shape.addForceAtLocalPos(hit.dir*coeff, NxVec3(0,0,0), NX_IMPULSE);
+		Ovgl::Actor* actor = (Ovgl::Actor*)hit.controller->getUserData();
 		if( acos(hit.worldNormal.y) > Ovgl::DegToRad(45.0f) )
 		{
 			Ovgl::Vector3 normal = Ovgl::Vector3Set(hit.worldNormal.x, 0.0f, hit.worldNormal.z);
-			Ovgl::Globals.InstanceList[0]->Scenes[0]->actors[0]->velocity = Ovgl::Globals.InstanceList[0]->Scenes[0]->actors[0]->velocity + (normal / 1000);
-			Ovgl::Globals.InstanceList[0]->Scenes[0]->actors[0]->grounded = false;
+			actor->velocity = actor->velocity + (normal / 100);
+			actor->grounded = false;
 		}
 		else
 		{
-			Ovgl::Globals.InstanceList[0]->Scenes[0]->actors[0]->grounded = true;
+			actor->grounded = true;
 		}
 		return NX_ACTION_NONE;
 	}
@@ -81,7 +82,7 @@ Ovgl::Camera* Ovgl::Scene::CreateCamera( Ovgl::Matrix44* matrix )
 	actorDesc.body = &bodyDesc;
 	actorDesc.globalPose.setColumnMajor44( (float*)matrix );
 	actorDesc.density = 0.00001f;
-	camera->projMat = Ovgl::MatrixPerspectiveLH( (((float)OvglPi) / 2.0f), (640.0f / 480.0f) , 0.1f, 1000.0f );
+	camera->projMat = Ovgl::MatrixPerspectiveLH( (((float)OvglPi) / 2.0f), (640.0f / 480.0f) , 0.01f, 1000.0f );
 	Ovgl::CMesh* cmesh = new Ovgl::CMesh;
 	cmesh->actor = physics_scene->createActor(actorDesc);
 	camera->cmesh = cmesh;
@@ -231,6 +232,7 @@ Ovgl::Actor* Ovgl::Scene::CreateActor( Ovgl::Mesh* mesh, float radius, float hei
 	actor->desc->stepOffset = height / 4.0f;
 	actor->desc->callback = &g_ControllerHitReport;
 	actor->desc->climbingMode = CLIMB_CONSTRAINED;
+	actor->desc->userData = actor;
 	actor->controller = (NxCapsuleController*)Inst->Manager->createController( physics_scene, *actor->desc );
 	actor->crouch = false;
 	actor->grounded = false;
@@ -262,7 +264,7 @@ void Ovgl::Actor::Jump( float force )
 	if( grounded )
 	{
 		grounded = false;
-		velocity.y = force / 4.0f;
+		velocity.y = force;
 	}
 }
 
@@ -503,7 +505,7 @@ void Ovgl::Scene::Update( DWORD UpdateTime )
 	for(UINT a = 0; a < actors.size(); a++)
 	{
 		NxU32 collisionFlags;
-		actors[a]->controller->move(NxVec3(actors[a]->velocity.x, actors[a]->velocity.y, actors[a]->velocity.z) * (((float)(UpdateTime) * 0.001f) * 80), 1 | 2, 0.0f, collisionFlags, 0.0f);
+		actors[a]->controller->move(NxVec3(actors[a]->velocity.x, actors[a]->velocity.y, actors[a]->velocity.z) * ((float)(UpdateTime) * 0.01f), 1 | 2, 0.0f, collisionFlags, 0.0f);
 		NxMat34 cam_pose;
 		Ovgl::Matrix44 cam_mat;
 		Ovgl::Matrix44 con_pos;
@@ -553,33 +555,39 @@ void Ovgl::Scene::Update( DWORD UpdateTime )
 		corrected_trajectory = Ovgl::Vector3Transform( &actors[a]->trajectory, &Ovgl::MatrixRotationY( -actors[a]->direction.z) );
 		if(actors[a]->grounded && (collisionFlags & NXCC_COLLISION_DOWN))
 		{
-			actors[a]->velocity =  (corrected_trajectory * (((float)(UpdateTime) * 0.001f) * 80));
+			actors[a]->velocity = corrected_trajectory / 3;
 		}
 		else
 		{
-			actors[a]->velocity = (actors[a]->velocity + ((corrected_trajectory * (((float)(UpdateTime) * 0.001f) * 80)) / 100));
+			actors[a]->velocity = (actors[a]->velocity + (corrected_trajectory / 50)) / 1.03f;
+
 		}
-		actors[a]->velocity = (actors[a]->velocity + Ovgl::Vector3Set( 0.0f, -0.01f * (((float)(UpdateTime) * 0.001f) * 80), 0.0f ));
+		actors[a]->velocity = (actors[a]->velocity + (Ovgl::Vector3Set( 0.0f, -0.4f , 0.0f ) * ((float)(UpdateTime) * 0.01f)));
+		float previous_height = actors[a]->controller->getHeight();
 		if( (actors[a]->crouch) & (actors[a]->controller->getHeight() > actors[a]->desc->height/2) )
 		{
-			actors[a]->controller->setHeight(actors[a]->controller->getHeight() - (0.2f* (((float)(UpdateTime) * 0.001f) * 80)));
-			if( actors[a]->controller->getHeight() < actors[a]->desc->height )
+			actors[a]->controller->setHeight(actors[a]->controller->getHeight() - (0.2f* ((float)UpdateTime * 0.01f)));
+			if( actors[a]->controller->getHeight() < actors[a]->desc->height / 2 )
 			{
-				actors[a]->controller->setHeight( actors[a]->desc->height/2 );
+				actors[a]->controller->setHeight( actors[a]->desc->height / 2 );
 			}
+			actors[a]->controller->setPosition( actors[a]->controller->getDebugPosition() + NxExtendedVec3( 0, -((actors[a]->controller->getHeight() - previous_height)/2), 0 ) );
 		}
 		else if( (!actors[a]->crouch) & (actors[a]->controller->getHeight() < actors[a]->desc->height) )
 		{
-			float previous_height = actors[a]->controller->getHeight();
-			actors[a]->controller->setHeight(actors[a]->controller->getHeight() + (0.2f* (((float)(UpdateTime) * 0.001f) * 80)));
-			if( actors[a]->controller->getHeight() > actors[a]->desc->height)
+			
+			actors[a]->controller->setHeight(actors[a]->controller->getHeight() + (0.2f* ((float)UpdateTime * 0.01f)));
+			if(  actors[a]->controller->getHeight() > actors[a]->desc->height)
 			{
 				actors[a]->controller->setHeight( actors[a]->desc->height );
 			}
-			if(collisionFlags & NXCC_COLLISION_DOWN)
+			if(actors[a]->grounded || (collisionFlags & (NXCC_COLLISION_DOWN | NXCC_COLLISION_SIDES)))
 			{
 				actors[a]->controller->setPosition( actors[a]->controller->getDebugPosition() + NxExtendedVec3( 0, -(previous_height - actors[a]->controller->getHeight()), 0 ) );
-				actors[a]->camera->cmesh->actor->setGlobalPosition( actors[a]->camera->cmesh->actor->getGlobalPosition() + NxVec3( 0, -(previous_height - actors[a]->controller->getHeight()), 0 ));
+			}
+			else
+			{
+				actors[a]->controller->setPosition( actors[a]->controller->getDebugPosition() + NxExtendedVec3( 0, ((previous_height - actors[a]->controller->getHeight())/2), 0 ) );
 			}
 		}
 	}

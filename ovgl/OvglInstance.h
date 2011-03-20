@@ -80,14 +80,6 @@ namespace Ovgl
 		class RenderTarget;
 		class Effect;
 
-		class GlobalsClass
-		{
-		public:
-			std::vector<Instance*> InstanceList;
-		};
-
-		extern GlobalsClass Globals;
-
 		class __declspec(dllexport) Effect
 		{
 		public:
@@ -137,6 +129,7 @@ namespace Ovgl
 			bool									Active;
 			bool									CursorBlink;
 			Effect*									DefaultEffect;
+			Effect*									SkyboxEffect;
 			std::vector< std::string >				ErrorLog;
 			std::string								TextCursor;
 			std::vector<RenderTarget*>				RenderTargets;

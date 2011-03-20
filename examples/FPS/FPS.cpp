@@ -1,5 +1,5 @@
 /**
-* @file Ovgl_FPS.cpp
+* @file FPS.cpp
 * Copyright 2011 Steven Batchelor
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,8 @@
 HWND						hWnd;
 Ovgl::Instance*				Inst;
 Ovgl::RenderTarget*			RenderTarget;
-Ovgl::AudioBuffer*			Buffer;
+Ovgl::AudioBuffer*			Music;
+Ovgl::AudioBuffer*			FootStep;
 Ovgl::Scene*				Scene;
 Ovgl::Actor*				Actor;
 Ovgl::Emitter*				Emitter;
@@ -40,15 +41,18 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
             if( wParam == VK_ESCAPE )
                 PostQuitMessage( 0 );
 			if( wParam == 0x57 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.0f, 0.0f, 0.05f );
+			{
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.0f, 0.0f, 1.0f );
+				FootStep->CreateAudioInstance(NULL);
+			}
 			if( wParam == 0x53 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.0f, 0.0f, -0.05f );
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.0f, 0.0f, -1.0f );
 			if( wParam == 0x44 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.05f, 0.0f, 0.0f );
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 1.0f, 0.0f, 0.0f );
 			if( wParam == 0x41 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( -0.05f, 0.0f, 0.0f );
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( -1.0f, 0.0f, 0.0f );
 			if( wParam == VK_SPACE && (lParam >> 30 & 1) == 0 )
-				Actor->Jump( 0.5f );
+				Actor->Jump( 1.0f );
 			if( wParam == VK_CONTROL && (lParam >> 30 & 1) == 0 )
 				Actor->crouch = true;
             break;
@@ -57,13 +61,13 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 		case WM_KEYUP:
 		{
 			if( wParam == 0x57 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.0f, 0.0f, 0.05f );
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.0f, 0.0f, 1.0f );
 			if( wParam == 0x53 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.0f, 0.0f, -0.05f );
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.0f, 0.0f, -1.0f );
 			if( wParam == 0x44 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.05f, 0.0f, 0.0f );
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 1.0f, 0.0f, 0.0f );
 			if( wParam == 0x41 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( -0.05f, 0.0f, 0.0f );
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( -1.0f, 0.0f, 0.0f );
 			if( wParam == VK_CONTROL )
 				Actor->crouch = false;
             break;
@@ -142,11 +146,18 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	ShowWindow( hWnd, SW_SHOW );
 	Inst = Ovgl::Create( 0 );
 	RenderTarget = Inst->CreateRenderTarget(hWnd, NULL, 0);
-	Buffer = Inst->CreateAudioBuffer( "..\\..\\media\\audio\\glacier.ogg" );
+	RenderTarget->CreateText("..\\..\\media\\textures\\Grass.dds", &Ovgl::Vector4Set( 0.0f, 0.0f, 512.0f, 512.0f ));
+	Music = Inst->CreateAudioBuffer( "..\\..\\media\\audio\\glacier.ogg" );
+	FootStep = Inst->CreateAudioBuffer( "..\\..\\media\\audio\\foot_step.ogg" );
 	Scene = Inst->CreateScene( "..\\..\\media\\meshes\\test3.bin", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
-	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( -78.0f, 5.0f, 0.0f ) );
+	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( -75.0f, 5.0f, 0.0f ) );
 	RenderTarget->view = Actor->camera;
-	Buffer->CreateAudioInstance( NULL );
+	Music->CreateAudioInstance( NULL );
+	Inst->SkyboxEffect->set_texture( "txEnvironment", "..\\..\\media\\textures\\Skybox.dds");
+	Inst->DefaultEffect->set_texture( "txEnvironment", "..\\..\\media\\textures\\Skybox.dds");
+	Inst->DefaultEffect->set_texture( "txDiffuse", "..\\..\\media\\textures\\Grass.dds");
+	float data[4] = { 0.25f, 0.25f, 0.25f, 1.0f };
+	Inst->DefaultEffect->set_variable( "Ambient", 4, data); 
 	DWORD previousTime = timeGetTime();
 	// Main message loop
     MSG msg = {0};
@@ -154,7 +165,7 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
     {
         if( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
         {
-            TranslateMessage( &msg ); 
+            TranslateMessage( &msg );
             DispatchMessage( &msg );
         }
         else

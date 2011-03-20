@@ -24,8 +24,6 @@
 #include "OvglMesh.h"
 #include "OvglScene.h"
 
-Ovgl::GlobalsClass Ovgl::Globals;
-
 Ovgl::Effect* BuildDefaultEffect( Ovgl::Instance* inst )
 {
 	Ovgl::Effect* effect = new Ovgl::Effect;
@@ -33,8 +31,24 @@ Ovgl::Effect* BuildDefaultEffect( Ovgl::Instance* inst )
 
 	// Create shader string.
 	std::string shader = 
-	"float4 Ambient = float4( 0.47f, 0.47f, 0.47f, 1.0f );"
-	"float4 Diffuse = float4( 0.5f, 0.5f, 0.5f, 1.0f );"
+	"Texture2D txDiffuse;"
+	"SamplerState samLinear"
+	"{"
+    "	Filter = MIN_MAG_MIP_LINEAR;"
+    "	AddressU = Wrap;"
+    "	AddressV = Wrap;"
+	"};"
+	"TextureCube txEnvironment;"
+	"SamplerState envSampler"
+	"{"
+	"	Filter = MIN_MAG_MIP_LINEAR;"
+	"	AddressU = Clamp;"
+	"	AddressV = Clamp;"
+	"	AddressW = Clamp;"
+	"};"
+	"float4 Ambient = float4( 0.0f, 0.0f, 0.0f, 1.0f );"
+	"float4 Diffuse = float4( 0.75f, 0.75f, 0.75f, 1.0f );"
+	"float Environment_map_intensity = 1.0f;"
 	"int Light_Count			: LIGHTCOUNT;"
 	"float4 Lights[255]			: LIGHTARRAY;"
 	"float4 LightColors[255]	: LIGHTCOLORARRAY;"
@@ -52,8 +66,8 @@ Ovgl::Effect* BuildDefaultEffect( Ovgl::Instance* inst )
 	"};"
 	"struct PS_INPUT"
 	"{"
-	"	float4 pos				: SV_POSITION;"
-	"	float4 pos2				: POSITION;"
+	"	float4 posVS			: SV_POSITION;"
+	"	float4 posWS			: POSITION;"
 	"	float2 tex				: TEXCOORD0;"
 	"	float4 norm				: NORMAL;"
 	"};"
@@ -65,25 +79,38 @@ Ovgl::Effect* BuildDefaultEffect( Ovgl::Instance* inst )
 	"   skinTransform += Bones[In.bi.y] * In.bw.y;"
 	"   skinTransform += Bones[In.bi.z] * In.bw.z;"
 	"   skinTransform += Bones[In.bi.w] * In.bw.w;"
-	"   Out.pos = mul(float4(In.pos, 1), skinTransform);"
-	"	Out.pos2 = Out.pos;"
+	"   Out.posVS = mul(float4(In.pos, 1), skinTransform);"
+	"	Out.posWS = Out.posVS;"
 	"	Out.norm = normalize(mul(float4(In.norm, 0), skinTransform));"
-	"   Out.pos = mul(mul(Out.pos, View), Projection);"
+	"   Out.posVS = mul(mul(Out.posVS, View), Projection);"
 	"	Out.tex = In.tex;"
 	"	return Out;"
 	"}"
 	"float4 PS( PS_INPUT In) : SV_Target"
 	"{"
-	"	float4 color = float4( 0, 0, 0, 0 );"
+	"	float4 light = float4( 0, 0, 0, 0 );"
+	"	float txWidth, txHeight;"
+	"	txEnvironment.GetDimensions(txWidth, txHeight);"
+	"	float4 envColor = float4( 0, 0, 0, 1 );"
+	"	if(txWidth > 0)"
+	"	{"
+	"		envColor = Environment_map_intensity * txEnvironment.Sample( envSampler, reflect( normalize( In.posWS - View[3] ).xyz, In.norm.xyz ));"
+	"	}"
+	"	txDiffuse.GetDimensions(txWidth, txHeight);"
+	"	float4 texColor = float4( 1, 1, 1, 1 );"
+	"	if(txWidth > 0)"
+	"	{"
+	"		texColor = txDiffuse.Sample( samLinear, In.tex );"
+	"	}"
 	"	for(int i = 0; i < Light_Count; i++)"
 	"	{"
-	"		float4 lightDir = Lights[i] - In.pos2;"
+	"		float4 lightDir = Lights[i] - In.posWS;"
 	"		float4 NdotL = saturate(dot(In.norm, normalize(lightDir)));"
 	"		float4 attenuation = 1/length(lightDir);"
-	"		color += LightColors[i] * NdotL * attenuation * 10;"
+	"		light += LightColors[i] * NdotL * attenuation * 10;"
 	"	}"    
-	"	color.w = 1;"
-	"	return color * Diffuse;"
+	"	light.w = 1;"
+	"	return ( ((texColor + envColor) * Diffuse) * (light + Ambient) );"
 	"}"
 	"technique10 Render"
 	"{"
@@ -94,6 +121,96 @@ Ovgl::Effect* BuildDefaultEffect( Ovgl::Instance* inst )
 	"		SetPixelShader( CompileShader( ps_4_0, PS() ) );"
 	"	}"
 	"}";
+
+	//  Create effect.
+	D3DX10CreateEffectFromMemory( shader.c_str(), shader.size(), NULL, NULL, NULL, "fx_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, inst->D3DDevice, NULL, NULL, &effect->SFX, NULL, NULL );
+	
+	// Get shader variables.
+	effect->Technique = effect->SFX->GetTechniqueByName( "Render" );
+	effect->Shadow_Maps = effect->SFX->GetVariableBySemantic( "SHADOWMAPS" )->AsShaderResource();
+	effect->Cube_Views = effect->SFX->GetVariableBySemantic( "CUBEVIEWS" )->AsMatrix();
+	effect->Light_Count = effect->SFX->GetVariableBySemantic( "LIGHTCOUNT" )->AsScalar();
+	effect->Lights = effect->SFX->GetVariableBySemantic( "LIGHTARRAY" )->AsVector();
+	effect->Light_Colors = effect->SFX->GetVariableBySemantic( "LIGHTCOLORARRAY" )->AsVector();
+    effect->Bones = effect->SFX->GetVariableBySemantic( "BONEARRAY" )->AsMatrix();
+    effect->View = effect->SFX->GetVariableBySemantic( "WORLDVIEW" )->AsMatrix();
+	effect->Projection = effect->SFX->GetVariableBySemantic( "PROJECTION" )->AsMatrix();
+
+	// Get technique.
+	D3D10_PASS_DESC PassDesc;
+	effect->Technique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
+
+	// Create vertex layout desc.
+	D3D10_INPUT_ELEMENT_DESC vertexlayout[] =
+	{
+		{ "POSITION",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0,	0,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",			0, DXGI_FORMAT_R32G32B32_FLOAT,		0,	12,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",		0, DXGI_FORMAT_R32G32_FLOAT,		0,	24,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",		1, DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	32,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",		2, DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	48,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	// Create vertex layout.
+	inst->D3DDevice->CreateInputLayout( vertexlayout, sizeof(vertexlayout)/sizeof(vertexlayout[0]), PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &effect->Layout );
+
+	//Return effect.
+	return effect;
+}
+
+Ovgl::Effect* BuildSkyboxEffect( Ovgl::Instance* inst )
+{
+	Ovgl::Effect* effect = new Ovgl::Effect;
+	effect->Inst = inst;
+
+	// Create shader string.
+	std::string shader = 
+	"TextureCube txEnvironment;"
+	"SamplerState envSampler"
+	"{"
+	"	Filter = MIN_MAG_MIP_LINEAR;"
+	"	AddressU = Clamp;"
+	"	AddressV = Clamp;"
+	"	AddressW = Clamp;"
+	"};"
+	"float4x4 World				: WORLD;"
+	"float4x4 View				: WORLDVIEW;"
+	"float4x4 Projection		: PROJECTION;"
+	"struct VS_INPUT"
+	"{"
+	"	float3 pos			: POSITION;"
+	"	float3 norm			: NORMAL;"
+	"	float2 tex			: TEXCOORD0;"
+	"	float4 bw			: TEXCOORD1;"
+	"	float4 bi			: TEXCOORD2;"
+	"};"
+	"struct PS_INPUT"
+	"{"
+	"	float4 pos			: SV_POSITION;"
+	"	float3 tex			: TEXCOORD0;"
+	"};"
+
+	"PS_INPUT VS( VS_INPUT In )"
+	"{"
+	"	PS_INPUT Out = (PS_INPUT)0;"
+	"	Out.pos = mul( float4( mul( In.pos.xyz, (float3x3)View), 1 ), Projection);"
+	"	Out.tex = In.pos.xyz;"
+	"	return Out;"
+	"}"
+	"float4 PS( PS_INPUT In) : SV_Target"
+	"{"
+	"	float4 color = txEnvironment.Sample( envSampler, In.tex );"
+	"	return color;"
+	"}"
+	"technique10 Render"
+	"{"
+	"	pass P0"
+	"	{"
+	"		SetVertexShader( CompileShader( vs_4_0, VS() ) );"
+	"		SetGeometryShader( NULL );"
+	"		SetPixelShader( CompileShader( ps_4_0, PS() ) );"
+	"	}"
+	"}";
+
 
 	//  Create effect.
 	D3DX10CreateEffectFromMemory( shader.c_str(), shader.size(), NULL, NULL, NULL, "fx_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, inst->D3DDevice, NULL, NULL, &effect->SFX, NULL, NULL );
@@ -209,24 +326,6 @@ Ovgl::RenderTarget* Ovgl::Instance::CreateRenderTarget( HWND hWnd, RECT* rect, D
 	rendertarget->RenderTargetView = NULL;
 	rendertarget->DepthStencilView = NULL;
 	rendertarget->hWnd = hWnd;
-	rendertarget->ViewPort = new D3D10_VIEWPORT;
-	ZeroMemory( rendertarget->ViewPort, sizeof(D3D10_VIEWPORT) );
-	rendertarget->ViewPort->MinDepth = 0.0f;
-	rendertarget->ViewPort->MaxDepth = 1.0f;
-	if( rect != NULL )
-	{
-		rendertarget->ViewPort->TopLeftX = rect->left;
-		rendertarget->ViewPort->TopLeftY = rect->top;
-		rendertarget->ViewPort->Width = rect->right - rect->left;
-		rendertarget->ViewPort->Height = rect->bottom - rect->top;
-	}
-	else
-	{
-		rendertarget->ViewPort->TopLeftX = 0;
-		rendertarget->ViewPort->TopLeftY = 0;
-		rendertarget->ViewPort->Width = WindowRect.right - WindowRect.left;
-		rendertarget->ViewPort->Height = WindowRect.bottom - WindowRect.top;
-	}
 	DXGI_SWAP_CHAIN_DESC sd;
 	ZeroMemory( &sd, sizeof( sd ) );
 	sd.BufferCount = 1;
@@ -270,9 +369,6 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 {
 	// Create new instance
 	Ovgl::Instance* instance = new Ovgl::Instance; 
-
-	// Add instance pointer to global instance list.
-	Ovgl::Globals.InstanceList.push_back( instance );
 
 	// Initialize COM
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -393,27 +489,67 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 	vertices[0].position.x = -0.5f;
 	vertices[0].position.y = -0.5f;
 	vertices[0].position.z = -0.5f;
+	vertices[0].normal.x = -0.5f;
+	vertices[0].normal.y = -0.5f;
+	vertices[0].normal.z = -0.5f;
+	vertices[0].weight[0] = 1.0f;
+
 	vertices[1].position.x = 0.5f;
 	vertices[1].position.y = -0.5f;
 	vertices[1].position.z = -0.5f;
+	vertices[1].normal.x = 0.5f;
+	vertices[1].normal.y = -0.5f;
+	vertices[1].normal.z = -0.5f;
+	vertices[1].weight[0] = 1.0f;
+
 	vertices[2].position.x = -0.5f;
 	vertices[2].position.y = 0.5f;
 	vertices[2].position.z = -0.5f;
+	vertices[2].normal.x = -0.5f;
+	vertices[2].normal.y = 0.5f;
+	vertices[2].normal.z = -0.5f;
+	vertices[2].weight[0] = 1.0f;
+
 	vertices[3].position.x = 0.5f;
 	vertices[3].position.y = 0.5f;
 	vertices[3].position.z = -0.5f;
+	vertices[3].normal.x = 0.5f;
+	vertices[3].normal.y = 0.5f;
+	vertices[3].normal.z = -0.5f;
+	vertices[3].weight[0] = 1.0f;
+
 	vertices[4].position.x = -0.5f;
 	vertices[4].position.y = -0.5f;
 	vertices[4].position.z = 0.5f;
+	vertices[4].normal.x = -0.5f;
+	vertices[4].normal.y = -0.5f;
+	vertices[4].normal.z = 0.5f;
+	vertices[4].weight[0] = 1.0f;
+
 	vertices[5].position.x = 0.5f;
 	vertices[5].position.y = -0.5f;
 	vertices[5].position.z = 0.5f;
+	vertices[5].normal.x = 0.5f;
+	vertices[5].normal.y = -0.5f;
+	vertices[5].normal.z = 0.5f;
+	vertices[5].weight[0] = 1.0f;
+
 	vertices[6].position.x = -0.5f;
 	vertices[6].position.y = 0.5f;
 	vertices[6].position.z = 0.5f;
+	vertices[6].normal.x = -0.5f;
+	vertices[6].normal.y = 0.5f;
+	vertices[6].normal.z = 0.5f;
+	vertices[6].weight[0] = 1.0f;
+
 	vertices[7].position.x = 0.5f;
 	vertices[7].position.y = 0.5f;
 	vertices[7].position.z = 0.5f;
+	vertices[7].normal.x = 0.5f;
+	vertices[7].normal.y = 0.5f;
+	vertices[7].normal.z = 0.5f;
+	vertices[7].weight[0] = 1.0f;
+
 	faces[0].indices[0] = 0;
 	faces[0].indices[1] = 1;
 	faces[0].indices[2] = 2;
@@ -517,6 +653,9 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 
 	// Build the default effect.
 	instance->DefaultEffect = BuildDefaultEffect( instance );
+
+	// Build the Skybox effect.
+	instance->SkyboxEffect = BuildSkyboxEffect( instance );
 
 	// Initialize FbxSdk
 	instance->FBXManager = KFbxSdkManager::Create();
