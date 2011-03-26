@@ -1,5 +1,5 @@
 /**
-* @file Ovgl_FPS.cpp
+* @file Editor.cpp
 * Copyright 2011 Steven Batchelor
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,14 +24,15 @@
 HWND						hWnd;
 Ovgl::Instance*				Inst;
 Ovgl::RenderTarget*			RenderTarget;
-Ovgl::AudioBuffer*			Buffer;
+Ovgl::AudioBuffer*			Music;
+Ovgl::AudioBuffer*			FootStep;
 Ovgl::Scene*				Scene;
 Ovgl::Actor*				Actor;
+Ovgl::Camera*				Camera;
 Ovgl::Emitter*				Emitter;
 bool						g_Active;
 bool						g_Sizing;
 
-// Window procedure which is used for all standard windows.
 LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
    switch( message )
@@ -40,33 +41,6 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 		{
             if( wParam == VK_ESCAPE )
                 PostQuitMessage( 0 );
-			if( wParam == 0x57 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.0f, 0.0f, 0.05f );
-			if( wParam == 0x53 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.0f, 0.0f, -0.05f );
-			if( wParam == 0x44 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.05f, 0.0f, 0.0f );
-			if( wParam == 0x41 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( -0.05f, 0.0f, 0.0f );
-			if( wParam == VK_SPACE && (lParam >> 30 & 1) == 0 )
-				Actor->Jump( 0.5f );
-			if( wParam == VK_CONTROL && (lParam >> 30 & 1) == 0 )
-				Actor->crouch = true;
-            break;
-		}
-
-		case WM_KEYUP:
-		{
-			if( wParam == 0x57 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.0f, 0.0f, 0.05f );
-			if( wParam == 0x53 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.0f, 0.0f, -0.05f );
-			if( wParam == 0x44 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.05f, 0.0f, 0.0f );
-			if( wParam == 0x41 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( -0.05f, 0.0f, 0.0f );
-			if( wParam == VK_CONTROL )
-				Actor->crouch = false;
             break;
 		}
 
@@ -88,16 +62,10 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 			{
 				if( wParam )
 				{
-					RECT WindowRect;
-					GetWindowRect( hWnd, &WindowRect );
-					ClipCursor( &WindowRect );
-					ShowCursor( false );
 					g_Active = true;
 				}
 				else
 				{
-					ClipCursor( NULL );
-					ShowCursor( TRUE );
 					g_Active = false;
 				}
 			}
@@ -143,11 +111,18 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	ShowWindow( hWnd, SW_SHOW );
 	Inst = Ovgl::Create( 0 );
 	RenderTarget = Inst->CreateRenderTarget(hWnd, NULL, 0);
-	Buffer = Inst->CreateAudioBuffer( "..\\..\\media\\audio\\glacier.ogg" );
-	Scene = Inst->CreateScene( "..\\..\\media\\meshes\\test3.bin", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
-	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( -75.0f, 5.0f, 0.0f ) );
-	RenderTarget->view = Actor->camera;
-	Buffer->CreateAudioInstance( NULL );
+	RenderTarget->CreateText("..\\media\\textures\\Grass.dds", &Ovgl::Vector4Set( 0.0f, 0.0f, 512.0f, 512.0f ));
+	Music = Inst->CreateAudioBuffer( "..\\media\\audio\\glacier.ogg" );
+	FootStep = Inst->CreateAudioBuffer( "..\\media\\audio\\foot_step.ogg" );
+	Scene = Inst->CreateScene( "..\\media\\meshes\\HL2.bin", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
+	Camera = Scene->CreateCamera(&Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
+	RenderTarget->view = Camera;
+	Music->CreateAudioInstance( NULL );
+	Inst->SkyboxEffect->set_texture( "txEnvironment", "..\\media\\textures\\Skybox.dds");
+	Inst->DefaultEffect->set_texture( "txEnvironment", "..\\media\\textures\\Skybox.dds");
+	Inst->DefaultEffect->set_texture( "txDiffuse", "..\\media\\textures\\Grass.dds");
+	float data[4] = { 0.25f, 0.25f, 0.25f, 1.0f };
+	Inst->DefaultEffect->set_variable( "Ambient", 4, data);
 	DWORD previousTime = timeGetTime();
 	// Main message loop
     MSG msg = {0};
@@ -155,7 +130,7 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
     {
         if( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
         {
-            TranslateMessage( &msg ); 
+            TranslateMessage( &msg );
             DispatchMessage( &msg );
         }
         else
@@ -163,19 +138,33 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
             DWORD currentTime = timeGetTime();
 			DWORD elapsedTime = currentTime - previousTime;
 			Scene->Update(elapsedTime);
-			RenderTarget->Update();
+			RenderTarget->Render();
+			static POINT LastPoint;
 			if( g_Active )
 			{
-				RECT WindowRect;
-				GetWindowRect( hWnd, &WindowRect );
-				POINT Point;
-				GetCursorPos( &Point );
-				long mx = Point.x - ((WindowRect.left + WindowRect.right) / 2);
-				long my = Point.y - ((WindowRect.top +  WindowRect.bottom) / 2);
-				Actor->direction.z = Actor->direction.z + (mx / 1000.0f);
-				Actor->direction.y = Actor->direction.y + (my / 1000.0f);
-				SetCursorPos( (WindowRect.left + WindowRect.right) / 2, (WindowRect.top +  WindowRect.bottom) / 2 );
+				if ((GetKeyState(VK_RBUTTON) & 0x80) != 0)
+				{
+					POINT Point;
+					GetCursorPos( &Point );
+					long mx = Point.x - LastPoint.x;
+					long my = Point.y - LastPoint.y;
+					Camera->setPose( &((Ovgl::MatrixRotationY(-mx / 1000.0f ) * Ovgl::MatrixRotationX( -my / 1000.0f)) * Camera->getPose() ) );
+					if((GetKeyState(0x57) & 0x80) != 0)
+						Camera->setPose( &(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * Camera->getPose() ) );
+					if((GetKeyState(0x53) & 0x80) != 0)
+						Camera->setPose( &(Ovgl::MatrixTranslation( 0.0f, 0.0f, -0.1f ) * Camera->getPose() ) );
+					if((GetKeyState(0x44) & 0x80) != 0)
+						Camera->setPose( &(Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
+					if((GetKeyState(0x41) & 0x80) != 0)
+						Camera->setPose( &(Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
+					SetCursorPos( LastPoint.x, LastPoint.y );
+				}
+				else
+				{
+					GetCursorPos( &LastPoint );
+				}
 			}
+
 			previousTime = currentTime;
         }
     }

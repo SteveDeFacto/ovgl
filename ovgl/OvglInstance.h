@@ -90,6 +90,7 @@ namespace Ovgl
 			ID3D10EffectMatrixVariable*			Bones;
 			ID3D10EffectMatrixVariable*			View;
 			ID3D10EffectMatrixVariable*			Projection;
+			ID3D10EffectVectorVariable*			ViewPos;
 			ID3D10EffectScalarVariable*			Light_Count;
 			ID3D10EffectVectorVariable*			Lights;
 			ID3D10EffectVectorVariable*			Light_Colors;

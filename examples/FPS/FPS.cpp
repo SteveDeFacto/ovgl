@@ -149,7 +149,7 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	RenderTarget->CreateText("..\\..\\media\\textures\\Grass.dds", &Ovgl::Vector4Set( 0.0f, 0.0f, 512.0f, 512.0f ));
 	Music = Inst->CreateAudioBuffer( "..\\..\\media\\audio\\glacier.ogg" );
 	FootStep = Inst->CreateAudioBuffer( "..\\..\\media\\audio\\foot_step.ogg" );
-	Scene = Inst->CreateScene( "..\\..\\media\\meshes\\test3.bin", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
+	Scene = Inst->CreateScene( "..\\..\\media\\meshes\\HL2.bin", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
 	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( -75.0f, 5.0f, 0.0f ) );
 	RenderTarget->view = Actor->camera;
 	Music->CreateAudioInstance( NULL );
@@ -173,7 +173,7 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
             DWORD currentTime = timeGetTime();
 			DWORD elapsedTime = currentTime - previousTime;
 			Scene->Update(elapsedTime);
-			RenderTarget->Update();
+			RenderTarget->Render();
 			if( g_Active )
 			{
 				RECT WindowRect;

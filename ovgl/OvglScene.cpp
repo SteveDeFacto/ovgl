@@ -303,6 +303,13 @@ Ovgl::Matrix44 Ovgl::Camera::getPose()
 	return matrix;
 }
 
+void Ovgl::Camera::setPose( Ovgl::Matrix44* matrix )
+{
+	NxMat34 mat;
+	mat.setColumnMajor44( (float*)matrix );
+	cmesh->actor->setGlobalPose( mat );
+}
+
 Ovgl::Matrix44 Ovgl::Light::getPose()
 {
 	Ovgl::Matrix44 matrix;

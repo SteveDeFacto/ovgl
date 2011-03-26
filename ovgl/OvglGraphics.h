@@ -46,7 +46,7 @@ namespace Ovgl
 			bool GetFullscreen();
 			void SetFullscreen( bool state );
 			void Release();
-			void Update();
+			void Render();
 		};
 
 		class Interface

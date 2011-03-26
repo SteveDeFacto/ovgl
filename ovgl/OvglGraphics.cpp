@@ -42,7 +42,7 @@ void Ovgl::RenderTarget::Release()
 	delete this;
 }
 
-void Ovgl::RenderTarget::Update()
+void Ovgl::RenderTarget::Render()
 {
 	RECT WindowRect;
 	GetWindowRect( hWnd, &WindowRect );
@@ -54,110 +54,123 @@ void Ovgl::RenderTarget::Update()
 	ViewPort.Width = WindowRect.right - WindowRect.left;
 	ViewPort.Height = WindowRect.bottom - WindowRect.top;
 
-	Ovgl::Scene* scene = view->scene;
-	Ovgl::Matrix44 viewMat = Ovgl::MatrixInverse( &Ovgl::Vector4Set(0,0,0,0), &view->getPose() );
-	Ovgl::Matrix44 projMat = view->projMat;
-	int Light_Count = scene->lights.size();
-	std::vector<float> mLights;
-	std::vector<float> LightColors;
-	for( DWORD l = 0; l < scene->lights.size(); l++)
+	if( view != NULL )
 	{
-		mLights.push_back( scene->lights[l]->getPose()._41 );
-		mLights.push_back( scene->lights[l]->getPose()._42 );
-		mLights.push_back( scene->lights[l]->getPose()._43 );
-		mLights.push_back( 1.0f );
-		LightColors.push_back( scene->lights[l]->color.x );
-		LightColors.push_back( scene->lights[l]->color.y );
-		LightColors.push_back( scene->lights[l]->color.z );
-		LightColors.push_back( 1.0f );
-	}
-	Inst->D3DDevice->ClearDepthStencilView( DepthStencilView, D3D10_CLEAR_DEPTH, 1.0f, 0 );
-
-	Inst->D3DDevice->RSSetViewports( 1, &ViewPort );
-	Inst->D3DDevice->IASetPrimitiveTopology( D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
-	Inst->D3DDevice->OMSetDepthStencilState( NULL, NULL);
-	Inst->D3DDevice->OMSetRenderTargets( 1, &RenderTargetView, NULL ); 
-	Inst->SkyboxEffect->View->SetMatrix( (float*)&viewMat );
-	Inst->SkyboxEffect->Projection->SetMatrix( (float*)&projMat );
-	Inst->D3DDevice->IASetInputLayout( Inst->SkyboxEffect->Layout );
-	D3D10_TECHNIQUE_DESC techDesc;
-	Inst->SkyboxEffect->Technique->GetDesc( &techDesc );
-	UINT stride = sizeof( Ovgl::Vertex );
-	UINT offset = 0;
-	Inst->D3DDevice->IASetVertexBuffers( 0, 1, &Inst->CubeVertexBuffer, &stride, &offset );
-	for( UINT p = 0; p < techDesc.Passes; ++p )
-	{
-		Inst->SkyboxEffect->Technique->GetPassByIndex( p )->Apply(0);
-		Inst->D3DDevice->IASetIndexBuffer( Inst->CubeIndexBuffer, DXGI_FORMAT_R32_UINT, 0 );
-		D3D10_BUFFER_DESC Buffer_Desc;
-		Inst->CubeIndexBuffer->GetDesc(&Buffer_Desc);
-		Inst->D3DDevice->DrawIndexed( Buffer_Desc.ByteWidth / sizeof(DWORD), 0, 0 );
-	}
-
-	Inst->D3DDevice->RSSetViewports( 1, &ViewPort );
-	Inst->D3DDevice->IASetPrimitiveTopology( D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
-	Inst->D3DDevice->OMSetDepthStencilState(NULL, NULL);
-	Inst->D3DDevice->OMSetRenderTargets( 1, &RenderTargetView, DepthStencilView ); 
-	for( DWORD i = 0; i < scene->props.size(); i++ )
-	{
-		for( DWORD s = 0; s < scene->props[i]->mesh->subset_count; s++)
+		Ovgl::Scene* scene = view->scene;
+		Ovgl::Matrix44 viewMat = Ovgl::MatrixInverse( &Ovgl::Vector4Set(0,0,0,0), &view->getPose() );
+		Ovgl::Matrix44 projMat = view->projMat;
+		int Light_Count = scene->lights.size();
+		std::vector<float> mLights;
+		std::vector<float> LightColors;
+		for( DWORD l = 0; l < scene->lights.size(); l++)
 		{
-			int Bone_Count = scene->props[i]->mesh->bones.size();
-			scene->props[i]->subsets[s]->View->SetMatrix( (float*)&viewMat );
-			scene->props[i]->subsets[s]->Projection->SetMatrix( (float*)&projMat );
-			scene->props[i]->subsets[s]->Light_Count->SetInt( Light_Count );
-			if( Light_Count > 0 )
+			mLights.push_back( scene->lights[l]->getPose()._41 );
+			mLights.push_back( scene->lights[l]->getPose()._42 );
+			mLights.push_back( scene->lights[l]->getPose()._43 );
+			mLights.push_back( 1.0f );
+			LightColors.push_back( scene->lights[l]->color.x );
+			LightColors.push_back( scene->lights[l]->color.y );
+			LightColors.push_back( scene->lights[l]->color.z );
+			LightColors.push_back( 1.0f );
+		}
+		Inst->D3DDevice->ClearDepthStencilView( DepthStencilView, D3D10_CLEAR_DEPTH, 1.0f, 0 );
+
+		Inst->D3DDevice->RSSetViewports( 1, &ViewPort );
+		Inst->D3DDevice->IASetPrimitiveTopology( D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+		Inst->D3DDevice->OMSetDepthStencilState( NULL, NULL);
+		Inst->D3DDevice->OMSetRenderTargets( 1, &RenderTargetView, NULL ); 
+		Inst->SkyboxEffect->View->SetMatrix( (float*)&viewMat );
+		Inst->SkyboxEffect->Projection->SetMatrix( (float*)&projMat );
+		Inst->D3DDevice->IASetInputLayout( Inst->SkyboxEffect->Layout );
+		D3D10_TECHNIQUE_DESC techDesc;
+		Inst->SkyboxEffect->Technique->GetDesc( &techDesc );
+		UINT stride = sizeof( Ovgl::Vertex );
+		UINT offset = 0;
+		Inst->D3DDevice->IASetVertexBuffers( 0, 1, &Inst->CubeVertexBuffer, &stride, &offset );
+		for( UINT p = 0; p < techDesc.Passes; ++p )
+		{
+			Inst->SkyboxEffect->Technique->GetPassByIndex( p )->Apply(0);
+			Inst->D3DDevice->IASetIndexBuffer( Inst->CubeIndexBuffer, DXGI_FORMAT_R32_UINT, 0 );
+			D3D10_BUFFER_DESC Buffer_Desc;
+			Inst->CubeIndexBuffer->GetDesc(&Buffer_Desc);
+			Inst->D3DDevice->DrawIndexed( Buffer_Desc.ByteWidth / sizeof(DWORD), 0, 0 );
+		}
+
+		Inst->D3DDevice->RSSetViewports( 1, &ViewPort );
+		Inst->D3DDevice->IASetPrimitiveTopology( D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+		Inst->D3DDevice->OMSetDepthStencilState(NULL, NULL);
+		Inst->D3DDevice->OMSetRenderTargets( 1, &RenderTargetView, DepthStencilView ); 
+		for( DWORD i = 0; i < scene->props.size(); i++ )
+		{
+			for( DWORD s = 0; s < scene->props[i]->mesh->subset_count; s++)
 			{
-				scene->props[i]->subsets[s]->Lights->SetFloatVectorArray( &mLights[0], 0, Light_Count );
-				scene->props[i]->subsets[s]->Light_Colors->SetFloatVectorArray( &LightColors[0], 0, Light_Count );
+				int Bone_Count = scene->props[i]->mesh->bones.size();
+				scene->props[i]->subsets[s]->View->SetMatrix( (float*)&viewMat );
+				scene->props[i]->subsets[s]->ViewPos->SetFloatVector( (float*)&view->getPose()[3] );
+				scene->props[i]->subsets[s]->Projection->SetMatrix( (float*)&projMat );
+				scene->props[i]->subsets[s]->Light_Count->SetInt( Light_Count );
+				if( Light_Count > 0 )
+				{
+					scene->props[i]->subsets[s]->Lights->SetFloatVectorArray( &mLights[0], 0, Light_Count );
+					scene->props[i]->subsets[s]->Light_Colors->SetFloatVectorArray( &LightColors[0], 0, Light_Count );
+				}
+				scene->props[i]->subsets[s]->Bones->SetMatrixArray( (float*)&scene->props[i]->matrices[0], 0, Bone_Count );
+				Inst->D3DDevice->IASetInputLayout( scene->props[i]->subsets[s]->Layout );
+				D3D10_TECHNIQUE_DESC techDesc;
+				scene->props[i]->subsets[s]->Technique->GetDesc( &techDesc );
+				UINT stride = sizeof( Ovgl::Vertex );
+				UINT offset = 0;
+				Inst->D3DDevice->IASetVertexBuffers( 0, 1, &scene->props[i]->mesh->VertexBuffer, &stride, &offset );
+				for( UINT p = 0; p < techDesc.Passes; ++p )
+				{
+					scene->props[i]->subsets[s]->Technique->GetPassByIndex( p )->Apply(0);
+					Inst->D3DDevice->IASetIndexBuffer( scene->props[i]->mesh->IndexBuffers[s], DXGI_FORMAT_R32_UINT, 0 );
+					D3D10_BUFFER_DESC Buffer_Desc;
+					scene->props[i]->mesh->IndexBuffers[s]->GetDesc(&Buffer_Desc);
+					Inst->D3DDevice->DrawIndexed( Buffer_Desc.ByteWidth / sizeof(DWORD), 0, 0 );
+				}
 			}
-			scene->props[i]->subsets[s]->Bones->SetMatrixArray( (float*)&scene->props[i]->matrices[0], 0, Bone_Count );
-			Inst->D3DDevice->IASetInputLayout( scene->props[i]->subsets[s]->Layout );
-			D3D10_TECHNIQUE_DESC techDesc;
-			scene->props[i]->subsets[s]->Technique->GetDesc( &techDesc );
-			UINT stride = sizeof( Ovgl::Vertex );
-			UINT offset = 0;
-			Inst->D3DDevice->IASetVertexBuffers( 0, 1, &scene->props[i]->mesh->VertexBuffer, &stride, &offset );
-			for( UINT p = 0; p < techDesc.Passes; ++p )
+		}
+
+		for( DWORD i = 0; i < scene->objects.size(); i++ )
+		{
+			for( DWORD s = 0; s < scene->objects[i]->mesh->subset_count; s++)
 			{
-				scene->props[i]->subsets[s]->Technique->GetPassByIndex( p )->Apply(0);
-				Inst->D3DDevice->IASetIndexBuffer( scene->props[i]->mesh->IndexBuffers[s], DXGI_FORMAT_R32_UINT, 0 );
-				D3D10_BUFFER_DESC Buffer_Desc;
-				scene->props[i]->mesh->IndexBuffers[s]->GetDesc(&Buffer_Desc);
-				Inst->D3DDevice->DrawIndexed( Buffer_Desc.ByteWidth / sizeof(DWORD), 0, 0 );
+				scene->objects[i]->subsets[s]->View->SetMatrix( (float*)&viewMat );
+				scene->objects[i]->subsets[s]->ViewPos->SetFloatVector( (float*)&view->getPose()[3] );
+				scene->objects[i]->subsets[s]->Projection->SetMatrix( (float*)&projMat );
+				scene->objects[i]->subsets[s]->Light_Count->SetInt( Light_Count );
+				if( Light_Count > 0 )
+				{
+					scene->objects[i]->subsets[s]->Lights->SetFloatVectorArray( &mLights[0], 0, Light_Count );
+					scene->objects[i]->subsets[s]->Light_Colors->SetFloatVectorArray( &LightColors[0], 0, Light_Count );
+				}
+				scene->objects[i]->subsets[s]->Bones->SetMatrixArray( (float*)&scene->objects[i]->getPose(), 0, 1 );
+				Inst->D3DDevice->IASetInputLayout( scene->objects[i]->subsets[s]->Layout );
+				D3D10_TECHNIQUE_DESC techDesc;
+				scene->objects[i]->subsets[s]->Technique->GetDesc( &techDesc );
+				UINT stride = sizeof( Ovgl::Vertex );
+				UINT offset = 0;
+				Inst->D3DDevice->IASetVertexBuffers( 0, 1, &scene->objects[i]->mesh->VertexBuffer, &stride, &offset );
+				for( UINT p = 0; p < techDesc.Passes; ++p )
+				{
+					scene->objects[i]->subsets[s]->Technique->GetPassByIndex( p )->Apply(0);
+					Inst->D3DDevice->IASetIndexBuffer( scene->objects[i]->mesh->IndexBuffers[s], DXGI_FORMAT_R32_UINT, 0 );
+					D3D10_BUFFER_DESC Buffer_Desc;
+					scene->objects[i]->mesh->IndexBuffers[s]->GetDesc(&Buffer_Desc);
+					Inst->D3DDevice->DrawIndexed( Buffer_Desc.ByteWidth / sizeof(DWORD), 0, 0 );
+				}
 			}
 		}
 	}
 
-	for( DWORD i = 0; i < scene->objects.size(); i++ )
-	{
-		for( DWORD s = 0; s < scene->objects[i]->mesh->subset_count; s++)
-		{
-			scene->objects[i]->subsets[s]->View->SetMatrix( (float*)&viewMat );
-			scene->objects[i]->subsets[s]->Projection->SetMatrix( (float*)&projMat );
-			scene->objects[i]->subsets[s]->Light_Count->SetInt( Light_Count );
-			if( Light_Count > 0 )
-			{
-				scene->objects[i]->subsets[s]->Lights->SetFloatVectorArray( &mLights[0], 0, Light_Count );
-				scene->objects[i]->subsets[s]->Light_Colors->SetFloatVectorArray( &LightColors[0], 0, Light_Count );
-			}
-			scene->objects[i]->subsets[s]->Bones->SetMatrixArray( (float*)&scene->objects[i]->getPose(), 0, 1 );
-			Inst->D3DDevice->IASetInputLayout( scene->objects[i]->subsets[s]->Layout );
-			D3D10_TECHNIQUE_DESC techDesc;
-			scene->objects[i]->subsets[s]->Technique->GetDesc( &techDesc );
-			UINT stride = sizeof( Ovgl::Vertex );
-			UINT offset = 0;
-			Inst->D3DDevice->IASetVertexBuffers( 0, 1, &scene->objects[i]->mesh->VertexBuffer, &stride, &offset );
-			for( UINT p = 0; p < techDesc.Passes; ++p )
-			{
-				scene->objects[i]->subsets[s]->Technique->GetPassByIndex( p )->Apply(0);
-				Inst->D3DDevice->IASetIndexBuffer( scene->objects[i]->mesh->IndexBuffers[s], DXGI_FORMAT_R32_UINT, 0 );
-				D3D10_BUFFER_DESC Buffer_Desc;
-				scene->objects[i]->mesh->IndexBuffers[s]->GetDesc(&Buffer_Desc);
-				Inst->D3DDevice->DrawIndexed( Buffer_Desc.ByteWidth / sizeof(DWORD), 0, 0 );
-			}
-		}
-	}
+
+
+
+
+
+
+
 
 	std::vector<D3DX10_SPRITE*> Sprites;
 	for(UINT i = 0; i < Interfaces.size(); i++)
@@ -300,12 +313,12 @@ void Ovgl::Interface::UpdateText()
 	{
 		AdjustedRect.bottom = (LONG)Rect.z;
 	}
-
+	
 	RECT TextRect;
 	TextRect.left = 0;
 	TextRect.top = 0;
-	TextRect.right = (LONG)(Rect.y - Rect.w);
-	TextRect.bottom = (LONG)(Rect.z - Rect.x);
+	TextRect.right = (LONG)(AdjustedRect.right - AdjustedRect.left);
+	TextRect.bottom = (LONG)(AdjustedRect.bottom - AdjustedRect.top);
 	HDC hDC = CreateCompatibleDC(NULL);
 	byte* pSrcData;
 	BITMAPINFO bmi = { sizeof( BITMAPINFOHEADER ), TextRect.right, -TextRect.bottom, 1, 32, BI_RGB, 0, 0, 0, 0, 0};

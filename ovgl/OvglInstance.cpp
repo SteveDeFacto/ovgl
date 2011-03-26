@@ -50,6 +50,7 @@ Ovgl::Effect* BuildDefaultEffect( Ovgl::Instance* inst )
 	"float4 Diffuse = float4( 0.75f, 0.75f, 0.75f, 1.0f );"
 	"float Environment_map_intensity = 1.0f;"
 	"int Light_Count			: LIGHTCOUNT;"
+	"float4 ViewPos				: VIEWPOS;"
 	"float4 Lights[255]			: LIGHTARRAY;"
 	"float4 LightColors[255]	: LIGHTCOLORARRAY;"
 	"float4x4 World				: WORLD;"
@@ -88,13 +89,13 @@ Ovgl::Effect* BuildDefaultEffect( Ovgl::Instance* inst )
 	"}"
 	"float4 PS( PS_INPUT In) : SV_Target"
 	"{"
-	"	float4 light = float4( 0, 0, 0, 0 );"
+	"	float4 light = float4( 0, 0, 0, 0 );" 
 	"	float txWidth, txHeight;"
 	"	txEnvironment.GetDimensions(txWidth, txHeight);"
 	"	float4 envColor = float4( 0, 0, 0, 1 );"
 	"	if(txWidth > 0)"
 	"	{"
-	"		envColor = Environment_map_intensity * txEnvironment.Sample( envSampler, reflect( normalize( In.posWS - View[3] ).xyz, In.norm.xyz ));"
+	"		envColor = Environment_map_intensity * txEnvironment.Sample( envSampler, reflect( normalize( In.posWS.xyz - ViewPos.xyz ), In.norm.xyz ) );"
 	"	}"
 	"	txDiffuse.GetDimensions(txWidth, txHeight);"
 	"	float4 texColor = float4( 1, 1, 1, 1 );"
@@ -134,6 +135,7 @@ Ovgl::Effect* BuildDefaultEffect( Ovgl::Instance* inst )
 	effect->Light_Colors = effect->SFX->GetVariableBySemantic( "LIGHTCOLORARRAY" )->AsVector();
     effect->Bones = effect->SFX->GetVariableBySemantic( "BONEARRAY" )->AsMatrix();
     effect->View = effect->SFX->GetVariableBySemantic( "WORLDVIEW" )->AsMatrix();
+	effect->ViewPos = effect->SFX->GetVariableBySemantic( "VIEWPOS" )->AsVector();
 	effect->Projection = effect->SFX->GetVariableBySemantic( "PROJECTION" )->AsMatrix();
 
 	// Get technique.
@@ -224,6 +226,7 @@ Ovgl::Effect* BuildSkyboxEffect( Ovgl::Instance* inst )
 	effect->Light_Colors = effect->SFX->GetVariableBySemantic( "LIGHTCOLORARRAY" )->AsVector();
     effect->Bones = effect->SFX->GetVariableBySemantic( "BONEARRAY" )->AsMatrix();
     effect->View = effect->SFX->GetVariableBySemantic( "WORLDVIEW" )->AsMatrix();
+	effect->ViewPos = effect->SFX->GetVariableBySemantic( "VIEWPOS" )->AsVector();
 	effect->Projection = effect->SFX->GetVariableBySemantic( "PROJECTION" )->AsMatrix();
 
 	// Get technique.
@@ -326,6 +329,7 @@ Ovgl::RenderTarget* Ovgl::Instance::CreateRenderTarget( HWND hWnd, RECT* rect, D
 	rendertarget->RenderTargetView = NULL;
 	rendertarget->DepthStencilView = NULL;
 	rendertarget->hWnd = hWnd;
+	rendertarget->view = NULL;
 	DXGI_SWAP_CHAIN_DESC sd;
 	ZeroMemory( &sd, sizeof( sd ) );
 	sd.BufferCount = 1;

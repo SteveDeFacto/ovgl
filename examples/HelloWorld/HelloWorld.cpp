@@ -24,13 +24,49 @@
 HWND						hWnd;
 Ovgl::Instance*				Inst;
 Ovgl::RenderTarget*			RenderTarget;
-Ovgl::Scene*				Scene;
-Ovgl::Camera*				Camera;
+Ovgl::Interface*			Text;
+bool						g_Active;
+bool						g_Sizing;
 
 LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
    switch( message )
     {
+        case WM_KEYDOWN:
+		{
+            if( wParam == VK_ESCAPE )
+                PostQuitMessage( 0 );
+            break;
+		}
+
+		case WM_ENTERSIZEMOVE:
+		{
+			g_Sizing = true;
+			break;
+		}
+
+		case WM_EXITSIZEMOVE:
+		{
+			g_Sizing = false;
+			break;
+		}
+
+        case WM_ACTIVATEAPP:
+		{
+			if( !g_Sizing )
+			{
+				if( wParam )
+				{
+					g_Active = true;
+				}
+				else
+				{
+					g_Active = false;
+				}
+			}
+			break;
+		}
+
         case WM_ACTIVATE:
 		{
 			if( RenderTarget->GetFullscreen() )
@@ -56,6 +92,7 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 
 int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
+	// Create a window.
     WNDCLASSEX wcex;
 	ZeroMemory( &wcex, sizeof( wcex ) );
     wcex.cbSize = sizeof( WNDCLASSEX );
@@ -65,34 +102,37 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
     wcex.hCursor = LoadCursor( NULL, IDC_ARROW );
     wcex.lpszClassName = L"DefaultWindowClass";
     RegisterClassEx( &wcex );
+	hWnd = NULL;
 	hWnd = CreateWindow( L"DefaultWindowClass", L"test", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wcex.hInstance, NULL );
-	UnregisterClass( L"DefaultWindowClass", NULL );
 	ShowWindow( hWnd, SW_SHOW );
+	
+	// Create an instance of Ovgl
 	Inst = Ovgl::Create( 0 );
+
+	// Create a render target form the window
 	RenderTarget = Inst->CreateRenderTarget(hWnd, NULL, 0);
-	Scene = Inst->CreateScene( "", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
-	Scene->Load( "..\\..\\data\\meshes\\test3.bin", 0 );
-	Camera = Scene->CreateCamera(  &Ovgl::MatrixTranslation( 0.0f, 0.0f, 5.0f ) );
-	RenderTarget->view = Camera;
-	DWORD previousTime = timeGetTime();
+
+	// Create add some text to the render target
+	RenderTarget->CreateText("Hello World!", &Ovgl::Vector4Set( 0.0f, 0.0f, 0.999f, 0.999f ));
+
 	// Main message loop
     MSG msg = {0};
     while( WM_QUIT != msg.message )
     {
         if( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
         {
-            TranslateMessage( &msg ); 
+            TranslateMessage( &msg );
             DispatchMessage( &msg );
         }
         else
         {
-            DWORD currentTime = timeGetTime();
-			DWORD elapsedTime = currentTime - previousTime;
-			Scene->Update(elapsedTime);
-			RenderTarget->Update();
-			previousTime = currentTime;
+			// Render
+			RenderTarget->Render();
         }
     }
+
+	// Release memory
 	Inst->Release();
+	UnregisterClass( L"DefaultWindowClass", NULL );
 	return 0;
 }
