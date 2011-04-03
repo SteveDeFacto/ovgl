@@ -80,6 +80,14 @@ namespace Ovgl
 		class RenderTarget;
 		class Effect;
 
+		class __declspec(dllexport) Texture
+		{
+		public:
+			Instance*							Inst;
+			ID3D10ShaderResourceView*			SRV;
+			void Release();
+		};
+
 		class __declspec(dllexport) Effect
 		{
 		public:
@@ -98,7 +106,7 @@ namespace Ovgl
 			ID3D10EffectShaderResourceVariable*	Shadow_Maps;
 
 			void set_variable(const std::string& variable, UINT count, float data[] );
-			void set_texture(const std::string& variable, const std::string& file);
+			void set_texture(const std::string& variable, Texture* texture);
 			void Release();
 		};
 
@@ -137,11 +145,13 @@ namespace Ovgl
 			std::vector<Scene*>						Scenes;
 			std::vector<Effect*>					Effects;
 			std::vector<Mesh*>						Meshes;
+			std::vector<Texture*>					Textures;
 			RenderTarget*							CreateRenderTarget( HWND window, RECT* rect, DWORD flags );
 			Scene*									CreateScene( const std::string& file, Matrix44* offset, DWORD flags );
 			AudioBuffer*							CreateAudioBuffer( const std::string& file );
 			Mesh*									CreateMesh( const std::string& file );
 			Effect*									CreateEffect( const std::string& file );
+			Texture*								CreateTexture(const std::string& file);
 			void									Release();
 		};
 	

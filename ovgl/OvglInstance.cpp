@@ -76,13 +76,18 @@ Ovgl::Effect* BuildDefaultEffect( Ovgl::Instance* inst )
 	"{"
 	"	PS_INPUT Out = (PS_INPUT)0;"
 	"   float4x4 skinTransform = 0;"
+	"	float3x3 normTransform = 0;"
 	"   skinTransform += Bones[In.bi.x] * In.bw.x;"
 	"   skinTransform += Bones[In.bi.y] * In.bw.y;"
 	"   skinTransform += Bones[In.bi.z] * In.bw.z;"
 	"   skinTransform += Bones[In.bi.w] * In.bw.w;"
+	"   normTransform += (float3x3)(Bones[In.bi.x] * In.bw.x);"
+	"   normTransform += (float3x3)(Bones[In.bi.y] * In.bw.y);" 
+	"   normTransform += (float3x3)(Bones[In.bi.z] * In.bw.z);"
+	"   normTransform += (float3x3)(Bones[In.bi.w] * In.bw.w);"
 	"   Out.posVS = mul(float4(In.pos, 1), skinTransform);"
 	"	Out.posWS = Out.posVS;"
-	"	Out.norm = normalize(mul(float4(In.norm, 0), skinTransform));"
+	"	Out.norm = float4(mul(In.norm, normTransform), 0);"
 	"   Out.posVS = mul(mul(Out.posVS, View), Projection);"
 	"	Out.tex = In.tex;"
 	"	return Out;"
@@ -248,6 +253,15 @@ Ovgl::Effect* BuildSkyboxEffect( Ovgl::Instance* inst )
 
 	//Return effect.
 	return effect;
+}
+
+Ovgl::Texture* Ovgl::Instance::CreateTexture(const std::string& file)
+{
+	Ovgl::Texture* texture = new Ovgl::Texture; 
+	texture->Inst = this;
+	D3DX10CreateShaderResourceViewFromFileA( D3DDevice, file.c_str(), NULL, NULL, &texture->SRV, NULL);
+	Textures.push_back(texture);
+	return texture;
 }
 
 Ovgl::Effect* Ovgl::Instance::CreateEffect( const std::string& file )
@@ -743,13 +757,9 @@ void Ovgl::Effect::set_variable(const std::string& variable, UINT count, float d
 	SFX->GetVariableByName( variable.c_str() )->SetRawValue( data, 0, count * 4 );
 }
 
-void Ovgl::Effect::set_texture(const std::string& variable, const std::string& file)
+void Ovgl::Effect::set_texture(const std::string& variable, Texture* texture)
 {
-	ID3D10ShaderResourceView* srvTexture;
-	std::wstring wfilename;
-	wfilename.assign(file.begin(), file.end());
-	D3DX10CreateShaderResourceViewFromFile( Inst->D3DDevice, wfilename.c_str(), NULL, NULL, &srvTexture, NULL);
-	SFX->GetVariableByName( variable.c_str() )->AsShaderResource()->SetResource(srvTexture);
+	SFX->GetVariableByName( variable.c_str() )->AsShaderResource()->SetResource(texture->SRV);
 }
 
 void Ovgl::Effect::Release()
