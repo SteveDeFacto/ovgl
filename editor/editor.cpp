@@ -30,6 +30,8 @@ Ovgl::Scene*				Scene;
 Ovgl::Actor*				Actor;
 Ovgl::Camera*				Camera;
 Ovgl::Emitter*				Emitter;
+Ovgl::Texture*				Texture1;
+Ovgl::Texture*				Texture2;
 bool						g_Active;
 bool						g_Sizing;
 
@@ -118,9 +120,11 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	Camera = Scene->CreateCamera(&Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
 	RenderTarget->view = Camera;
 	Music->CreateAudioInstance( NULL );
-	Inst->SkyboxEffect->set_texture( "txEnvironment", "..\\media\\textures\\Skybox.dds");
-	Inst->DefaultEffect->set_texture( "txEnvironment", "..\\media\\textures\\Skybox.dds");
-	Inst->DefaultEffect->set_texture( "txDiffuse", "..\\media\\textures\\Grass.dds");
+	Texture1 = Inst->CreateTexture("..\\media\\textures\\Skybox.dds");
+	Texture2 = Inst->CreateTexture("..\\media\\textures\\Grass.dds");
+	Inst->SkyboxEffect->set_texture( "txEnvironment", Texture1);
+	Inst->DefaultEffect->set_texture( "txEnvironment", Texture1);
+	Inst->DefaultEffect->set_texture( "txDiffuse", Texture2);
 	float data[4] = { 0.25f, 0.25f, 0.25f, 1.0f };
 	Inst->DefaultEffect->set_variable( "Ambient", 4, data);
 	DWORD previousTime = timeGetTime();

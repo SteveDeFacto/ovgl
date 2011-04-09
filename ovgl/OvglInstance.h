@@ -79,6 +79,7 @@ namespace Ovgl
 		class Interface;
 		class RenderTarget;
 		class Effect;
+		class MediaLibrary;
 
 		class __declspec(dllexport) Texture
 		{
@@ -142,16 +143,9 @@ namespace Ovgl
 			std::vector< std::string >				ErrorLog;
 			std::string								TextCursor;
 			std::vector<RenderTarget*>				RenderTargets;
-			std::vector<Scene*>						Scenes;
-			std::vector<Effect*>					Effects;
-			std::vector<Mesh*>						Meshes;
-			std::vector<Texture*>					Textures;
+			std::vector<MediaLibrary*>				MediaLibraries;
 			RenderTarget*							CreateRenderTarget( HWND window, RECT* rect, DWORD flags );
-			Scene*									CreateScene( const std::string& file, Matrix44* offset, DWORD flags );
-			AudioBuffer*							CreateAudioBuffer( const std::string& file );
-			Mesh*									CreateMesh( const std::string& file );
-			Effect*									CreateEffect( const std::string& file );
-			Texture*								CreateTexture(const std::string& file);
+			MediaLibrary*							CreateMediaLibrary( const std::string& file );
 			void									Release();
 		};
 	

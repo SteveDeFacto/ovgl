@@ -113,6 +113,8 @@ namespace Ovgl
 			NxActor* actor;
 			void setPose( Matrix44* matrix );
 			Matrix44 getPose();
+			void SetFlags( DWORD flags );
+			DWORD GetFlags();
 			void Release();
 		};
 

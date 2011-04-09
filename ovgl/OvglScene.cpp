@@ -19,6 +19,7 @@
 #include "OvglIncludes.h"
 #include "OvglInstance.h"
 #include "OvglMath.h"
+#include "OvglMedia.h"
 #include "OvglAudio.h"
 #include "OvglScene.h"
 #include "OvglMesh.h"
@@ -60,12 +61,6 @@ class g_BoneContactReport : public NxUserContactReport
 	}
 
 } g_BoneContactReport;
-
-
-bool FrameCompare ( Ovgl::Frame* frame1, Ovgl::Frame* frame2 )
-{
-   return frame1->time < frame2->time;
-}
 
 Ovgl::Camera* Ovgl::Scene::CreateCamera( Ovgl::Matrix44* matrix )
 {
@@ -123,14 +118,20 @@ Ovgl::Prop* Ovgl::Scene::CreateProp( Ovgl::Mesh* mesh, Ovgl::Matrix44* matrix )
 	prop->scene = this;
 	prop->mesh = mesh;
 	prop->subsets.resize(mesh->subset_count);
+	for( DWORD s = 0; s < prop->subsets.size(); s++)
+	{
+		prop->subsets[s] = Inst->DefaultEffect;
+	}
 	for( DWORD i = 0; i < mesh->bones.size(); i++ )
 	{
 		NxActorDesc actorDesc;
 		NxConvexShapeDesc ConvexShapeDesc;
 		ConvexShapeDesc.meshData = mesh->bones[i]->convex;
+//		ConvexShapeDesc.skinWidth = 0.0f;
 		actorDesc.shapes.pushBack( &ConvexShapeDesc );
 		NxBodyDesc bodyDesc;
 		bodyDesc.solverIterationCount = 8;
+		bodyDesc.contactReportThreshold = 10.0f;
 		actorDesc.body = &bodyDesc;
 		Ovgl::Matrix44 tmatrix;
 		tmatrix = mesh->bones[i]->matrix * (*matrix);
@@ -142,23 +143,19 @@ Ovgl::Prop* Ovgl::Scene::CreateProp( Ovgl::Mesh* mesh, Ovgl::Matrix44* matrix )
 		cmesh->actor->getShapes()[0]->setGroup(1);
 		prop->bones.push_back(cmesh);
 	}
+
 	prop->joints.resize(prop->bones.size());
 	prop->CreateJoints( prop->mesh->root_bone );
-	physics_scene->setUserContactReport(&g_BoneContactReport);
 	for(UINT np = 0; np < prop->bones.size(); np++)
 	{
 		for(UINT nq = 0; nq < prop->bones.size(); nq++)
 		{
 			if( np!=nq )
 			{
-				physics_scene->setActorPairFlags( *prop->bones[np]->actor, *prop->bones[nq]->actor, NX_NOTIFY_ON_START_TOUCH | NX_NOTIFY_ON_END_TOUCH | NX_NOTIFY_ON_TOUCH );
+				physics_scene->setActorPairFlags( *prop->bones[np]->actor, *prop->bones[nq]->actor, NX_IGNORE_PAIR);
 			}
 		}
 	}
-	physics_scene->simulate( 0.05f );
-	physics_scene->flushStream();
-	physics_scene->fetchResults(NX_RIGID_BODY_FINISHED, true);
-	physics_scene->setUserContactReport(NULL);
 	this->props.push_back( prop );
 	prop->matrices.resize( prop->bones.size() );
 	return prop;
@@ -170,6 +167,10 @@ Ovgl::Object* Ovgl::Scene::CreateObject( Ovgl::Mesh* mesh, Ovgl::Matrix44* matri
 	object->scene = this;
 	object->mesh = mesh;
 	object->subsets.resize(mesh->subset_count);
+	for( DWORD s = 0; s < object->subsets.size(); s++)
+	{
+		object->subsets[s] = Inst->DefaultEffect;
+	}
 	NxActorDesc actorDesc;
 	NxTriangleMeshShapeDesc TriangleMeshShapeDesc;
 	NxTriangleMeshDesc TriangleMeshDesc;    
@@ -258,6 +259,34 @@ Ovgl::Actor* Ovgl::Scene::CreateActor( Ovgl::Mesh* mesh, float radius, float hei
 	actors.push_back(actor);
 	return actor;
 };
+
+Ovgl::Joint* Ovgl::Scene::CreateJoint( Ovgl::CMesh* obj1, Ovgl::CMesh* obj2, Ovgl::Vector3* anchor )
+{
+	Ovgl::Joint* joint = new Ovgl::Joint;
+	joint->scene = this;
+	joint->obj[0] = obj1;
+	joint->obj[1] = obj2;
+	NxD6JointDesc d6Desc;
+	d6Desc.xMotion = NX_D6JOINT_MOTION_LOCKED;
+	d6Desc.yMotion = NX_D6JOINT_MOTION_LOCKED;
+	d6Desc.zMotion = NX_D6JOINT_MOTION_LOCKED;
+	d6Desc.twistMotion = NX_D6JOINT_MOTION_LOCKED;
+	d6Desc.swing1Motion = NX_D6JOINT_MOTION_LOCKED;
+	d6Desc.swing2Motion = NX_D6JOINT_MOTION_LOCKED;
+	d6Desc.actor[0] = obj1->actor;
+	d6Desc.actor[1] = obj2->actor;
+	if(anchor)
+	{
+		d6Desc.setGlobalAnchor( NxVec3(anchor->x, anchor->y, anchor->z) );
+	}
+	else
+	{
+		d6Desc.setGlobalAnchor( obj1->actor->getGlobalPosition() );
+	}
+	joint->joint = (NxD6Joint*)physics_scene->createJoint( d6Desc )->is(NX_JOINT_D6);
+	joints.push_back(joint);
+	return joint;
+}
 
 void Ovgl::Actor::Jump( float force )
 {
@@ -645,583 +674,7 @@ void Ovgl::Scene::Update( DWORD UpdateTime )
 	physics_scene->fetchResults(NX_RIGID_BODY_FINISHED, true);
 };
 
-void Ovgl::Scene::Save( const std::string& file, DWORD flags )
-{
-	if(!file.empty())
-	{
-		// Open file.
-		FILE *output;
-		fopen_s(&output, file.c_str(),"wb");
-	
-		// Get a list of meshes used in this scene.
-		std::vector<Ovgl::Mesh*> SceneMeshes;
-		for( DWORD m = 0; m < Inst->Meshes.size(); m++ )
-		{
-			for( DWORD p = 0; p < props.size(); p++ )
-			{
-				if( props[p]->mesh == Inst->Meshes[m] )
-				{
-					SceneMeshes.push_back( Inst->Meshes[m] );
-					goto end;
-				}
-			}
-			for( DWORD o = 0; o < objects.size(); o++ )
-			{
-				if( objects[o]->mesh == Inst->Meshes[m] )
-				{
-					SceneMeshes.push_back( Inst->Meshes[m] );
-					goto end;
-				}
-			}
-			for( DWORD a = 0; a < actors.size(); a++ )
-			{
-				if( actors[a]->mesh == Inst->Meshes[m] )
-				{
-					SceneMeshes.push_back( Inst->Meshes[m] );
-					goto end;
-				}
-			}
-			end:;
-		}
-	
-		// Write the number of meshes in this scene to the file.
-		DWORD mesh_count = SceneMeshes.size();
-		fwrite( &mesh_count, 4, 1, output ); 
-		for( DWORD m = 0; m < mesh_count; m++ )
-		{
-			// Get mesh variables.
-			DWORD vertex_count = SceneMeshes[m]->vertices.size();
-			DWORD face_count = SceneMeshes[m]->faces.size();
-			DWORD bone_count = SceneMeshes[m]->bones.size();
-	
-			// Write the number of vertices, faces, and bones.
-			fwrite( &vertex_count, 4, 1, output );
-			fwrite( &face_count, 4, 1, output );
-			fwrite( &bone_count, 4, 1, output );
-			
-			// Write the vertices, faces, and bones.
-			fwrite( &SceneMeshes[m]->vertices[0], sizeof(Ovgl::Vertex), vertex_count, output);
-			fwrite( &SceneMeshes[m]->faces[0], sizeof(Ovgl::Face), face_count, output);
-			fwrite( &SceneMeshes[m]->attributes[0], sizeof(DWORD), face_count, output);
 
-			// Write bones.
-			for( DWORD i = 0; i < bone_count; i++ )
-			{
-				vertex_count = SceneMeshes[m]->bones[i]->mesh->vertices.size();
-				face_count = SceneMeshes[m]->bones[i]->mesh->faces.size();
-				fwrite( &vertex_count, 4, 1, output );
-				fwrite( &face_count, 4, 1, output );
-				if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it. 
-				{
-					fwrite( &SceneMeshes[m]->bones[i]->mesh->vertices[0], sizeof(Ovgl::Vertex), vertex_count, output );
-					fwrite( &SceneMeshes[m]->bones[i]->mesh->faces[0], sizeof(Ovgl::Face), face_count, output );
-				}
-				fwrite( &SceneMeshes[m]->bones[i]->matrix, sizeof(Ovgl::Matrix44), 1, output );
-				fwrite( &SceneMeshes[m]->bones[i]->length, sizeof(float), 1, output );
-				fwrite( &SceneMeshes[m]->bones[i]->min, sizeof(D3DXVECTOR3), 1, output );
-				fwrite( &SceneMeshes[m]->bones[i]->max, sizeof(D3DXVECTOR3), 1, output );
-				fwrite( &SceneMeshes[m]->bones[i]->parent, sizeof(DWORD), 1, output );
-				DWORD child_count = SceneMeshes[m]->bones[i]->childen.size();
-				fwrite( &child_count, sizeof(DWORD), 1, output );
-				if(child_count) fwrite( &SceneMeshes[m]->bones[i]->childen[0], sizeof(DWORD), child_count, output );
-			}
-
-			// Write animations.
-			DWORD frame_count = SceneMeshes[m]->keyframes.size();
-			fwrite( &frame_count, 4, 1, output );
-			for( DWORD f = 0; f < frame_count; f++ )
-			{
-				fwrite( &SceneMeshes[m]->keyframes[f]->time, sizeof(DWORD), 1, output );
-				DWORD key_count = SceneMeshes[m]->keyframes[f]->keys.size();
-				fwrite( &key_count, sizeof(DWORD), 1, output );
-				if( key_count > 0)
-				{
-					fwrite( &SceneMeshes[m]->keyframes[f]->keys[0], sizeof(Ovgl::Key), key_count, output );
-				}
-			}
-		}
-		DWORD object_count = props.size() + objects.size();
-		fwrite( &object_count, 4, 1, output );
-		for( DWORD p = 0; p < props.size(); p++ )
-		{
-			Ovgl::Matrix44 matrix = props[p]->getPose();
-			fwrite( &matrix, sizeof(Ovgl::Matrix44), 1, output );
-			DWORD mesh_index = 0;
-			for( DWORD sm = 0; sm < SceneMeshes.size(); sm++ )
-			{
-				if( props[p]->mesh == SceneMeshes[sm] )
-				{
-					mesh_index = sm;
-				}
-			}
-			fwrite( &mesh_index, 4, 1, output );
-		}
-		for( DWORD o = 0; o < objects.size(); o++ )
-		{
-			Ovgl::Matrix44 matrix = objects[o]->getPose();
-			fwrite( &matrix, sizeof(Ovgl::Matrix44), 1, output );
-			DWORD mesh_index = 0;
-			for( DWORD sm = 0; sm < SceneMeshes.size(); sm++ )
-			{
-				if( objects[o]->mesh == SceneMeshes[sm] )
-				{
-					mesh_index = sm;
-				}
-			}
-			fwrite( &mesh_index, 4, 1, output );
-		}
-		DWORD light_count = lights.size();
-		fwrite( &light_count, 4, 1, output );
-		for( DWORD l = 0; l < light_count; l++ )
-		{
-			Ovgl::Matrix44 matrix = lights[l]->getPose();
-			fwrite( &matrix, sizeof(Ovgl::Matrix44), 1, output );
-		}
-		DWORD camera_count = cameras.size();
-		fwrite( &camera_count, 4, 1, output );
-		for( DWORD c = 0; c < camera_count; c++ )
-		{
-			Ovgl::Matrix44 matrix = cameras[c]->getPose();
-			fwrite( &matrix, sizeof(Ovgl::Matrix44), 1, output );
-		}
-	
-		// Close file.
-		fclose(output);
-	}
-}
-
-void Ovgl::Scene::Load( const std::string& file, DWORD flags )
-{
-	if(!file.empty())
-	{
-		// Get the number of meshes currently in memory so we can offset the indices into the array.
-		DWORD mesh_offset = Inst->Meshes.size();
-	
-		// Open file.	
-		FILE *input = NULL;
-		fopen_s(&input, file.c_str(),"rb");
-
-		// If file was unable to be opened present error message to debug output and 
-		if ( input == NULL )
-		{
-			std::wstring wfile;
-			wfile = L"Ovgl::Instance::CreateAudioBuffer was unable to open the file ";
-			wfile.append(file.begin(), file.end());
-			OutputDebugString( wfile.c_str() );
-			return;
-		}
-
-		//Get number of meshes.
-		DWORD mesh_count;
-		fread( &mesh_count, 4, 1, input );
-		for( DWORD m = 0; m < mesh_count; m++ )
-		{
-			// Specify mesh variables.
-			Ovgl::Mesh* mesh = new Ovgl::Mesh;
-			mesh->Inst = Inst;
-			DWORD vertex_count;
-			DWORD face_count;
-			DWORD bone_count;
-			DWORD child_count;
-			DWORD frame_count;
-			DWORD key_count;
-			std::vector<Ovgl::Vector3> bone_vertices;
-			std::vector<Ovgl::Face> bone_faces;
-	
-			// Get number of vertices, faces, and bones.
-			fread( &vertex_count, 4, 1, input ); 
-			fread( &face_count, 4, 1, input ); 
-			fread( &bone_count, 4, 1, input ); 
-		
-			// Resize arrays.
-			mesh->vertices.resize(vertex_count);
-			mesh->faces.resize(face_count);
-			mesh->attributes.resize(face_count);
-			mesh->bones.resize(bone_count);
-		
-			// Load vertices, indices and attributes.
-			fread(&mesh->vertices[0], sizeof(Ovgl::Vertex), vertex_count, input);
-			fread(&mesh->faces[0], sizeof(Ovgl::Face), face_count, input);
-			fread(&mesh->attributes[0], sizeof(DWORD), face_count, input);
-
-			// Load bones.
-			for( DWORD i = 0; i < bone_count; i++ )
-			{
-				mesh->bones[i] = new Ovgl::Bone;
-				mesh->bones[i]->mesh = new Ovgl::Mesh;
-				mesh->bones[i]->convex = NULL;
-				fread( &vertex_count, 4, 1, input );
-				fread( &face_count, 4, 1, input );
-				if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it. 
-				{
-					mesh->bones[i]->mesh->vertices.resize(vertex_count);
-					mesh->bones[i]->mesh->faces.resize(face_count);
-					fread( &mesh->bones[i]->mesh->vertices[0], sizeof(Ovgl::Vertex), vertex_count, input );
-					fread( &mesh->bones[i]->mesh->faces[0], sizeof(Ovgl::Face), face_count, input );
-				}
-				fread( &mesh->bones[i]->matrix, sizeof(Ovgl::Matrix44), 1, input );
-				fread( &mesh->bones[i]->length, sizeof(float), 1, input );
-				fread( &mesh->bones[i]->min, sizeof(D3DXVECTOR3), 1, input );
-				fread( &mesh->bones[i]->max, sizeof(D3DXVECTOR3), 1, input );
-				fread( &mesh->bones[i]->parent, sizeof(DWORD), 1, input );
-				fread( &child_count, sizeof(DWORD), 1, input );
-				mesh->bones[i]->childen.resize(child_count);
-				if(child_count) fread( &mesh->bones[i]->childen[0], sizeof(DWORD), child_count, input );
-			}
-	
-			// Get animations.
-			fread( &frame_count, 4, 1, input ); 
-			mesh->keyframes.resize( frame_count );
-			for( DWORD f = 0; f < frame_count; f++ )
-			{
-				mesh->keyframes[f] = new Frame;
-				fread( &mesh->keyframes[f]->time, sizeof(DWORD), 1, input );
-				fread( &key_count, sizeof(DWORD), 1, input );
-				if( key_count > 0)
-				{
-					mesh->keyframes[f]->keys.resize(key_count);
-					fread( &mesh->keyframes[f]->keys[0], sizeof(Ovgl::Key), key_count, input );
-				}
-			}
-	
-			// Nullify buffer addresses.
-			mesh->VertexBuffer = NULL;
-			mesh->IndexBuffers = NULL;
-
-			// Update buffers.
-			mesh->Update();
-	
-			Inst->Meshes.push_back(mesh);
-		}
-		DWORD object_count;
-		fread( &object_count, 4, 1, input );
-		for( DWORD o = 0; o < object_count; o++ )
-		{
-			// Get the pose of this object.
-			Ovgl::Matrix44 matrix;
-			fread( &matrix, sizeof(Ovgl::Matrix44), 1, input );
-			DWORD mesh_index;
-			fread( &mesh_index, 4, 1, input );
-			if( Inst->Meshes[mesh_index + mesh_offset]->bones.size() > 0 )
-			{
-				Ovgl::Prop* prop = CreateProp( Inst->Meshes[mesh_index + mesh_offset], &matrix );
-				prop->subsets[0] = Inst->DefaultEffect;
-			}
-			else
-			{
-				Ovgl::Object* object = CreateObject( Inst->Meshes[mesh_index + mesh_offset], &matrix );
-				object->subsets[0] = Inst->DefaultEffect;
-			}
-		}
-		DWORD light_count;
-		fread( &light_count, 4, 1, input );
-		for( DWORD l = 0; l < light_count; l++ )
-		{
-			// Get the pose of this light.
-			Ovgl::Matrix44 matrix;
-			fread( &matrix, sizeof(Ovgl::Matrix44), 1, input );
-			CreateLight( &matrix, &Ovgl::Vector4Set( 1.0f, 1.0f, 1.0f, 1.0f ) );
-		}
-		DWORD camera_count;
-		fread( &camera_count, 4, 1, input );
-		for( DWORD c = 0; c < camera_count; c++ )
-		{
-			// Get the pose of this camera.
-			Ovgl::Matrix44 matrix;
-			fread( &matrix, sizeof(Ovgl::Matrix44), 1, input );
-			CreateCamera( &matrix );
-		}
-		// Close file.
-		fclose(input);
-	}
-}
-
-void Ovgl::Scene::Import_FBX( const std::string& file, DWORD flags )
-{
-	if(!file.empty())
-	{
-		KFbxImporter* FBXImporter;
-		KFbxScene* FBXScene;
-		FBXImporter = KFbxImporter::Create( (KFbxSdkManager*)Inst->FBXManager, "" );
-		FBXScene = KFbxScene::Create( (KFbxSdkManager*)Inst->FBXManager, "" );
-		FBXImporter->Initialize( file.c_str(), -1, ((KFbxSdkManager*)Inst->FBXManager)->GetIOSettings() );
-		FBXImporter->Import( FBXScene );
-		KFbxAnimLayer* lCurrentAnimationLayer = KFbxGetSrc<KFbxAnimStack>( FBXScene, 0 )->GetMember(FBX_TYPE(KFbxAnimLayer), 0);
-		for(int n = 1; n < KFbxGetSrcCount<KFbxNode>(FBXScene); n++)
-		{
-			KFbxNodeAttribute::EAttributeType AttributeType = KFbxGetSrc<KFbxNode>(FBXScene, n)->GetNodeAttribute()->GetAttributeType();
-			if ( AttributeType == KFbxNodeAttribute::eMESH )
-			{
-				Ovgl::Matrix44 matrix;
-				KFbxVector4 localT, localR, localS;
-				KFbxNode* FBXNode = KFbxGetSrc<KFbxNode>(FBXScene, n);
-				KFbxMesh* FBXMesh = (KFbxMesh*) FBXNode->GetNodeAttribute();
-				localT = FBXNode->GetParent()->LclTranslation.Get();
-				localR = FBXNode->GetParent()->LclRotation.Get();
-				localS = FBXNode->GetParent()->LclScaling.Get();
-				KFbxDeformer *FBXDeformer = FBXMesh->GetDeformer(0);
-				if(FBXDeformer)
-				matrix = Ovgl::MatrixScaling( (float)localS[0], (float)localS[1], (float)localS[2] ) * Ovgl::MatrixRotationEuler( (float)((localR[0] + 90)  * OvglPi / 180), -(float)(localR[2] * OvglPi / 180), (float)(( localR[1] + 90) * OvglPi / 180) )  * Ovgl::MatrixTranslation( (float)localT[0], (float)localT[1], (float)localT[2] );
-				else
-				matrix = Ovgl::MatrixScaling( (float)localS[0], (float)localS[1], (float)localS[2] ) * Ovgl::MatrixRotationEuler( (float)((localR[0])  * OvglPi / 180), -(float)(localR[2] * OvglPi / 180), (float)(( localR[1] + 90) * OvglPi / 180) )  * Ovgl::MatrixTranslation( (float)localT[0], (float)localT[1], (float)localT[2] );
-				int ControlPointCount = FBXMesh->GetControlPointsCount();
-				KFbxVector4* ControlPoints = FBXMesh->GetControlPoints();
-				KFbxLayerElementUV* FBXLayerUVs = FBXMesh->GetLayer(0)->GetUVs();
-				Ovgl::Vertex ZeroVertex = {0};
-				std::vector<Ovgl::Vertex> vertices(ControlPointCount);
-				std::vector<std::vector<float>> weights(ControlPointCount);
-				std::vector<std::vector<float>> indices(ControlPointCount);
-				std::vector<Ovgl::Face> faces;
-				std::vector<DWORD> attributes;
-				std::vector<KFbxNode*> BoneNodes;
-				Ovgl::Mesh* mesh = new Ovgl::Mesh;
-				mesh->Inst = Inst;
-				mesh->vertices.resize(ControlPointCount);
-				if(FBXDeformer)
-				{
-					KFbxSkin *FBXSkin = KFbxCast<KFbxSkin>(FBXDeformer);
-					for (int c = 0; c < FBXSkin->GetClusterCount(); c++)
-					{
-						KFbxCluster* FBXCluster = FBXSkin->GetCluster(c);
-						KFbxCluster::ELinkMode lClusterMode = FBXCluster->GetLinkMode();
-						KFbxNode* FBXLinkNode = FBXCluster->GetLink();
-						BoneNodes.push_back(FBXLinkNode);
-						int CPIndexCount = FBXCluster->GetControlPointIndicesCount();
-						int* CPIndices = FBXCluster->GetControlPointIndices();
-						double* CPWeights = FBXCluster->GetControlPointWeights();
-						Ovgl::Bone* bone = new Ovgl::Bone;
-						bone->max.fromDoubles((double*)&FBXLinkNode->RotationMax.Get());
-						bone->min.fromDoubles((double*)&FBXLinkNode->RotationMin.Get());
-						KFbxXMatrix FBXLinkMatrix;
-						FBXCluster->GetTransformLinkMatrix(FBXLinkMatrix);
-						bone->matrix.fromDoubles( (double*)FBXLinkMatrix.Double44() );
-						bone->matrix = Ovgl::MatrixRotationZ(1.57f) * bone->matrix * Ovgl::MatrixRotationX(1.57f) * Ovgl::MatrixRotationY(1.57f);
-						bone->length = 1.0f;
-						bone->mesh = new Ovgl::Mesh;
-						bone->convex = NULL;
-						for(int i = 0; i < FBXLinkNode->GetChildCount(); i++)
-						{
-							for (int cc = 0; cc < FBXSkin->GetClusterCount(); cc++)
-							{
-								if(FBXSkin->GetCluster(cc)->GetLink() == FBXLinkNode->GetChild(i))
-								{
-									bone->childen.push_back(cc);
-								}
-							}
-						}
-						for (int cc = 0; cc < FBXSkin->GetClusterCount(); cc++)
-						{
-							if(FBXSkin->GetCluster(cc)->GetLink() == FBXLinkNode->GetParent())
-							{
-								bone->parent = cc;
-							}
-						}
-						mesh->bones.push_back(bone);
-						for (int v = 0 ; v < CPIndexCount ; v++)
-						{
-							weights[CPIndices[v]].push_back((float)CPWeights[v]);
-							indices[CPIndices[v]].push_back((float)c);
-						}
-					}
-				}
-				for (int w = 0; w < ControlPointCount; w++)
-				{
-					weights[w].resize(4);
-					indices[w].resize(4);
-					if(!FBXDeformer)
-						weights[w][0] = 1.0f;
-				}
-				for( int p = 0; p < FBXMesh->GetPolygonCount(); p++ )
-				{
-					DWORD FaceIndices[4];
-					for( int i = 0; i < FBXMesh->GetPolygonSize(p); i++ )
-					{
-						int vi = FBXMesh->GetPolygonVertex( p, i );
-						Ovgl::Vertex vertex = {0};
-						KFbxVector4 normal;
-						KFbxVector2 uv;
-						FBXMesh->GetPolygonVertexNormal( p, i, normal );
-						vertex.position.x = (float)ControlPoints[vi][1];
-						vertex.position.y = (float)ControlPoints[vi][2];
-						vertex.position.z = (float)ControlPoints[vi][0];
-						vertex.normal.x = (float)normal[1];
-						vertex.normal.y = (float)normal[2];
-						vertex.normal.z = (float)normal[0];
-						if( FBXLayerUVs )
-						{
-							int MappingMode = FBXLayerUVs->GetMappingMode();
-							int ReferenceMode = FBXLayerUVs->GetReferenceMode();
-							if( MappingMode == KFbxLayerElement::eBY_CONTROL_POINT )
-							{
-								if( ReferenceMode == KFbxLayerElement::eDIRECT )
-								{
-									uv = FBXLayerUVs->GetDirectArray().GetAt(vi);
-								}
-								else if( ReferenceMode == KFbxLayerElement::eINDEX_TO_DIRECT )
-								{
-									int id = FBXLayerUVs->GetIndexArray().GetAt(vi);
-									uv = FBXLayerUVs->GetDirectArray().GetAt(id);
-								}
-							}
-							else if( MappingMode == KFbxLayerElement::eBY_POLYGON_VERTEX )
-							{
-								int lTextureUVIndex = FBXMesh->GetTextureUVIndex(p, i);
-								if( ReferenceMode == KFbxLayerElement::eDIRECT || ReferenceMode == KFbxLayerElement::eINDEX_TO_DIRECT )
-								{
-									uv = FBXLayerUVs->GetDirectArray().GetAt(lTextureUVIndex);
-								}
-							}
-							vertex.texture.x = (float)uv[0];
-							vertex.texture.y = (float)uv[1];
-						}
-						else
-						{
-							vertex.texture.x = 0.5f;
-							vertex.texture.y = 0.5f;
-						}
-						vertex.weight[0] = weights[vi][0];
-						vertex.weight[1] = weights[vi][1];
-						vertex.weight[2] = weights[vi][2];
-						vertex.weight[3] = weights[vi][3];
-						vertex.indices[0] = indices[vi][0];
-						vertex.indices[1] = indices[vi][1];
-						vertex.indices[2] = indices[vi][2];
-						vertex.indices[3] = indices[vi][3];
-						if( vertex != mesh->vertices[vi] && mesh->vertices[vi] != ZeroVertex )
-						{
-							FaceIndices[i] = mesh->vertices.size();
-							mesh->vertices.push_back( vertex );
-						}
-						else
-						{
-							FaceIndices[i] = (DWORD)vi;
-							mesh->vertices[vi] = vertex;
-						}
-					}
-					if(FBXMesh->GetPolygonSize(p) == 4)
-					{
-						Ovgl::Face face;
-						face.indices[0] = FaceIndices[0];
-						face.indices[1] = FaceIndices[2];
-						face.indices[2] = FaceIndices[3];
-						mesh->faces.push_back( face );
-						mesh->attributes.push_back(0);
-					}
-					Ovgl::Face face;
-					face.indices[0] = FaceIndices[0];
-					face.indices[1] = FaceIndices[1];
-					face.indices[2] = FaceIndices[2];
-					mesh->faces.push_back( face );
-					mesh->attributes.push_back(0);
-				}
-
-				// Get animation frames for this mesh.
-				for( DWORD bn = 0; bn < BoneNodes.size(); bn++ )
-				{
-					KFbxAnimCurve* lAnimCurve[3];
-					lAnimCurve[0] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_X);
-					lAnimCurve[1] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Y);
-					lAnimCurve[2] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Z);
-					for( DWORD c = 0; c < 3; c++ )
-					{
-						for( DWORD k = 0; k < (DWORD)lAnimCurve[c]->KeyGetCount(); k++ )
-						{
-							KFbxAnimCurveKey lKey = lAnimCurve[c]->KeyGet(k);
-							DWORD lKeyTime = (DWORD)lKey.GetTime().GetMilliSeconds();
-							float lKeyValue = lKey.GetValue();
-							bool found_frame = false;
-							for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
-							{
-								if( lKeyTime == mesh->keyframes[f]->time )
-								{
-									found_frame = true;
-									bool found_key = false;
-									for( DWORD k2 = 0; k2 < mesh->keyframes[f]->keys.size(); k2++ )
-									{
-										if( mesh->keyframes[f]->keys[k2].index == bn )
-										{
-											found_key = true;
-											mesh->keyframes[f]->keys[k2].rotation[c] = lKeyValue;
-										}
-									}
-									if( !found_key )
-									{
-										Ovgl::Key key;
-										key.index = bn;
-										ZeroMemory( &key.rotation, sizeof( Ovgl::Vector4 ) );
-										key.rotation[c] = lKeyValue;
-										mesh->keyframes[f]->keys.push_back(key);
-									}
-								}
-							}
-							if( !found_frame )
-							{
-								Ovgl::Frame* frame = new Ovgl::Frame;
-								frame->time = lKeyTime;
-								frame->keys.clear();
-								mesh->keyframes.push_back(frame);
-							}
-						}
-					}
-				}
-
-				// Convert euler angles to quaternions.
-				for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
-				{
-					for( DWORD k = 0; k < mesh->keyframes[f]->keys.size(); k++ )
-					{
-						Ovgl::Vector4 KeyEuler = mesh->keyframes[f]->keys[k].rotation;
-						mesh->keyframes[f]->keys[k].rotation = Ovgl::QuaternionRotationEuler( (KeyEuler.x / 180.0f) * (float)OvglPi, (KeyEuler.y / 180.0f) * (float)OvglPi, (KeyEuler.z / 180.0f) * (float)OvglPi );
-					}
-				}
-
-				// Sort frame times.
-				std::sort(mesh->keyframes.begin(), mesh->keyframes.begin() + mesh->keyframes.size(), FrameCompare );
-
-				mesh->VertexBuffer = NULL;
-				mesh->IndexBuffers = NULL;
-				mesh->GenerateBoneMeshes();
-				mesh->Update();
-				Inst->Meshes.push_back( mesh );
-				if( mesh->bones.size() > 0 )
-				{
-					Ovgl::Prop* Prop = CreateProp( mesh, &matrix);
-					Prop->subsets[0] = Inst->DefaultEffect;
-				}
-				else
-				{
-					Ovgl::Object* Object = CreateObject( mesh, &matrix);
-					Object->subsets[0] = Inst->DefaultEffect;
-				}
-			}
-			else if ( AttributeType == KFbxNodeAttribute::eLIGHT )
-			{
-				Ovgl::Matrix44 matrix;
-				KFbxVector4 localT, localR, localS;
-				KFbxNode* FBXNode = KFbxGetSrc<KFbxNode>(FBXScene, n);
-				KFbxLight* FBXLight = (KFbxLight*) FBXNode->GetNodeAttribute();
-				KFbxVector4 color = FBXLight->Color.Get();
-				localT = FBXNode->LclTranslation.Get();
-				localR = FBXNode->LclRotation.Get();
-				localS = FBXNode->LclScaling.Get();
-				matrix = Ovgl::MatrixScaling( (float)localS[0], (float)localS[1], (float)localS[2] ) * Ovgl::MatrixRotationEuler( (float)(localR[0] * OvglPi / 180), -(float)(localR[2] * OvglPi / 180), (float)(( localR[1] + 90) * OvglPi / 180) )  * Ovgl::MatrixTranslation( (float)localT[0], (float)localT[1], (float)localT[2] );
-				CreateLight( &matrix, &Ovgl::Vector4Set( (float)color[0], (float)color[1], (float)color[2], (float)color[3] ));
-			}
-			else if ( AttributeType == KFbxNodeAttribute::eCAMERA )
-			{
-				Ovgl::Matrix44 matrix;
-				KFbxVector4 localT, localR, localS;
-				KFbxNode* FBXNode = KFbxGetSrc<KFbxNode>(FBXScene, n);
-				KFbxCamera* FBXCamera = (KFbxCamera*) FBXNode->GetNodeAttribute();
-				localT = FBXNode->LclTranslation.Get();
-				localR = FBXNode->LclRotation.Get();
-				localS = FBXNode->LclScaling.Get();
-				matrix = Ovgl::MatrixScaling( (float)localS[0], (float)localS[1], (float)localS[2] ) * Ovgl::MatrixRotationEuler( (float)(localR[0] * OvglPi / 180), -(float)(localR[2] * OvglPi / 180), (float)(( localR[1] + 90) * OvglPi / 180) )  * Ovgl::MatrixTranslation( (float)localT[0], (float)localT[1], (float)localT[2] );
-				CreateCamera(&matrix);
-			}
-		}
-	}
-}
 
 void Ovgl::Light::Release()
 {
@@ -1274,14 +727,6 @@ void Ovgl::Scene::Release()
 	for( DWORD l = 0; l < lights.size(); l++ )
 	{
 		lights[l]->Release();
-	}
-
-	for( DWORD s = 0; s < Inst->Scenes.size(); s++ )
-	{
-		if( Inst->Scenes[s] == this)
-		{
-			Inst->Scenes.erase( Inst->Scenes.begin() + s );
-		}
 	}
 	delete this;
 }

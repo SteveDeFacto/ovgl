@@ -24,6 +24,22 @@ class NxD6Joint;
 
 namespace Ovgl
 {
+	enum ObjectFlags
+	{
+		DISABLE_COLLISION = 1,
+		DISABLE_GRAVITY = 2,
+		KINEMATIC = 4,
+		FROZEN_POS_X = 8,
+		FROZEN_POS_Y = 16,
+		FROZEN_POS_Z = 32,
+		FROZEN_ROT_X = 64,
+		FROZEN_ROT_Y = 128,
+		FROZEN_ROT_Z = 256,
+		FROZEN_POS = FROZEN_POS_X | FROZEN_POS_Y | FROZEN_POS_Z,
+        FROZEN_ROT = FROZEN_ROT_X | FROZEN_ROT_Y | FROZEN_ROT_Z,
+        FROZEN = FROZEN_POS | FROZEN_ROT
+	};
+
 	extern "C"
 	{
 		class Actor;
@@ -63,6 +79,7 @@ namespace Ovgl
 		{
 		public:
 			Scene* scene;
+			CMesh* obj[1];
 			NxD6Joint* joint;
 			void Release();
 		};
@@ -188,9 +205,12 @@ namespace Ovgl
 			* @param bone Index of first bone to joint to it's children. This should generally be the meshes root_bone.
 			*/
 			void CreateJoints( DWORD bone );
-
-
-
+			/**
+			* Creates an animation clip.
+			* @param current The current time.
+			* @param start The time in which the clip begins.
+			* @param start The time in which the clip ends.
+			*/
 			Animation* CreateAnimation( float current, float start, float end );
 			/**
 			* Sets the pose of this prop.
@@ -365,25 +385,29 @@ namespace Ovgl
 			*/
 			std::vector<Object*>					objects;
 			/**
-			* This array contains all lights within the scene..
+			* This array contains all lights within the scene.
 			*/
 			std::vector<Light*>						lights;
 			/**
-			* This array contains all cameras within the scene..
+			* This array contains all cameras within the scene.
 			*/
 			std::vector<Camera*>					cameras;
 			/**
-			* This array contains all props within the scene..
+			* This array contains all props within the scene.
 			*/
 			std::vector<Prop*>						props;
 			/**
-			* This array contains all actors within the scene..
+			* This array contains all actors within the scene.
 			*/
 			std::vector<Actor*>						actors;
 			/**
-			* This array contains all emitters within the scene..
+			* This array contains all emitters within the scene.
 			*/
 			std::vector<Emitter*>					emitters;
+			/**
+			* This array contains all joints within the scene.
+			*/
+			std::vector<Joint*>						joints;
 			/**
 			* This function adds a Ovgl::Light to the scene.
 			* @param matrix The matrix which defines the the starting pose of the light.
@@ -422,25 +446,17 @@ namespace Ovgl
 			*/
 			Emitter* CreateEmitter( Matrix44* matrix );
 			/**
+			* This function creates a joint which binds two Ovgl::CMesh together. 
+			* @param obj1 First Ovgl::CMesh.
+			* @param obj2 Second Ovgl::CMesh.
+			* @param anchor This is the point in which the two Ovgl::CMesh are anchored. If this is set to NULL the anchor will be placed at the position of the first Ovgl::CMesh;
+			*/
+			Joint* CreateJoint( CMesh* obj1, CMesh* obj2, Vector3* anchor );
+			/**
 			* This function updates the animations, audio emition points, and the physics objects of the scene.
 			* @param update_time The amount of time that has passed since the last scene update.
 			*/
 			void Update( DWORD update_time );
-			/**
-			* This function saves all objects in the scene out to the engine's native format.
-			* @param file The file to save.
-			*/
-			void Save( const std::string& file, DWORD flags );
-			/**
-			* This function loads a scene from the engine's native format.
-			* @param file The file to load.
-			*/
-			void Load( const std::string& file, DWORD flags );
-			/**
-			* This function loads a scene from the FBX format.
-			* @param file The file to load.
-			*/
-			void Import_FBX( const std::string& file, DWORD flags );
 			/**
 			* This function will release control of all memory associated with the scene and any objects within it. It will also remove any reference to it from the Ovgl::Instance.
 			*/

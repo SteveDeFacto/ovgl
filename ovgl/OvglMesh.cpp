@@ -20,6 +20,7 @@
 #include "OvglInstance.h"
 #include "OvglMath.h"
 #include "OvglMesh.h"
+#include "OvglMedia.h"
 #include "OvglScene.h"
 
 bool Ovgl::Vertex::operator == ( const Ovgl::Vertex& in ) const
@@ -173,7 +174,7 @@ void Ovgl::Mesh::Update()
 			ConvexMeshDesc.numTriangles = bones[i]->mesh->faces.size();
 			ConvexMeshDesc.triangleStrideBytes = sizeof(Ovgl::Face);
 			ConvexMeshDesc.triangles = &bones[i]->mesh->faces[0];
-			ConvexMeshDesc.flags = NX_CF_COMPUTE_CONVEX;
+			ConvexMeshDesc.flags = NX_CF_COMPUTE_CONVEX | NX_CF_INFLATE_CONVEX;
 			NxStreamDefault buf;
 			Inst->Cooking->NxCookConvexMesh(ConvexMeshDesc, buf);
 			bones[i]->convex = Inst->PhysX->createConvexMesh(buf);
@@ -263,28 +264,142 @@ void Ovgl::Mesh::Save( const std::string& file  )
 {
 }
 
-void Ovgl::Mesh::Release()
-{
-	for( DWORD m = 0; m < Inst->Meshes.size(); m++ )
-	{
-		if( Inst->Meshes[m] == this )
-		{
-			Inst->Meshes.erase( Inst->Meshes.begin() + m );
-		}
-	}
-	VertexBuffer->Release();
-	for( DWORD i = 0; i < subset_count; i++)
-	{
-		IndexBuffers[i]->Release();
-	}
-	delete this;
-}
+//void Ovgl::Mesh::Release()
+//{
+//	for( DWORD m = 0; m < Inst->Meshes.size(); m++ )
+//	{
+//		if( Inst->Meshes[m] == this )
+//		{
+//			Inst->Meshes.erase( Inst->Meshes.begin() + m );
+//		}
+//	}
+//	VertexBuffer->Release();
+//	for( DWORD i = 0; i < subset_count; i++)
+//	{
+//		IndexBuffers[i]->Release();
+//	}
+//	delete this;
+//}
 
 Ovgl::Matrix44 Ovgl::CMesh::getPose()
 {
 	Ovgl::Matrix44 matrix;
 	actor->getGlobalPose().getColumnMajor44( (float*)&matrix );
 	return matrix;
+}
+
+void Ovgl::CMesh::SetFlags( DWORD flags )
+{
+	actor->clearActorFlag(NX_AF_DISABLE_COLLISION);
+	actor->clearBodyFlag(NX_BF_DISABLE_GRAVITY);
+	actor->clearBodyFlag(NX_BF_KINEMATIC);
+	actor->clearBodyFlag(NX_BF_FROZEN);
+	actor->clearBodyFlag(NX_BF_FROZEN_POS);
+	actor->clearBodyFlag(NX_BF_FROZEN_POS_X);
+	actor->clearBodyFlag(NX_BF_FROZEN_POS_Y);
+	actor->clearBodyFlag(NX_BF_FROZEN_POS_Z);
+	actor->clearBodyFlag(NX_BF_FROZEN_ROT);
+	actor->clearBodyFlag(NX_BF_FROZEN_ROT_X);
+	actor->clearBodyFlag(NX_BF_FROZEN_ROT_Y);
+	actor->clearBodyFlag(NX_BF_FROZEN_ROT_Z);
+
+	switch( flags )
+    {
+        case DISABLE_COLLISION:
+		{
+			this->actor->raiseActorFlag(NX_AF_DISABLE_COLLISION);
+            break;
+		}
+
+        case DISABLE_GRAVITY:
+		{
+			this->actor->raiseBodyFlag(NX_BF_DISABLE_GRAVITY);
+            break;
+		}
+
+		case KINEMATIC:
+		{
+			this->actor->raiseBodyFlag(NX_BF_KINEMATIC);
+            break;
+		}
+
+        case FROZEN:
+		{
+			this->actor->raiseBodyFlag(NX_BF_FROZEN);
+            break;
+		}
+
+        case FROZEN_POS:
+		{
+			this->actor->raiseBodyFlag(NX_BF_FROZEN_POS);
+            break;
+		}
+
+		case FROZEN_POS_X:
+		{
+			this->actor->raiseBodyFlag(NX_BF_FROZEN_POS_X);
+            break;
+		}
+
+		case FROZEN_POS_Y:
+		{
+			this->actor->raiseBodyFlag(NX_BF_FROZEN_POS_Y);
+            break;
+		}
+
+		case FROZEN_POS_Z:
+		{
+			this->actor->raiseBodyFlag(NX_BF_FROZEN_POS_Z);
+            break;
+		}
+        case FROZEN_ROT:
+		{
+			this->actor->raiseBodyFlag(NX_BF_FROZEN_ROT);
+            break;
+		}
+
+		case FROZEN_ROT_X:
+		{
+			this->actor->raiseBodyFlag(NX_BF_FROZEN_ROT_X);
+            break;
+		}
+
+		case FROZEN_ROT_Y:
+		{
+			this->actor->raiseBodyFlag(NX_BF_FROZEN_ROT_Y);
+            break;
+		}
+
+		case FROZEN_ROT_Z:
+		{
+			this->actor->raiseBodyFlag(NX_BF_FROZEN_ROT_Z);
+            break;
+		}
+    }
+}
+
+DWORD Ovgl::CMesh::GetFlags()
+{
+	DWORD flags = 0;
+	if(actor->readActorFlag(NX_AF_DISABLE_COLLISION))
+		flags = flags | Ovgl::DISABLE_COLLISION;
+	if(actor->readBodyFlag(NX_BF_DISABLE_GRAVITY))
+		flags = flags | Ovgl::DISABLE_GRAVITY;
+	if(actor->readBodyFlag(NX_BF_KINEMATIC))
+		flags = flags | Ovgl::KINEMATIC;
+	if(actor->readBodyFlag(NX_BF_FROZEN_POS_X))
+		flags = flags | Ovgl::FROZEN_POS_X;
+	if(actor->readBodyFlag(NX_BF_FROZEN_POS_Y))
+		flags = flags | Ovgl::FROZEN_POS_Y;
+	if(actor->readBodyFlag(NX_BF_FROZEN_POS_Z))
+		flags = flags | Ovgl::FROZEN_POS_Z;
+	if(actor->readBodyFlag(NX_BF_FROZEN_ROT_X))
+		flags = flags | Ovgl::FROZEN_ROT_X;
+	if(actor->readBodyFlag(NX_BF_FROZEN_ROT_Y))
+		flags = flags | Ovgl::FROZEN_ROT_Y;
+	if(actor->readBodyFlag(NX_BF_FROZEN_ROT_Z))
+		flags = flags | Ovgl::FROZEN_ROT_Z;
+	return flags;
 }
 
 void Ovgl::CMesh::setPose( Ovgl::Matrix44* matrix )

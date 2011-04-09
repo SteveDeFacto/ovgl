@@ -19,6 +19,7 @@
 #include "OvglIncludes.h"
 #include "OvglInstance.h"
 #include "OvglMath.h"
+#include "OvglMedia.h"
 #include "OvglGraphics.h"
 #include "OvglScene.h"
 #include "OvglAudio.h"

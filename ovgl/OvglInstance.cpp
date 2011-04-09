@@ -19,6 +19,7 @@
 #include "OvglIncludes.h"
 #include "OvglInstance.h"
 #include "OvglMath.h"
+#include "OvglMedia.h"
 #include "OvglGraphics.h"
 #include "OvglAudio.h"
 #include "OvglMesh.h"
@@ -254,85 +255,6 @@ Ovgl::Effect* BuildSkyboxEffect( Ovgl::Instance* inst )
 	//Return effect.
 	return effect;
 }
-
-Ovgl::Texture* Ovgl::Instance::CreateTexture(const std::string& file)
-{
-	Ovgl::Texture* texture = new Ovgl::Texture; 
-	texture->Inst = this;
-	D3DX10CreateShaderResourceViewFromFileA( D3DDevice, file.c_str(), NULL, NULL, &texture->SRV, NULL);
-	Textures.push_back(texture);
-	return texture;
-}
-
-Ovgl::Effect* Ovgl::Instance::CreateEffect( const std::string& file )
-{
-	Ovgl::Effect* effect = new Ovgl::Effect;
-	effect->Inst = this;
-	
-	//  Create effect.
-	std::wstring wfilename;
-	wfilename.assign( file.begin(), file.end() );
-	D3DX10CreateEffectFromFile( wfilename.c_str(), NULL, NULL, "fx_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, D3DDevice, NULL, NULL, &effect->SFX, NULL, NULL );
-	
-	// Get shader variables.
-	effect->Technique = effect->SFX->GetTechniqueByName( "Render" );
-	effect->Shadow_Maps = effect->SFX->GetVariableBySemantic( "SHADOWMAPS" )->AsShaderResource();
-	effect->Cube_Views = effect->SFX->GetVariableBySemantic( "CUBEVIEWS" )->AsMatrix();
-	effect->Light_Count = effect->SFX->GetVariableBySemantic( "LIGHTCOUNT" )->AsScalar();
-	effect->Lights = effect->SFX->GetVariableBySemantic( "LIGHTARRAY" )->AsVector();
-	effect->Light_Colors = effect->SFX->GetVariableBySemantic( "LIGHTCOLORARRAY" )->AsVector();
-    effect->Bones = effect->SFX->GetVariableBySemantic( "BONEARRAY" )->AsMatrix();
-    effect->View = effect->SFX->GetVariableBySemantic( "WORLDVIEW" )->AsMatrix();
-	effect->Projection = effect->SFX->GetVariableBySemantic( "PROJECTION" )->AsMatrix();
-
-	// Get technique.
-	D3D10_PASS_DESC PassDesc;
-	effect->Technique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
-
-	// Create vertex layout desc.
-	D3D10_INPUT_ELEMENT_DESC vertexlayout[] =
-	{
-		{ "POSITION",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0,	0,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",			0, DXGI_FORMAT_R32G32B32_FLOAT,		0,	12,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		0, DXGI_FORMAT_R32G32_FLOAT,		0,	24,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		1, DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	32,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		2, DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	48,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-	};
-
-	// Create vertex layout.
-	D3DDevice->CreateInputLayout( vertexlayout, sizeof(vertexlayout)/sizeof(vertexlayout[0]), PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &effect->Layout );
-
-	//Add Effect to array
-	Effects.push_back( effect );
-
-	//Return effect.
-	return effect;
-}
-
-Ovgl::Scene* Ovgl::Instance::CreateScene( const std::string& file, Ovgl::Matrix44* offset, DWORD flags )
-{
-	Ovgl::Scene* scene = new Ovgl::Scene;
-	scene->Inst = this;
-	NxSceneDesc sceneDesc;
-	sceneDesc.gravity.set( 0.0f, -9.8f, 0.0f );
-	if( PhysX->getHWVersion() != NX_HW_VERSION_NONE)
-		#ifdef _DEBUG
-			sceneDesc.simType = NX_SIMULATION_SW;
-		#else
-			sceneDesc.simType = NX_SIMULATION_HW;
-		#endif
-	scene->physics_scene = PhysX->createScene(sceneDesc);
-	NxMaterial* defaultMaterial = scene->physics_scene->getMaterialFromIndex(0);
-	defaultMaterial->setRestitution(0.0f);
-	defaultMaterial->setStaticFriction(0.5f);
-	defaultMaterial->setDynamicFriction(0.5f);
-	if( !file.empty() )
-	{
-		scene->Load(file, 0);
-	}
-	this->Scenes.push_back(scene);
-	return scene;
-};
 
 Ovgl::RenderTarget* Ovgl::Instance::CreateRenderTarget( HWND hWnd, RECT* rect, DWORD flags )
 {
@@ -682,44 +604,6 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 	return instance;
 }
 
-Ovgl::AudioBuffer* Ovgl::Instance::CreateAudioBuffer( const std::string& file )
-{
-	Ovgl::AudioBuffer* buffer = new Ovgl::AudioBuffer;
-	buffer->Inst = this;
-	OggVorbis_File info;
-	FILE* f = NULL;
-	fopen_s( &f, file.c_str(), "rb" );
-	if ( f == NULL )
-	{
-		std::wstring wfile;
-		wfile = L"Ovgl::Instance::CreateAudioBuffer was unable to open the file ";
-		wfile.append( file.begin(), file.end() );
-		OutputDebugString( wfile.c_str() );
-		return NULL;
-	}
-	ov_open_callbacks(f, &info, NULL, 0, OV_CALLBACKS_DEFAULT);
-	vorbis_info *vi = ov_info(&info, -1);
-	buffer->format = new WAVEFORMATEX;
-	memset( buffer->format, 0, sizeof(WAVEFORMATEX) );
-	buffer->format->cbSize          = sizeof(WAVEFORMATEX);
-	buffer->format->nChannels       = vi->channels;
-	buffer->format->wBitsPerSample  = 16;
-	buffer->format->nSamplesPerSec  = vi->rate;
-	buffer->format->nAvgBytesPerSec = buffer->format->nSamplesPerSec * buffer->format->nChannels * 2;
-	buffer->format->nBlockAlign     = 2 * buffer->format->nChannels;
-	buffer->format->wFormatTag      = 1;
-	buffer->data.resize( vi->channels * 2 * (UINT)ov_pcm_total( &info, -1 ));
-	DWORD pos = 0;
-	int sec = 0;
-	int ret = 1;
-	while( ret && pos < buffer->data.size() )
-	{
-		ret = ov_read( &info, &buffer->data[0] + pos, buffer->data.size() - pos, 0, 2, 1, &sec );
-		pos += ret;
-	}
-	return buffer;
-};
-
 void Ovgl::Instance::Release()
 {
 	delete Allocator;
@@ -729,18 +613,6 @@ void Ovgl::Instance::Release()
 	for( DWORD r = 0; r < RenderTargets.size(); r++ )
 	{
 		RenderTargets[r]->Release();
-	}
-	for( DWORD s = 0; s < Scenes.size(); s++ )
-	{
-		Scenes[s]->Release();
-	}
-	for( DWORD e = 0; e < Scenes.size(); e++ )
-	{
-		Effects[e]->Release();
-	}
-	for( DWORD m = 0; m < Meshes.size(); m++ )
-	{
-		Meshes[m]->Release();
 	}
 	MasteringVoice->DestroyVoice();
 	XAudio2->StopEngine();
@@ -762,16 +634,24 @@ void Ovgl::Effect::set_texture(const std::string& variable, Texture* texture)
 	SFX->GetVariableByName( variable.c_str() )->AsShaderResource()->SetResource(texture->SRV);
 }
 
-void Ovgl::Effect::Release()
+//void Ovgl::Effect::Release()
+//{
+//	Layout->Release();
+//	SFX->Release();
+//	for( DWORD e = 0; e < Inst->Effects.size(); e++ )
+//	{
+//		if( Inst->Effects[e] == this )
+//		{
+//			Inst->Effects.erase( Inst->Effects.begin() + e );
+//		}
+//	}
+//	delete this;
+//}
+
+
+Ovgl::MediaLibrary* Ovgl::Instance::CreateMediaLibrary( const std::string& file )
 {
-	Layout->Release();
-	SFX->Release();
-	for( DWORD e = 0; e < Inst->Effects.size(); e++ )
-	{
-		if( Inst->Effects[e] == this )
-		{
-			Inst->Effects.erase( Inst->Effects.begin() + e );
-		}
-	}
-	delete this;
+	Ovgl::MediaLibrary* MediaLibrary = new Ovgl::MediaLibrary;
+	MediaLibrary->Inst = this;
+	return MediaLibrary;
 }
