@@ -71,8 +71,8 @@ void Ovgl::MediaLibrary::Save( const std::string& file )
 				}
 				fwrite( &Meshes[m]->bones[i]->matrix, sizeof(Ovgl::Matrix44), 1, output );
 				fwrite( &Meshes[m]->bones[i]->length, sizeof(float), 1, output );
-				fwrite( &Meshes[m]->bones[i]->min, sizeof(D3DXVECTOR3), 1, output );
-				fwrite( &Meshes[m]->bones[i]->max, sizeof(D3DXVECTOR3), 1, output );
+				fwrite( &Meshes[m]->bones[i]->min, sizeof(Ovgl::Vector3), 1, output );
+				fwrite( &Meshes[m]->bones[i]->max, sizeof(Ovgl::Vector3), 1, output );
 				fwrite( &Meshes[m]->bones[i]->parent, sizeof(DWORD), 1, output );
 				DWORD child_count = Meshes[m]->bones[i]->childen.size();
 				fwrite( &child_count, sizeof(DWORD), 1, output );
@@ -162,6 +162,10 @@ void Ovgl::MediaLibrary::Save( const std::string& file )
 			//	fwrite( &anchor, sizeof(Ovgl::Vector3), 1, output );
 			//}
 		}
+		DWORD texture_count = Textures.size();
+		fwrite( &texture_count, 4, 1, output );
+
+
 		// Close file.
 		fclose(output);
 	}
@@ -238,8 +242,8 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 				}
 				fread( &mesh->bones[i]->matrix, sizeof(Ovgl::Matrix44), 1, input );
 				fread( &mesh->bones[i]->length, sizeof(float), 1, input );
-				fread( &mesh->bones[i]->min, sizeof(D3DXVECTOR3), 1, input );
-				fread( &mesh->bones[i]->max, sizeof(D3DXVECTOR3), 1, input );
+				fread( &mesh->bones[i]->min, sizeof(Ovgl::Vector3), 1, input );
+				fread( &mesh->bones[i]->max, sizeof(Ovgl::Vector3), 1, input );
 				fread( &mesh->bones[i]->parent, sizeof(DWORD), 1, input );
 				fread( &child_count, sizeof(DWORD), 1, input );
 				mesh->bones[i]->childen.resize(child_count);
@@ -262,8 +266,8 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 			}
 	
 			// Nullify buffer addresses.
-			mesh->VertexBuffer = NULL;
-			mesh->IndexBuffers = NULL;
+			mesh->VertexBuffer = 0;
+			mesh->IndexBuffers = 0;
 
 			// Update buffers.
 			mesh->Update();
@@ -347,12 +351,12 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, const std::s
 		FBXImporter->Initialize( file.c_str(), -1, ((KFbxSdkManager*)Inst->FBXManager)->GetIOSettings() );
 		FBXImporter->Import( FBXScene );
 		KFbxAnimLayer* lCurrentAnimationLayer = KFbxGetSrc<KFbxAnimStack>( FBXScene, 0 )->GetMember(FBX_TYPE(KFbxAnimLayer), 0);
-		for(int n = 1; n < KFbxGetSrcCount<KFbxNode>(FBXScene); n++)
+		for(int n = 1; n < FBXScene->GetNodeCount(); n++)
 		{
-			KFbxNodeAttribute::EAttributeType AttributeType = KFbxGetSrc<KFbxNode>(FBXScene, n)->GetNodeAttribute()->GetAttributeType();
+			KFbxNodeAttribute::EAttributeType AttributeType = FBXScene->GetNode(n)->GetNodeAttribute()->GetAttributeType();
 			if ( AttributeType == KFbxNodeAttribute::eMESH )
 			{
-				KFbxNode* FBXNode = KFbxGetSrc<KFbxNode>(FBXScene, n);
+				KFbxNode* FBXNode = FBXScene->GetNode(n);
 				if( node.compare(FBXNode->GetName()) == 0)
 				{
 					Ovgl::Matrix44 matrix;
@@ -361,14 +365,15 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, const std::s
 					localT = FBXNode->GetParent()->LclTranslation.Get();
 					localR = FBXNode->GetParent()->LclRotation.Get();
 					localS = FBXNode->GetParent()->LclScaling.Get();
-					KFbxDeformer *FBXDeformer = FBXMesh->GetDeformer(0);
-					if(FBXDeformer)
+					KFbxSkin *FBXSkin = (KFbxSkin*)FBXMesh->GetDeformer(0);
+					if(FBXSkin)
 					matrix = Ovgl::MatrixScaling( (float)localS[0], (float)localS[1], (float)localS[2] ) * Ovgl::MatrixRotationEuler( (float)((localR[0] + 90)  * OvglPi / 180), -(float)(localR[2] * OvglPi / 180), (float)(( localR[1] + 90) * OvglPi / 180) )  * Ovgl::MatrixTranslation( (float)localT[0], (float)localT[1], (float)localT[2] );
 					else
 					matrix = Ovgl::MatrixScaling( (float)localS[0], (float)localS[1], (float)localS[2] ) * Ovgl::MatrixRotationEuler( (float)((localR[0])  * OvglPi / 180), -(float)(localR[2] * OvglPi / 180), (float)(( localR[1] + 90) * OvglPi / 180) )  * Ovgl::MatrixTranslation( (float)localT[0], (float)localT[1], (float)localT[2] );
 					int ControlPointCount = FBXMesh->GetControlPointsCount();
 					KFbxVector4* ControlPoints = FBXMesh->GetControlPoints();
 					KFbxLayerElementUV* FBXLayerUVs = FBXMesh->GetLayer(0)->GetUVs();
+					KFbxLayerElementMaterial* FBXLayerMats = FBXMesh->GetLayer(0)->GetMaterials();
 					Ovgl::Vertex ZeroVertex = {0};
 					std::vector<Ovgl::Vertex> vertices(ControlPointCount);
 					std::vector<std::vector<float>> weights(ControlPointCount);
@@ -379,9 +384,8 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, const std::s
 					Ovgl::Mesh* mesh = new Ovgl::Mesh;
 					mesh->Inst = Inst;
 					mesh->vertices.resize(ControlPointCount);
-					if(FBXDeformer)
+					if(FBXSkin)
 					{
-						KFbxSkin *FBXSkin = KFbxCast<KFbxSkin>(FBXDeformer);
 						for (int c = 0; c < FBXSkin->GetClusterCount(); c++)
 						{
 							KFbxCluster* FBXCluster = FBXSkin->GetCluster(c);
@@ -440,7 +444,7 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, const std::s
 					{
 						weights[w].resize(4);
 						indices[w].resize(4);
-						if(!FBXDeformer)
+						if(!FBXSkin)
 							weights[w][0] = 1.0f;
 					}
 					for( int p = 0; p < FBXMesh->GetPolygonCount(); p++ )
@@ -517,16 +521,16 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, const std::s
 							face.indices[1] = FaceIndices[2];
 							face.indices[2] = FaceIndices[3];
 							mesh->faces.push_back( face );
-							mesh->attributes.push_back(0);
+							mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p));
 						}
 						Ovgl::Face face;
 						face.indices[0] = FaceIndices[0];
 						face.indices[1] = FaceIndices[1];
 						face.indices[2] = FaceIndices[2];
 						mesh->faces.push_back( face );
-						mesh->attributes.push_back(0);
+						mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p));
 					}
-						
+
 					// Get animation frames for this mesh.
 					for(DWORD bn = 0; bn < BoneNodes.size(); bn++ )
 					{	
@@ -589,8 +593,8 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, const std::s
 	
 					// Sort frame times.
 					std::sort(mesh->keyframes.begin(), mesh->keyframes.begin() + mesh->keyframes.size(), FrameCompare );
-					mesh->VertexBuffer = NULL;
-					mesh->IndexBuffers = NULL;
+					mesh->VertexBuffer = 0;
+					mesh->IndexBuffers = 0;
 					mesh->GenerateBoneMeshes();
 					mesh->Update();
 					Meshes.push_back( mesh );
@@ -602,58 +606,188 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, const std::s
 	return NULL;
 }
 
-Ovgl::Texture* Ovgl::MediaLibrary::ImportDDS( const std::string& file )
+Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& POS_X, const std::string& NEG_X, const std::string& POS_Y, const std::string& NEG_Y, const std::string& POS_Z, const std::string& NEG_Z )
 {
-	Ovgl::Texture* texture = new Ovgl::Texture; 
-	texture->Inst = Inst;
-	D3DX10CreateShaderResourceViewFromFileA( Inst->D3DDevice, file.c_str(), NULL, NULL, &texture->SRV, NULL);
-	Textures.push_back(texture);
+	// Create new texture
+	Ovgl::Texture* texture = new Ovgl::Texture;
+
+	// Set the texture's media library handle to this media library
+	texture->MLibrary = this;
+
+	// Create array of cube faces.
+	std::string CubeFaces[6] = {POS_X, NEG_X, POS_Y, NEG_Y, POS_Z, NEG_Z};
+
+	glGenTextures(1, &texture->Image);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texture->Image);
+	for (int i = 0; i < 6; i++)
+	{
+		// Image format
+		FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+
+		// Check the file signature and deduce its format
+		fif = FreeImage_GetFileType( CubeFaces[i].c_str(), 0 );
+
+		// If still unknown, try to guess the file format from the file extension
+		if( fif == FIF_UNKNOWN )
+		{
+			fif = FreeImage_GetFIFFromFilename( CubeFaces[i].c_str() );
+		}
+
+		// If still unkown, return NULL
+		if( fif == FIF_UNKNOWN )
+		{
+			return NULL;
+		}
+
+		// Load texture
+		FIBITMAP* dib = FreeImage_Load( fif, CubeFaces[i].c_str() );
+
+		// Convert to RGB format
+		dib = FreeImage_ConvertTo32Bits( dib );
+
+		// Get raw data and dimensions
+		DWORD w = FreeImage_GetWidth( dib );
+		DWORD h = FreeImage_GetHeight( dib );
+		BYTE* pixeles = FreeImage_GetBits( dib );
+		GLubyte* textura = new GLubyte[4*w*h];
+
+		for( DWORD j = 0; j < w * h; j++ )
+		{
+			textura[j*4+0] = pixeles[j*4+2];
+			textura[j*4+1] = pixeles[j*4+1];
+			textura[j*4+2] = pixeles[j*4+0];
+			textura[j*4+3] = pixeles[j*4+3];
+		}
+
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
+
+	// Add texture to media library
+	Textures.push_back( texture );
+
+	// Return texture pointer
 	return texture;
 }
 
-Ovgl::Effect* Ovgl::MediaLibrary::ImportFX( const std::string& file )
+Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
 {
-	Ovgl::Effect* effect = new Ovgl::Effect;
-	effect->Inst = Inst;
-	
-	//  Create effect.
-	std::wstring wfilename;
-	wfilename.assign( file.begin(), file.end() );
-	D3DX10CreateEffectFromFile( wfilename.c_str(), NULL, NULL, "fx_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, Inst->D3DDevice, NULL, NULL, &effect->SFX, NULL, NULL );
-	
-	// Get shader variables.
-	effect->Technique = effect->SFX->GetTechniqueByName( "Render" );
-	effect->Shadow_Maps = effect->SFX->GetVariableBySemantic( "SHADOWMAPS" )->AsShaderResource();
-	effect->Cube_Views = effect->SFX->GetVariableBySemantic( "CUBEVIEWS" )->AsMatrix();
-	effect->Light_Count = effect->SFX->GetVariableBySemantic( "LIGHTCOUNT" )->AsScalar();
-	effect->Lights = effect->SFX->GetVariableBySemantic( "LIGHTARRAY" )->AsVector();
-	effect->Light_Colors = effect->SFX->GetVariableBySemantic( "LIGHTCOLORARRAY" )->AsVector();
-    effect->Bones = effect->SFX->GetVariableBySemantic( "BONEARRAY" )->AsMatrix();
-    effect->View = effect->SFX->GetVariableBySemantic( "WORLDVIEW" )->AsMatrix();
-	effect->Projection = effect->SFX->GetVariableBySemantic( "PROJECTION" )->AsMatrix();
+	// Create new texture
+	Ovgl::Texture* texture = new Ovgl::Texture;
 
-	// Get technique.
-	D3D10_PASS_DESC PassDesc;
-	effect->Technique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
+	// Set the texture's media library handle to this media library
+	texture->MLibrary = this;
 
-	// Create vertex layout desc.
-	D3D10_INPUT_ELEMENT_DESC vertexlayout[] =
+	// Image format
+	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+
+	// Check the file signature and deduce its format
+	fif = FreeImage_GetFileType( file.c_str(), 0 );
+
+	// If still unknown, try to guess the file format from the file extension
+	if( fif == FIF_UNKNOWN )
 	{
-		{ "POSITION",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0,	0,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",			0, DXGI_FORMAT_R32G32B32_FLOAT,		0,	12,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		0, DXGI_FORMAT_R32G32_FLOAT,		0,	24,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		1, DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	32,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		2, DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	48,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-	};
+		fif = FreeImage_GetFIFFromFilename( file.c_str() );
+	}
 
-	// Create vertex layout.
-	Inst->D3DDevice->CreateInputLayout( vertexlayout, sizeof(vertexlayout)/sizeof(vertexlayout[0]), PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &effect->Layout );
+	// If still unkown, return NULL
+	if( fif == FIF_UNKNOWN )
+	{
+		return NULL;
+	}
+
+	// Load texture
+	FIBITMAP* dib = FreeImage_Load( fif, file.c_str() );
+
+	// Convert to RGB format
+	dib = FreeImage_ConvertTo32Bits( dib );
+
+	// Get raw data and dimensions
+	DWORD w = FreeImage_GetWidth( dib );
+	DWORD h = FreeImage_GetHeight( dib );
+	BYTE* pixeles = FreeImage_GetBits( dib );
+	GLubyte* textura = new GLubyte[4*w*h];
+
+	for( DWORD j = 0; j < w * h; j++ )
+	{
+		textura[j*4+0] = pixeles[j*4+2];
+		textura[j*4+1] = pixeles[j*4+1];
+		textura[j*4+2] = pixeles[j*4+0];
+		textura[j*4+3] = pixeles[j*4+3];
+	}
+
+	// Create OpenGL texture
+	glGenTextures( 1, &texture->Image );
+	glBindTexture( GL_TEXTURE_2D, texture->Image );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
+	glBindTexture( GL_TEXTURE_2D, NULL );
+
+	// Release FreeImage's copy of the image
+	FreeImage_Unload( dib );
+
+	// Add texture to media library
+	Textures.push_back( texture );
+
+	// Return texture pointer
+	return texture;
+}
+
+Ovgl::Shader* Ovgl::MediaLibrary::ImportCG( const std::string& file )
+{
+	Ovgl::Shader* shader = new Ovgl::Shader;
+	shader->MLibrary = this;
+	
+	// Define debugging variables
+	CGerror error;
+	const char* string;
+
+	// Create vertex program
+	shader->VertexProgram = cgCreateProgramFromFile( Inst->CgContext, CG_SOURCE, file.c_str(), CG_PROFILE_GPU_VP, "VS", NULL );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
+
+	// Load vertex program
+	cgGLLoadProgram( shader->VertexProgram );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
+
+	// Create fragment program
+	shader->FragmentProgram = cgCreateProgram( Inst->CgContext, CG_SOURCE, file.c_str(), CG_PROFILE_GPU_FP, "FS", NULL );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
+
+	// Load vertex program
+	cgGLLoadProgram( shader->FragmentProgram );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
+
+	shader->GeometryProgram = NULL;
 
 	//Add Effect to array
-	Effects.push_back( effect );
+	Shaders.push_back( shader );
 
 	//Return effect.
-	return effect;
+	return shader;
 }
 
 Ovgl::Scene* Ovgl::MediaLibrary::CreateScene( )
@@ -661,7 +795,7 @@ Ovgl::Scene* Ovgl::MediaLibrary::CreateScene( )
 	Ovgl::Scene* scene = new Ovgl::Scene;
 	scene->Inst = Inst;
 	NxSceneDesc sceneDesc;
-	sceneDesc.gravity.set( 0.0f, -0.2f, 0.0f );
+	sceneDesc.gravity.set( 0.0f, -9.8f, 0.0f );
 	if( Inst->PhysX->getHWVersion() != NX_HW_VERSION_NONE)
 		#ifdef _DEBUG
 			sceneDesc.simType = NX_SIMULATION_SW;
@@ -677,6 +811,18 @@ Ovgl::Scene* Ovgl::MediaLibrary::CreateScene( )
 	return scene;
 };
 
+Ovgl::Material* Ovgl::MediaLibrary::CreateMaterial( )
+{
+	Ovgl::Material* material = new Ovgl::Material;
+	material->MLibrary = this;
+	material->ShaderProgram = Inst->DefaultMedia->Shaders[0];
+	material->NoZBuffer = false;
+	material->NoZWrite = false;
+	material->PostRender = false;
+	Materials.push_back(material);
+	return material;
+};
+
 Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportOGG( const std::string& file )
 {
 	Ovgl::AudioBuffer* buffer = new Ovgl::AudioBuffer;
@@ -687,30 +833,52 @@ Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportOGG( const std::string& file )
 	if ( f == NULL )
 	{
 		std::wstring wfile;
-		wfile = L"Ovgl::Instance::CreateAudioBuffer was unable to open the file ";
+		wfile = L"Ovgl::MediaLibrary::ImportOGG was unable to open the file ";
 		wfile.append( file.begin(), file.end() );
 		OutputDebugString( wfile.c_str() );
 		return NULL;
 	}
 	ov_open_callbacks(f, &info, NULL, 0, OV_CALLBACKS_DEFAULT);
 	vorbis_info *vi = ov_info(&info, -1);
-	buffer->format = new WAVEFORMATEX;
-	memset( buffer->format, 0, sizeof(WAVEFORMATEX) );
-	buffer->format->cbSize          = sizeof(WAVEFORMATEX);
-	buffer->format->nChannels       = vi->channels;
-	buffer->format->wBitsPerSample  = 16;
-	buffer->format->nSamplesPerSec  = vi->rate;
-	buffer->format->nAvgBytesPerSec = buffer->format->nSamplesPerSec * buffer->format->nChannels * 2;
-	buffer->format->nBlockAlign     = 2 * buffer->format->nChannels;
-	buffer->format->wFormatTag      = 1;
-	buffer->data.resize( vi->channels * 2 * (UINT)ov_pcm_total( &info, -1 ));
+
+	if (vi->channels == 1)
+	{
+		buffer->format = AL_FORMAT_MONO16;
+	}
+	else
+	{
+		buffer->format = AL_FORMAT_STEREO16;
+	}
+
+	buffer->frequency = vi->rate;
+
+	buffer->data.resize( vi->channels * (UINT)ov_pcm_total( &info, -1 ));
 	DWORD pos = 0;
 	int sec = 0;
 	int ret = 1;
-	while( ret && pos < buffer->data.size() )
+	while( ret && pos < (buffer->data.size()*2) )
 	{
-		ret = ov_read( &info, &buffer->data[0] + pos, buffer->data.size() - pos, 0, 2, 1, &sec );
+		ret = ov_read( &info, (char*)&buffer->data[0] + pos, (buffer->data.size()*2) - pos, 0, 2, 1, &sec );
 		pos += ret;
+	}
+	fclose( f );
+
+	if( buffer->format == AL_FORMAT_MONO16 )
+	{
+		alGenBuffers( 1, &buffer->mono );
+		alBufferData( buffer->mono, AL_FORMAT_MONO16, (ALvoid*)&buffer->data[0], buffer->data.size()*2, buffer->frequency );
+	}
+	else
+	{
+		alGenBuffers( 1, &buffer->stereo );
+		alBufferData( buffer->stereo, AL_FORMAT_STEREO16, (ALvoid*)&buffer->data[0], buffer->data.size()*2, buffer->frequency );
+		std::vector<signed short> mono(buffer->data.size() / 2);
+		for (UINT i = 0; i < mono.size(); i++)
+		{
+			mono[i] = (buffer->data[2*i] + buffer->data[2*i+1]) / 2;
+		}
+		alGenBuffers( 1, &buffer->mono );
+		alBufferData( buffer->mono, AL_FORMAT_MONO16, (ALvoid*)&mono[0], mono.size()*2, buffer->frequency );
 	}
 	AudioBuffers.push_back(buffer);
 	return buffer;

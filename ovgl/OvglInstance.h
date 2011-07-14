@@ -17,22 +17,6 @@
 */
 
 // Forward declare external classes
-struct ID3D10InputLayout;
-struct ID3D10Effect;
-struct ID3D10EffectTechnique;
-struct ID3D10EffectScalarVariable;
-struct ID3D10EffectVectorVariable;
-struct ID3D10EffectShaderResourceVariable;
-struct ID3D10EffectMatrixVariable;
-struct ID3D10Device;
-struct ID3D10RenderTargetView;
-struct ID3D10RasterizerState;
-struct ID3D10RasterizerState;
-struct ID3D10ShaderResourceView;
-struct ID3DX10Sprite;
-struct ID3D10Buffer;
-struct ID3D10Buffer;
-struct IDXGIFactory;
 struct IXAudio2;
 typedef BYTE X3DAUDIO_HANDLE[20];
 struct IXAudio2MasteringVoice;
@@ -84,29 +68,33 @@ namespace Ovgl
 		class __declspec(dllexport) Texture
 		{
 		public:
-			Instance*							Inst;
-			ID3D10ShaderResourceView*			SRV;
+			MediaLibrary*							MLibrary;
+			GLuint									Image;
+
 			void Release();
 		};
 
-		class __declspec(dllexport) Effect
+		class __declspec(dllexport) Shader
 		{
 		public:
-			Instance*							Inst;
-			ID3D10InputLayout*					Layout;
-			ID3D10Effect*						SFX;
-			ID3D10EffectTechnique*				Technique;
-			ID3D10EffectMatrixVariable*			Bones;
-			ID3D10EffectMatrixVariable*			View;
-			ID3D10EffectMatrixVariable*			Projection;
-			ID3D10EffectVectorVariable*			ViewPos;
-			ID3D10EffectScalarVariable*			Light_Count;
-			ID3D10EffectVectorVariable*			Lights;
-			ID3D10EffectVectorVariable*			Light_Colors;
-			ID3D10EffectMatrixVariable*			Cube_Views;
-			ID3D10EffectShaderResourceVariable*	Shadow_Maps;
+			MediaLibrary*							MLibrary;
+			CGprogram								VertexProgram;
+			CGprogram								FragmentProgram;
+			CGprogram								GeometryProgram;
+			void Release();
+		};
 
-			void set_variable(const std::string& variable, UINT count, float data[] );
+		class __declspec(dllexport) Material
+		{
+		public:
+			MediaLibrary*							MLibrary;
+			Shader*									ShaderProgram;
+			bool									PostRender;
+			bool									NoZBuffer;
+			bool									NoZWrite;
+			std::vector< std::pair<std::string, std::vector<float>> > Variables;
+			std::vector< std::pair<std::string, Texture*> > Textures;
+			void set_variable(const std::string& variable, const std::vector<float>& data);
 			void set_texture(const std::string& variable, Texture* texture);
 			void Release();
 		};
@@ -115,15 +103,10 @@ namespace Ovgl
 		class __declspec(dllexport) Instance
 		{
 		public:
-			ID3D10Device*							D3DDevice;
-			ID3D10RenderTargetView*					RenderTargetView;
-			ID3D10RasterizerState*					SolidRasterState;
-			ID3D10RasterizerState*					WireFrameRasterState;
-			ID3D10ShaderResourceView*				ShaderResourceView;
-			ID3DX10Sprite*							MainSprite;
-			ID3D10Buffer*							CubeVertexBuffer;
-			ID3D10Buffer*							CubeIndexBuffer;
-			IDXGIFactory*							Factory;
+			HWND									hWnd;
+			HDC										hDC;
+			HGLRC									hRC;
+			CGcontext								CgContext;
 			IXAudio2*								XAudio2;
 			X3DAUDIO_HANDLE							X3DAudio;
 			IXAudio2MasteringVoice*					MasteringVoice;
@@ -135,15 +118,10 @@ namespace Ovgl
 			NxControllerManager*					Manager;
 			NxConvexMesh*							Shapes[1];
 			void*									FBXManager;
-			Interface*								ActiveText;
-			bool									Active;
-			bool									CursorBlink;
-			Effect*									DefaultEffect;
-			Effect*									SkyboxEffect;
-			std::vector< std::string >				ErrorLog;
-			std::string								TextCursor;
+			MediaLibrary*							DefaultMedia;
 			std::vector<RenderTarget*>				RenderTargets;
 			std::vector<MediaLibrary*>				MediaLibraries;
+
 			RenderTarget*							CreateRenderTarget( HWND window, RECT* rect, DWORD flags );
 			MediaLibrary*							CreateMediaLibrary( const std::string& file );
 			void									Release();

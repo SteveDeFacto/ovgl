@@ -69,9 +69,11 @@ void Ovgl::Mesh::GenerateVertexNormals()
 
 void Ovgl::Mesh::GenerateBoneMeshes()
 {
+	DWORD bs = bones.size();
 	for( DWORD b = 0; b < bones.size(); b++ )
 	{
 		bones[b]->mesh->vertices.clear();
+		DWORD vs = vertices.size();
 		for( DWORD v = 0; v < vertices.size(); v++ )
 		{
 			for( DWORD i = 0; i < 4; i++)
@@ -94,12 +96,12 @@ void Ovgl::Mesh::GenerateBoneMeshes()
 void Ovgl::Mesh::Update()
 {
 	// Release buffers.
-	if( VertexBuffer ) VertexBuffer->Release();
+	if( VertexBuffer ) glDeleteBuffers(1, &VertexBuffer);
 	if( IndexBuffers )
 	{
 		for(UINT i = 0; i < subset_count; i++)
 			if( IndexBuffers[i] ) 
-				IndexBuffers[i]->Release();
+				glDeleteBuffers(1, &IndexBuffers[i]);
 		delete [] IndexBuffers;
 	}
 	for( DWORD i = 0; i < bones.size(); i++ )
@@ -109,17 +111,9 @@ void Ovgl::Mesh::Update()
 			Inst->PhysX->releaseConvexMesh( *bones[i]->convex );
 		}
 	}
-
-	// Create Vertex buffer.
-	D3D10_BUFFER_DESC Buffer_Desc;
-	D3D10_SUBRESOURCE_DATA InitData;
-	Buffer_Desc.Usage = D3D10_USAGE_DEFAULT;
-	Buffer_Desc.ByteWidth = sizeof( Ovgl::Vertex ) * vertices.size();
-	Buffer_Desc.BindFlags = D3D10_BIND_VERTEX_BUFFER;
-	Buffer_Desc.CPUAccessFlags = 0;
-	Buffer_Desc.MiscFlags = 0;
-	InitData.pSysMem = &vertices[0];
-	Inst->D3DDevice->CreateBuffer( &Buffer_Desc, &InitData, &VertexBuffer );
+	glGenBuffersARB( 1, &VertexBuffer );
+	glBindBufferARB( GL_ARRAY_BUFFER, VertexBuffer );
+	glBufferDataARB( GL_ARRAY_BUFFER, vertices.size()*sizeof(Ovgl::Vertex), &vertices[0], GL_STATIC_DRAW );
 
 	// Create Index buffers.
 	std::vector<std::vector<Ovgl::Face>> index_subsets;
@@ -130,16 +124,13 @@ void Ovgl::Mesh::Update()
 		index_subsets[attributes[i]].push_back(faces[i]);
 	}
 	subset_count = index_subsets.size();
-	IndexBuffers = new ID3D10Buffer*[subset_count];
+
+	IndexBuffers = new GLuint[subset_count];
 	for( DWORD i = 0; i < subset_count; i++ )
 	{
-		Buffer_Desc.Usage = D3D10_USAGE_DEFAULT;
-		Buffer_Desc.ByteWidth = sizeof( Ovgl::Face ) * index_subsets[i].size();
-		Buffer_Desc.BindFlags = D3D10_BIND_INDEX_BUFFER;
-		Buffer_Desc.CPUAccessFlags = 0;
-		Buffer_Desc.MiscFlags = 0;
-		InitData.pSysMem = &index_subsets[i][0];
-		Inst->D3DDevice->CreateBuffer( &Buffer_Desc, &InitData, &IndexBuffers[i] );
+		glGenBuffersARB( 1, &IndexBuffers[i] );
+		glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, IndexBuffers[i] );
+		glBufferDataARB( GL_ELEMENT_ARRAY_BUFFER, index_subsets[i].size()*sizeof(Ovgl::Face), &index_subsets[i][0], GL_STATIC_DRAW );
 	}
 
 	// Find the root bone.
@@ -264,8 +255,8 @@ void Ovgl::Mesh::Save( const std::string& file  )
 {
 }
 
-//void Ovgl::Mesh::Release()
-//{
+void Ovgl::Mesh::Release()
+{
 //	for( DWORD m = 0; m < Inst->Meshes.size(); m++ )
 //	{
 //		if( Inst->Meshes[m] == this )
@@ -279,7 +270,7 @@ void Ovgl::Mesh::Save( const std::string& file  )
 //		IndexBuffers[i]->Release();
 //	}
 //	delete this;
-//}
+}
 
 Ovgl::Matrix44 Ovgl::CMesh::getPose()
 {
@@ -430,7 +421,6 @@ void Ovgl::Mesh::CubeCloud( float sx, float sy, float sz, int count )
 void Ovgl::Mesh::QuickHull()
 {
 	// Generate a starting face that is at the farthest points. ( Right now it is just adding the first three points. )
-
 	Ovgl::Face FirstFace = {0};
 	FirstFace.indices[0] = 0;
 	FirstFace.indices[1] = 1;
@@ -804,6 +794,7 @@ void Ovgl::Mesh::Clean( float min, DWORD flags )
 Ovgl::Vector3 Ovgl::Mesh::ComputeFaceNormal( DWORD face )
 {
 	Ovgl::Vector3 out = {0};
+	DWORD test = faces[face].indices[2];
 	Ovgl::Vector3 v1 = vertices[faces[face].indices[2]].position - vertices[faces[face].indices[1]].position;
 	Ovgl::Vector3 v2 = vertices[faces[face].indices[0]].position - vertices[faces[face].indices[1]].position;
 	out = Vector3Normalize( &Ovgl::Vector3Cross( &v1, &v2 ) );

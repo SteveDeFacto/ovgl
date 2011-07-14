@@ -25,472 +25,224 @@
 #include "OvglMesh.h"
 #include "OvglScene.h"
 
-Ovgl::Effect* BuildDefaultEffect( Ovgl::Instance* inst )
+void BuildDefaultMedia( Ovgl::Instance* inst )
 {
-	Ovgl::Effect* effect = new Ovgl::Effect;
-	effect->Inst = inst;
+	inst->DefaultMedia = new Ovgl::MediaLibrary;
+	inst->DefaultMedia->Inst = inst;
+
+	Ovgl::Shader* DefaultEffect = new Ovgl::Shader;
+	Ovgl::Shader* SkyboxEffect = new Ovgl::Shader;
+
+	DefaultEffect->MLibrary = inst->DefaultMedia;
+	SkyboxEffect->MLibrary = inst->DefaultMedia;
+
+	std::string shader;
 
 	// Create shader string.
-	std::string shader = 
-	"Texture2D txDiffuse;"
-	"SamplerState samLinear"
+	shader =
+	"struct VS_INPUT"
 	"{"
-    "	Filter = MIN_MAG_MIP_LINEAR;"
-    "	AddressU = Wrap;"
-    "	AddressV = Wrap;"
+	"	float3 pos					: ATTR0;"
+	"	float3 norm					: ATTR1;"
+	"	float2 tex					: ATTR2;"
+	"	float4 bw					: ATTR3;"
+	"	float4 bi					: ATTR4;"
 	"};"
-	"TextureCube txEnvironment;"
-	"SamplerState envSampler"
+
+	"struct FS_INPUT"
 	"{"
-	"	Filter = MIN_MAG_MIP_LINEAR;"
-	"	AddressU = Clamp;"
-	"	AddressV = Clamp;"
-	"	AddressW = Clamp;"
+	"  float4 posVS					: POSITION;"
+	"  float4 posWS					: TEXCOORD0;"
+	"  float2 tex					: TEXCOORD1;"
+	"  float4 norm					: TEXCOORD2;"
 	"};"
+
+	"struct FS_OUTPUT"
+	"{"
+	"  float4 color					: COLOR;"
+	"};"
+
 	"float4 Ambient = float4( 0.0f, 0.0f, 0.0f, 1.0f );"
 	"float4 Diffuse = float4( 0.75f, 0.75f, 0.75f, 1.0f );"
-	"float Environment_map_intensity = 1.0f;"
-	"int Light_Count			: LIGHTCOUNT;"
-	"float4 ViewPos				: VIEWPOS;"
-	"float4 Lights[255]			: LIGHTARRAY;"
-	"float4 LightColors[255]	: LIGHTCOLORARRAY;"
-	"float4x4 World				: WORLD;"
-	"float4x4 View				: WORLDVIEW;"
-	"float4x4 Projection		: PROJECTION;"
-	"float4x4 Bones[255]		: BONEARRAY;"
-	"struct VS_INPUT"
+	"float EMI = 0.1f;"
+	"float LightCount				: LIGHTCOUNT;"
+	"float4 ViewPos					: VIEWPOS;"
+	"float4 Lights[2]				: LIGHTS;"
+	"float4 LightColors[2]			: LIGHTCOLORS;"
+	"float4x4 World					: WORLD;"
+	"float4x4 ViewProj				: VIEWPROJ;"
+	"float4x4 Bones[2]				: BONES;"
+	"uniform sampler2D txDiffuse;"
+	"uniform samplerCUBE txEnvironment;"
+
+	"FS_INPUT VS( VS_INPUT In )"
 	"{"
-	"	float3 pos				: POSITION;"
-	"	float3 norm				: NORMAL;"
-	"	float2 tex				: TEXCOORD0;"
-	"	float4 bw				: TEXCOORD1;"
-	"	float4 bi				: TEXCOORD2;"
-	"};"
-	"struct PS_INPUT"
-	"{"
-	"	float4 posVS			: SV_POSITION;"
-	"	float4 posWS			: POSITION;"
-	"	float2 tex				: TEXCOORD0;"
-	"	float4 norm				: NORMAL;"
-	"};"
-	"PS_INPUT VS( VS_INPUT In )"
-	"{"
-	"	PS_INPUT Out = (PS_INPUT)0;"
-	"   float4x4 skinTransform = 0;"
-	"	float3x3 normTransform = 0;"
-	"   skinTransform += Bones[In.bi.x] * In.bw.x;"
-	"   skinTransform += Bones[In.bi.y] * In.bw.y;"
-	"   skinTransform += Bones[In.bi.z] * In.bw.z;"
-	"   skinTransform += Bones[In.bi.w] * In.bw.w;"
-	"   normTransform += (float3x3)(Bones[In.bi.x] * In.bw.x);"
-	"   normTransform += (float3x3)(Bones[In.bi.y] * In.bw.y);" 
-	"   normTransform += (float3x3)(Bones[In.bi.z] * In.bw.z);"
-	"   normTransform += (float3x3)(Bones[In.bi.w] * In.bw.w);"
-	"   Out.posVS = mul(float4(In.pos, 1), skinTransform);"
-	"	Out.posWS = Out.posVS;"
-	"	Out.norm = float4(mul(In.norm, normTransform), 0);"
-	"   Out.posVS = mul(mul(Out.posVS, View), Projection);"
-	"	Out.tex = In.tex;"
-	"	return Out;"
+	"  FS_INPUT Out;"
+	"  float4x4 skinTransform = 0;"
+	"  float3x3 normTransform = 0;"
+	"  skinTransform += Bones[In.bi.x] * In.bw.x;"
+	"  skinTransform += Bones[In.bi.y] * In.bw.y;"
+	"  skinTransform += Bones[In.bi.z] * In.bw.z;"
+	"  skinTransform += Bones[In.bi.w] * In.bw.w;"
+	"  normTransform += (float3x3)(Bones[In.bi.x] * In.bw.x);"
+	"  normTransform += (float3x3)(Bones[In.bi.y] * In.bw.y);"
+	"  normTransform += (float3x3)(Bones[In.bi.z] * In.bw.z);"
+	"  normTransform += (float3x3)(Bones[In.bi.w] * In.bw.w);"
+	"  Out.posVS = mul(float4(In.pos, 1), skinTransform);"
+	"  Out.posWS = Out.posVS;"
+	"  Out.norm = float4(In.norm, 1);"
+	"  Out.tex = In.tex;"
+	"  Out.posVS = mul(Out.posVS, ViewProj);"
+	"  return Out;"
 	"}"
-	"float4 PS( PS_INPUT In) : SV_Target"
+
+	"FS_OUTPUT FS( FS_INPUT In )"
 	"{"
-	"	float4 light = float4( 0, 0, 0, 0 );" 
-	"	float txWidth, txHeight;"
-	"	txEnvironment.GetDimensions(txWidth, txHeight);"
-	"	float4 envColor = float4( 0, 0, 0, 1 );"
-	"	if(txWidth > 0)"
-	"	{"
-	"		envColor = Environment_map_intensity * txEnvironment.Sample( envSampler, reflect( normalize( In.posWS.xyz - ViewPos.xyz ), In.norm.xyz ) );"
-	"	}"
-	"	txDiffuse.GetDimensions(txWidth, txHeight);"
-	"	float4 texColor = float4( 1, 1, 1, 1 );"
-	"	if(txWidth > 0)"
-	"	{"
-	"		texColor = txDiffuse.Sample( samLinear, In.tex );"
-	"	}"
-	"	for(int i = 0; i < Light_Count; i++)"
-	"	{"
-	"		float4 lightDir = Lights[i] - In.posWS;"
-	"		float4 NdotL = saturate(dot(In.norm, normalize(lightDir)));"
-	"		float4 attenuation = 1/length(lightDir);"
-	"		light += LightColors[i] * NdotL * attenuation * 10;"
-	"	}"    
-	"	light.w = 1;"
-	"	return ( ((texColor + envColor) * Diffuse) * (light + Ambient) );"
-	"}"
-	"technique10 Render"
-	"{"
-	"	pass P0"
-	"	{"
-	"		SetVertexShader( CompileShader( vs_4_0, VS() ) );"
-	"		SetGeometryShader( NULL );"
-	"		SetPixelShader( CompileShader( ps_4_0, PS() ) );"
-	"	}"
+	"  FS_OUTPUT Out;"
+	"  float4 light = float4( 0, 0, 0, 0 );"
+	"  for(float i = 0; i < LightCount; i++)"
+	"  {"
+	"	float4 lightDir = Lights[i] - In.posWS;"
+	"	float4 NdotL = saturate(dot(In.norm, normalize(lightDir)));"
+	"	float4 attenuation = 1/length(lightDir);"
+	"	light += LightColors[i] * NdotL * attenuation * 10;"
+	"  }"
+	"  float4 envColor = texCUBE( txEnvironment, reflect( normalize( In.posWS.xyz - ViewPos.xyz ), In.norm.xyz ) ) * EMI;"
+	"  float4 texColor = tex2D( txDiffuse, In.tex );"
+	"  Out.color = ( (texColor + envColor) * Diffuse) * (light + Ambient);"
+	"  return Out;"
 	"}";
 
-	//  Create effect.
-	D3DX10CreateEffectFromMemory( shader.c_str(), shader.size(), NULL, NULL, NULL, "fx_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, inst->D3DDevice, NULL, NULL, &effect->SFX, NULL, NULL );
-	
-	// Get shader variables.
-	effect->Technique = effect->SFX->GetTechniqueByName( "Render" );
-	effect->Shadow_Maps = effect->SFX->GetVariableBySemantic( "SHADOWMAPS" )->AsShaderResource();
-	effect->Cube_Views = effect->SFX->GetVariableBySemantic( "CUBEVIEWS" )->AsMatrix();
-	effect->Light_Count = effect->SFX->GetVariableBySemantic( "LIGHTCOUNT" )->AsScalar();
-	effect->Lights = effect->SFX->GetVariableBySemantic( "LIGHTARRAY" )->AsVector();
-	effect->Light_Colors = effect->SFX->GetVariableBySemantic( "LIGHTCOLORARRAY" )->AsVector();
-    effect->Bones = effect->SFX->GetVariableBySemantic( "BONEARRAY" )->AsMatrix();
-    effect->View = effect->SFX->GetVariableBySemantic( "WORLDVIEW" )->AsMatrix();
-	effect->ViewPos = effect->SFX->GetVariableBySemantic( "VIEWPOS" )->AsVector();
-	effect->Projection = effect->SFX->GetVariableBySemantic( "PROJECTION" )->AsMatrix();
-
-	// Get technique.
-	D3D10_PASS_DESC PassDesc;
-	effect->Technique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
-
-	// Create vertex layout desc.
-	D3D10_INPUT_ELEMENT_DESC vertexlayout[] =
+	DefaultEffect->VertexProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), CG_PROFILE_GPU_VP, "VS", NULL );
+	CGerror error;
+	const char* string;
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
 	{
-		{ "POSITION",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0,	0,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",			0, DXGI_FORMAT_R32G32B32_FLOAT,		0,	12,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		0, DXGI_FORMAT_R32G32_FLOAT,		0,	24,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		1, DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	32,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		2, DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	48,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-	};
+		OutputDebugStringA( string );
+	}
+	cgGLLoadProgram( DefaultEffect->VertexProgram );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
 
-	// Create vertex layout.
-	inst->D3DDevice->CreateInputLayout( vertexlayout, sizeof(vertexlayout)/sizeof(vertexlayout[0]), PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &effect->Layout );
+	DefaultEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), CG_PROFILE_GPU_FP, "FS", NULL );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
+	cgGLLoadProgram( DefaultEffect->FragmentProgram );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
 
-	//Return effect.
-	return effect;
-}
+	DefaultEffect->GeometryProgram = NULL;
 
-Ovgl::Effect* BuildSkyboxEffect( Ovgl::Instance* inst )
-{
-	Ovgl::Effect* effect = new Ovgl::Effect;
-	effect->Inst = inst;
-
-	// Create shader string.
-	std::string shader = 
-	"TextureCube txEnvironment;"
-	"SamplerState envSampler"
-	"{"
-	"	Filter = MIN_MAG_MIP_LINEAR;"
-	"	AddressU = Clamp;"
-	"	AddressV = Clamp;"
-	"	AddressW = Clamp;"
-	"};"
-	"float4x4 World				: WORLD;"
-	"float4x4 View				: WORLDVIEW;"
-	"float4x4 Projection		: PROJECTION;"
+	shader =
 	"struct VS_INPUT"
 	"{"
-	"	float3 pos			: POSITION;"
-	"	float3 norm			: NORMAL;"
-	"	float2 tex			: TEXCOORD0;"
-	"	float4 bw			: TEXCOORD1;"
-	"	float4 bi			: TEXCOORD2;"
-	"};"
-	"struct PS_INPUT"
-	"{"
-	"	float4 pos			: SV_POSITION;"
-	"	float3 tex			: TEXCOORD0;"
+	"	float3 pos				: ATTR0;"
+	"	float3 norm				: ATTR1;"
+	"	float2 tex				: ATTR2;"
+	"	float4 bw				: ATTR3;"
+	"	float4 bi				: ATTR4;"
 	"};"
 
-	"PS_INPUT VS( VS_INPUT In )"
+	"struct FS_INPUT"
 	"{"
-	"	PS_INPUT Out = (PS_INPUT)0;"
-	"	Out.pos = mul( float4( mul( In.pos.xyz, (float3x3)View), 1 ), Projection);"
+	"  float4 pos				: POSITION;"
+	"  float3 tex;"
+	"};"
+
+	"struct FS_OUTPUT"
+	"{"
+	"  float4 color				: COLOR;"
+	"};"
+
+	"uniform samplerCUBE txSkybox;"
+	"float4x4 View;"
+	"float4x4 Projection;"
+
+	"FS_INPUT VS( VS_INPUT In )"
+	"{"
+	"	FS_INPUT Out;"
+	"	Out.pos = mul( float4( mul( In.pos.xyz, (float3x3)View), 1 ), Projection );"
 	"	Out.tex = In.pos.xyz;"
 	"	return Out;"
 	"}"
-	"float4 PS( PS_INPUT In) : SV_Target"
+
+	"FS_OUTPUT FS( FS_INPUT In)"
 	"{"
-	"	float4 color = txEnvironment.Sample( envSampler, In.tex );"
-	"	return color;"
-	"}"
-	"technique10 Render"
-	"{"
-	"	pass P0"
-	"	{"
-	"		SetVertexShader( CompileShader( vs_4_0, VS() ) );"
-	"		SetGeometryShader( NULL );"
-	"		SetPixelShader( CompileShader( ps_4_0, PS() ) );"
-	"	}"
+	"	FS_OUTPUT Out;"
+	"	Out.color = texCUBE(txSkybox, In.tex);"
+	"	return Out;"
 	"}";
 
-
-	//  Create effect.
-	D3DX10CreateEffectFromMemory( shader.c_str(), shader.size(), NULL, NULL, NULL, "fx_4_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, inst->D3DDevice, NULL, NULL, &effect->SFX, NULL, NULL );
-	
-	// Get shader variables.
-	effect->Technique = effect->SFX->GetTechniqueByName( "Render" );
-	effect->Shadow_Maps = effect->SFX->GetVariableBySemantic( "SHADOWMAPS" )->AsShaderResource();
-	effect->Cube_Views = effect->SFX->GetVariableBySemantic( "CUBEVIEWS" )->AsMatrix();
-	effect->Light_Count = effect->SFX->GetVariableBySemantic( "LIGHTCOUNT" )->AsScalar();
-	effect->Lights = effect->SFX->GetVariableBySemantic( "LIGHTARRAY" )->AsVector();
-	effect->Light_Colors = effect->SFX->GetVariableBySemantic( "LIGHTCOLORARRAY" )->AsVector();
-    effect->Bones = effect->SFX->GetVariableBySemantic( "BONEARRAY" )->AsMatrix();
-    effect->View = effect->SFX->GetVariableBySemantic( "WORLDVIEW" )->AsMatrix();
-	effect->ViewPos = effect->SFX->GetVariableBySemantic( "VIEWPOS" )->AsVector();
-	effect->Projection = effect->SFX->GetVariableBySemantic( "PROJECTION" )->AsMatrix();
-
-	// Get technique.
-	D3D10_PASS_DESC PassDesc;
-	effect->Technique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
-
-	// Create vertex layout desc.
-	D3D10_INPUT_ELEMENT_DESC vertexlayout[] =
+	SkyboxEffect->VertexProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), CG_PROFILE_GPU_VP, "VS", NULL );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
 	{
-		{ "POSITION",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0,	0,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL",			0, DXGI_FORMAT_R32G32B32_FLOAT,		0,	12,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		0, DXGI_FORMAT_R32G32_FLOAT,		0,	24,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		1, DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	32,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD",		2, DXGI_FORMAT_R32G32B32A32_FLOAT,	0,	48,	D3D10_INPUT_PER_VERTEX_DATA, 0 },
-	};
+		OutputDebugStringA( string );
+	}
+	cgGLLoadProgram( SkyboxEffect->VertexProgram );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
 
-	// Create vertex layout.
-	inst->D3DDevice->CreateInputLayout( vertexlayout, sizeof(vertexlayout)/sizeof(vertexlayout[0]), PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &effect->Layout );
+	SkyboxEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), CG_PROFILE_GPU_FP, "FS", NULL );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
+	cgGLLoadProgram( SkyboxEffect->FragmentProgram );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
 
-	//Return effect.
-	return effect;
-}
+	SkyboxEffect->GeometryProgram = NULL;
 
-Ovgl::RenderTarget* Ovgl::Instance::CreateRenderTarget( HWND hWnd, RECT* rect, DWORD flags )
-{
-	RECT WindowRect;
-	GetWindowRect( hWnd, &WindowRect );
-	Ovgl::RenderTarget* rendertarget = new Ovgl::RenderTarget;
-	rendertarget->Inst = this;
-	rendertarget->RenderTargetView = NULL;
-	rendertarget->DepthStencilView = NULL;
-	rendertarget->hWnd = hWnd;
-	rendertarget->view = NULL;
-	DXGI_SWAP_CHAIN_DESC sd;
-	ZeroMemory( &sd, sizeof( sd ) );
-	sd.BufferCount = 1;
-	sd.BufferDesc.Width = WindowRect.right - WindowRect.left;
-	sd.BufferDesc.Height = WindowRect.bottom - WindowRect.top;
-	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	sd.BufferDesc.RefreshRate.Numerator = 60;
-	sd.BufferDesc.RefreshRate.Denominator = 1;
-	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	sd.OutputWindow = hWnd;
-	sd.SampleDesc.Count = 1;
-	sd.SampleDesc.Quality = 0;
-	sd.Windowed = true;
-	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-	Factory->CreateSwapChain( D3DDevice, &sd, &rendertarget->SwapChain);
-	ID3D10Texture2D* pBackBuffer;
-	rendertarget->SwapChain->GetBuffer( 0, __uuidof( ID3D10Texture2D ), ( LPVOID* )&pBackBuffer );
-	D3DDevice->CreateRenderTargetView( pBackBuffer, NULL, &rendertarget->RenderTargetView );
-	pBackBuffer->Release();
-	ID3D10Texture2D* DepthStencil;
-	D3D10_TEXTURE2D_DESC DepthStencilDesc;
-	DepthStencilDesc.Width = WindowRect.right - WindowRect.left;
-	DepthStencilDesc.Height = WindowRect.bottom - WindowRect.top;
-	DepthStencilDesc.MipLevels = 1;
-	DepthStencilDesc.ArraySize = 1;
-	DepthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	DepthStencilDesc.SampleDesc.Count = 1;
-	DepthStencilDesc.SampleDesc.Quality = 0;
-	DepthStencilDesc.Usage = D3D10_USAGE_DEFAULT;
-	DepthStencilDesc.BindFlags = D3D10_BIND_DEPTH_STENCIL;
-	DepthStencilDesc.CPUAccessFlags = 0;
-	DepthStencilDesc.MiscFlags = 0;
-	D3DDevice->CreateTexture2D( &DepthStencilDesc, NULL, &DepthStencil );
-	D3DDevice->CreateDepthStencilView( DepthStencil, NULL, &rendertarget->DepthStencilView );
-	DepthStencil->Release();
-	this->RenderTargets.push_back(rendertarget);
-	return rendertarget;
-};
+	inst->DefaultMedia->Shaders.push_back( DefaultEffect );
+	inst->DefaultMedia->Shaders.push_back( SkyboxEffect );
 
-Ovgl::Instance* Ovgl::Create( DWORD flags )
-{
-	// Create new instance
-	Ovgl::Instance* instance = new Ovgl::Instance; 
-
-	// Initialize COM
-	CoInitializeEx(NULL, COINIT_MULTITHREADED);
-
-	// Create DirectX device
-	D3D10_CREATE_DEVICE_FLAG DeviceFlag;
-	#ifdef _DEBUG
-		DeviceFlag = D3D10_CREATE_DEVICE_DEBUG;
-	#else
-		DeviceFlag = D3D10_CREATE_DEVICE_SINGLETHREADED;
-	#endif
-
-	D3D10CreateDevice( NULL, D3D10_DRIVER_TYPE_HARDWARE, NULL, DeviceFlag, D3D10_SDK_VERSION, &instance->D3DDevice );
-
-	// Get factory from D3DDevice.
-	IDXGIDevice * pDXGIDevice;
-	IDXGIAdapter * pDXGIAdapter;
-	instance->D3DDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice);
-	pDXGIDevice->GetParent(__uuidof(IDXGIAdapter), (void **)&pDXGIAdapter);
-	pDXGIAdapter->GetParent(__uuidof(IDXGIFactory), (void **)&instance->Factory);
-
-	// Get default views.
-	instance->D3DDevice->OMGetRenderTargets( 1, &instance->RenderTargetView, NULL );
-	instance->D3DDevice->PSGetShaderResources( 0, 1, &instance->ShaderResourceView );
-
-	// Set Rasterizer State.
-	D3D10_RASTERIZER_DESC rasterizerState;
-    rasterizerState.FillMode = D3D10_FILL_SOLID;
-    rasterizerState.CullMode = D3D10_CULL_FRONT;
-    rasterizerState.FrontCounterClockwise = true;
-    rasterizerState.DepthBias = false;
-    rasterizerState.DepthBiasClamp = 0;
-    rasterizerState.SlopeScaledDepthBias = 0;
-    rasterizerState.DepthClipEnable = true;
-    rasterizerState.ScissorEnable = false;
-    rasterizerState.MultisampleEnable = false;
-    rasterizerState.AntialiasedLineEnable = false;
-    instance->D3DDevice->CreateRasterizerState( &rasterizerState, &instance->SolidRasterState );
-    rasterizerState.FillMode = D3D10_FILL_WIREFRAME;
-    rasterizerState.CullMode = D3D10_CULL_FRONT;
-    rasterizerState.FrontCounterClockwise = true;
-    rasterizerState.DepthBias = false;
-    rasterizerState.DepthBiasClamp = 0;
-    rasterizerState.SlopeScaledDepthBias = 0;
-    rasterizerState.DepthClipEnable = true;
-    rasterizerState.ScissorEnable = false;
-    rasterizerState.MultisampleEnable = false;
-    rasterizerState.AntialiasedLineEnable = false;
-    instance->D3DDevice->CreateRasterizerState( &rasterizerState, &instance->WireFrameRasterState);
-
-	// Set Blend State.
-	ID3D10BlendState* BlendState = NULL;
-	D3D10_BLEND_DESC BlendStateDesc;
-	ZeroMemory(&BlendStateDesc, sizeof(D3D10_BLEND_DESC));
-	BlendStateDesc.AlphaToCoverageEnable = false;
-	BlendStateDesc.BlendEnable[0] = true;
-	BlendStateDesc.SrcBlend = D3D10_BLEND_SRC_ALPHA;
-	BlendStateDesc.DestBlend = D3D10_BLEND_INV_SRC_ALPHA;
-	BlendStateDesc.BlendOp = D3D10_BLEND_OP_ADD;
-	BlendStateDesc.SrcBlendAlpha = D3D10_BLEND_ZERO;
-	BlendStateDesc.DestBlendAlpha = D3D10_BLEND_ZERO;
-	BlendStateDesc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
-	BlendStateDesc.RenderTargetWriteMask[0] = D3D10_COLOR_WRITE_ENABLE_ALL;
-	instance->D3DDevice->CreateBlendState(&BlendStateDesc, &BlendState);
-	instance->D3DDevice->OMSetBlendState(BlendState, D3DXCOLOR( 0.0f, 0.0f, 0.0f, 0.0f ), 0xFFFFFFFF);
-
-	// Create Global sprite.
-	D3DX10CreateSprite( instance->D3DDevice, 0, &instance->MainSprite );
-
-	// Initialize XAudio2
-	XAudio2Create( &instance->XAudio2, 0);
-	instance->XAudio2->CreateMasteringVoice( &instance->MasteringVoice );
-	instance->DeviceDetails = new XAUDIO2_DEVICE_DETAILS;
-	instance->XAudio2->GetDeviceDetails( 0, instance->DeviceDetails );
-	X3DAudioInitialize( instance->DeviceDetails->OutputFormat.dwChannelMask, X3DAUDIO_SPEED_OF_SOUND, instance->X3DAudio );
-	instance->DSPSettings = new X3DAUDIO_DSP_SETTINGS;
-	ZeroMemory( instance->DSPSettings, sizeof( X3DAUDIO_DSP_SETTINGS ) );
-	instance->DSPSettings->SrcChannelCount = 2;
-	instance->DSPSettings->DstChannelCount = instance->DeviceDetails->OutputFormat.Format.nChannels;
-	DWORD dwSize = (instance->DSPSettings->SrcChannelCount * instance->DSPSettings->DstChannelCount);
-	FLOAT32* MatrixCoefficients = new FLOAT32[dwSize];
-	ZeroMemory( MatrixCoefficients, sizeof( FLOAT32 ) * dwSize );
-	instance->DSPSettings->pMatrixCoefficients = MatrixCoefficients;
-
-	// Create PhyX object.
-	NxPhysicsSDKDesc NxDesc;
-	NxSDKCreateError errorCode = NXCE_NO_ERROR;
-	instance->Allocator = new NxUserAllocatorDefault;
-	instance->PhysX = NxCreatePhysicsSDK( NX_PHYSICS_SDK_VERSION, instance->Allocator, NULL, NxDesc, &errorCode );
-
-	#ifdef _DEBUG
-		instance->PhysX->setParameter(NX_VISUALIZATION_SCALE, 1);
-		instance->PhysX->setParameter(NX_VISUALIZE_COLLISION_SHAPES, 1);
-		instance->PhysX->setParameter(NX_VISUALIZE_JOINT_LIMITS, 1);
-		instance->PhysX->setParameter(NX_VISUALIZE_JOINT_LOCAL_AXES, 1);
-		instance->PhysX->getFoundationSDK().getRemoteDebugger()->connect ("localhost", 5425);
-	#else
-		instance->PhysX->setParameter(NX_VISUALIZATION_SCALE, 0);
-		instance->PhysX->setParameter(NX_VISUALIZE_COLLISION_SHAPES, 0);
-		instance->PhysX->setParameter(NX_VISUALIZE_JOINT_LIMITS, 0);
-		instance->PhysX->setParameter(NX_VISUALIZE_JOINT_LOCAL_AXES, 0);
-	#endif
-
-	// Create PhysX cooking object
-	instance->Cooking = NxGetCookingLib(NX_PHYSICS_SDK_VERSION);
-	instance->Cooking->NxInitCooking();
-
-	// Create PhysX character controller.
-	instance->Manager = NxCreateControllerManager( instance->Allocator );
-
-	// Create temporary arrays to hold mesh data.
-	std::vector<Ovgl::Vertex> vertices;
-	std::vector<Ovgl::Face> faces;
+	// Create Default Material
+	Ovgl::Material* DefaultMaterial = new Ovgl::Material;
+	DefaultMaterial->ShaderProgram = DefaultEffect;
+	DefaultMaterial->NoZBuffer = false;
+	DefaultMaterial->NoZWrite = false;
+	DefaultMaterial->PostRender = false;
+	inst->DefaultMedia->Materials.push_back(DefaultMaterial);
 
 	// Create Sky Box
-	vertices.resize(8);
-	faces.resize(12);
-	vertices[0].position.x = -0.5f;
-	vertices[0].position.y = -0.5f;
-	vertices[0].position.z = -0.5f;
-	vertices[0].normal.x = -0.5f;
-	vertices[0].normal.y = -0.5f;
-	vertices[0].normal.z = -0.5f;
+	std::vector<Ovgl::Vertex> vertices(8);
+	std::vector<Ovgl::Face> faces(12);
+	std::vector<DWORD> attributes(12);
+	vertices[0].position = Ovgl::Vector3Set( -0.5f, -0.5f, -0.5f );
 	vertices[0].weight[0] = 1.0f;
-
-	vertices[1].position.x = 0.5f;
-	vertices[1].position.y = -0.5f;
-	vertices[1].position.z = -0.5f;
-	vertices[1].normal.x = 0.5f;
-	vertices[1].normal.y = -0.5f;
-	vertices[1].normal.z = -0.5f;
+	vertices[1].position = Ovgl::Vector3Set( 0.5f, -0.5f, -0.5f );
 	vertices[1].weight[0] = 1.0f;
-
-	vertices[2].position.x = -0.5f;
-	vertices[2].position.y = 0.5f;
-	vertices[2].position.z = -0.5f;
-	vertices[2].normal.x = -0.5f;
-	vertices[2].normal.y = 0.5f;
-	vertices[2].normal.z = -0.5f;
+	vertices[2].position = Ovgl::Vector3Set( -0.5f, 0.5f, -0.5f);
 	vertices[2].weight[0] = 1.0f;
-
-	vertices[3].position.x = 0.5f;
-	vertices[3].position.y = 0.5f;
-	vertices[3].position.z = -0.5f;
-	vertices[3].normal.x = 0.5f;
-	vertices[3].normal.y = 0.5f;
-	vertices[3].normal.z = -0.5f;
+	vertices[3].position = Ovgl::Vector3Set( 0.5f, 0.5f, -0.5f );
 	vertices[3].weight[0] = 1.0f;
-
-	vertices[4].position.x = -0.5f;
-	vertices[4].position.y = -0.5f;
-	vertices[4].position.z = 0.5f;
-	vertices[4].normal.x = -0.5f;
-	vertices[4].normal.y = -0.5f;
-	vertices[4].normal.z = 0.5f;
+	vertices[4].position = Ovgl::Vector3Set( -0.5f, -0.5f, 0.5f );
 	vertices[4].weight[0] = 1.0f;
-
-	vertices[5].position.x = 0.5f;
-	vertices[5].position.y = -0.5f;
-	vertices[5].position.z = 0.5f;
-	vertices[5].normal.x = 0.5f;
-	vertices[5].normal.y = -0.5f;
-	vertices[5].normal.z = 0.5f;
+	vertices[5].position = Ovgl::Vector3Set( 0.5f, -0.5f, 0.5f );
 	vertices[5].weight[0] = 1.0f;
-
-	vertices[6].position.x = -0.5f;
-	vertices[6].position.y = 0.5f;
-	vertices[6].position.z = 0.5f;
-	vertices[6].normal.x = -0.5f;
-	vertices[6].normal.y = 0.5f;
-	vertices[6].normal.z = 0.5f;
+	vertices[6].position = Ovgl::Vector3Set( -0.5f, 0.5f, 0.5f );
 	vertices[6].weight[0] = 1.0f;
-
-	vertices[7].position.x = 0.5f;
-	vertices[7].position.y = 0.5f;
-	vertices[7].position.z = 0.5f;
-	vertices[7].normal.x = 0.5f;
-	vertices[7].normal.y = 0.5f;
-	vertices[7].normal.z = 0.5f;
+	vertices[7].position = Ovgl::Vector3Set( 0.5f, 0.5f, 0.5f );
 	vertices[7].weight[0] = 1.0f;
-
-	faces[0].indices[0] = 0;
+	faces[0].indices[1] = 0;
 	faces[0].indices[1] = 1;
 	faces[0].indices[2] = 2;
 	faces[1].indices[0] = 2;
@@ -526,41 +278,167 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 	faces[11].indices[0] = 7;
 	faces[11].indices[1] = 3;
 	faces[11].indices[2] = 5;
-	D3D10_BUFFER_DESC Buffer_Desc;
-	D3D10_SUBRESOURCE_DATA InitData;
-	Buffer_Desc.Usage = D3D10_USAGE_DEFAULT;
-	Buffer_Desc.ByteWidth = sizeof( Ovgl::Vertex ) * vertices.size();
-	Buffer_Desc.BindFlags = D3D10_BIND_VERTEX_BUFFER;
-	Buffer_Desc.CPUAccessFlags = 0;
-	Buffer_Desc.MiscFlags = 0;
-	InitData.pSysMem = &vertices[0];
-	instance->D3DDevice->CreateBuffer( &Buffer_Desc, &InitData, &instance->CubeVertexBuffer );
-	Buffer_Desc.Usage = D3D10_USAGE_DEFAULT;
-	Buffer_Desc.ByteWidth = sizeof( Ovgl::Face ) * faces.size();
-	Buffer_Desc.BindFlags = D3D10_BIND_INDEX_BUFFER;
-	Buffer_Desc.CPUAccessFlags = 0;
-	Buffer_Desc.MiscFlags = 0;
-	InitData.pSysMem = &faces[0];
-	instance->D3DDevice->CreateBuffer( &Buffer_Desc, &InitData, &instance->CubeIndexBuffer );
+
+	attributes[0] = 0;
+	attributes[1] = 0;
+	attributes[2] = 0;
+	attributes[3] = 0;
+	attributes[4] = 0;
+	attributes[5] = 0;
+	attributes[6] = 0;
+	attributes[7] = 0;
+	attributes[8] = 0;
+	attributes[9] = 0;
+	attributes[10] = 0;
+	attributes[11] = 0;
+
+	Ovgl::Mesh* mesh = new Ovgl::Mesh;
+	mesh->vertices = vertices;
+	mesh->faces = faces;
+	mesh->attributes = attributes;
+	mesh->IndexBuffers = NULL;
+	mesh->VertexBuffer = NULL;
+	mesh->Update();
+	inst->DefaultMedia->Meshes.push_back(mesh);
+}
+
+Ovgl::RenderTarget* Ovgl::Instance::CreateRenderTarget( HWND hWnd, RECT* rect, DWORD flags )
+{
+	RECT WindowRect;
+	GetWindowRect( hWnd, &WindowRect );
+	Ovgl::RenderTarget* rendertarget = new Ovgl::RenderTarget;
+	rendertarget->Inst = this;
+	rendertarget->hWnd = hWnd;
+	rendertarget->hDC = GetDC(hWnd);
+	rendertarget->view = NULL;
+	PIXELFORMATDESCRIPTOR pfd;
+	ZeroMemory( &pfd, sizeof( pfd ) );
+	pfd.nSize = sizeof( pfd );
+	pfd.nVersion = 1;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+	pfd.iPixelType = PFD_TYPE_RGBA;
+	pfd.cColorBits = 32;
+	pfd.cDepthBits = 32;
+	int iFormat = ChoosePixelFormat( rendertarget->hDC, &pfd );
+	SetPixelFormat( rendertarget->hDC, iFormat, &pfd );
+	SwapBuffers( rendertarget->hDC );
+	this->RenderTargets.push_back(rendertarget);
+	return rendertarget;
+};
+
+Ovgl::Instance* Ovgl::Create( DWORD flags )
+{
+	// Create new instance
+	Ovgl::Instance* instance = new Ovgl::Instance; 
+
+	// Initialize COM
+	CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+	// Create a simple hidden window so we can create a GL context from it
+    WNDCLASSEX wcex;
+	ZeroMemory( &wcex, sizeof( wcex ) );
+    wcex.cbSize = sizeof( WNDCLASSEX );
+    wcex.lpfnWndProc = DefWindowProc;
+	wcex.hInstance = GetModuleHandle( NULL );
+	wcex.hIcon = NULL;
+    wcex.hCursor = NULL;
+    wcex.lpszClassName = L"OvglWinClass";
+    RegisterClassEx( &wcex );
+	instance->hWnd = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
+
+	// Set window pixel format
+	instance->hDC = GetDC( instance->hWnd );
+	PIXELFORMATDESCRIPTOR pfd;
+	ZeroMemory( &pfd, sizeof( pfd ) );
+	pfd.nSize = sizeof( pfd );
+	pfd.nVersion = 1;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+	pfd.iPixelType = PFD_TYPE_RGBA;
+	pfd.cColorBits = 32;
+	pfd.cDepthBits = 32;
+	int iFormat = ChoosePixelFormat( instance->hDC, &pfd );
+	SetPixelFormat( instance->hDC, iFormat, &pfd );
+
+	// Create GL context
+	HGLRC tempContext = wglCreateContext( instance->hDC );
+	wglMakeCurrent( instance->hDC, tempContext );
+	glewInit();
+	int attribs[] =
+	{
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 1,
+		0
+	};
+	instance->hRC = wglCreateContextAttribsARB( instance->hDC, 0, attribs );
+	wglMakeCurrent( NULL, NULL );
+	wglDeleteContext( tempContext );
+	wglMakeCurrent( instance->hDC, instance->hRC );
+
+	glEnable (GL_BLEND);
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Initialize CG
+	instance->CgContext = cgCreateContext();
+
+	// Initialize XAudio2
+	//XAudio2Create( &instance->XAudio2, 0);
+	//instance->XAudio2->CreateMasteringVoice( &instance->MasteringVoice );
+	//instance->DeviceDetails = new XAUDIO2_DEVICE_DETAILS;
+	//instance->XAudio2->GetDeviceDetails( 0, instance->DeviceDetails );
+	//X3DAudioInitialize( instance->DeviceDetails->OutputFormat.dwChannelMask, X3DAUDIO_SPEED_OF_SOUND, instance->X3DAudio );
+	//instance->DSPSettings = new X3DAUDIO_DSP_SETTINGS;
+	//ZeroMemory( instance->DSPSettings, sizeof( X3DAUDIO_DSP_SETTINGS ) );
+	//instance->DSPSettings->SrcChannelCount = 2;
+	//instance->DSPSettings->DstChannelCount = instance->DeviceDetails->OutputFormat.Format.nChannels;
+	//DWORD dwSize = (instance->DSPSettings->SrcChannelCount * instance->DSPSettings->DstChannelCount);
+	//FLOAT32* MatrixCoefficients = new FLOAT32[dwSize];
+	//ZeroMemory( MatrixCoefficients, sizeof( FLOAT32 ) * dwSize );
+	//instance->DSPSettings->pMatrixCoefficients = MatrixCoefficients;
+
+
+	// Initialize OpenAL
+	ALCdevice *device = alcOpenDevice(NULL);
+	ALCcontext *context = alcCreateContext(device, NULL);
+	alcMakeContextCurrent(context);
+
+	// Create PhyX object.
+	NxPhysicsSDKDesc NxDesc;
+	NxSDKCreateError errorCode = NXCE_NO_ERROR;
+	instance->Allocator = new NxUserAllocatorDefault;
+	instance->PhysX = NxCreatePhysicsSDK( NX_PHYSICS_SDK_VERSION, instance->Allocator, NULL, NxDesc, &errorCode );
+
+	#ifdef _DEBUG
+		instance->PhysX->setParameter(NX_VISUALIZATION_SCALE, 1);
+		instance->PhysX->setParameter(NX_VISUALIZE_COLLISION_SHAPES, 1);
+		instance->PhysX->setParameter(NX_VISUALIZE_JOINT_LIMITS, 1);
+		instance->PhysX->setParameter(NX_VISUALIZE_JOINT_LOCAL_AXES, 1);
+		instance->PhysX->getFoundationSDK().getRemoteDebugger()->connect ("localhost", 5425);
+	#else
+		instance->PhysX->setParameter(NX_VISUALIZATION_SCALE, 0);
+		instance->PhysX->setParameter(NX_VISUALIZE_COLLISION_SHAPES, 0);
+		instance->PhysX->setParameter(NX_VISUALIZE_JOINT_LIMITS, 0);
+		instance->PhysX->setParameter(NX_VISUALIZE_JOINT_LOCAL_AXES, 0);
+	#endif
+
+	// Create PhysX cooking object
+	instance->Cooking = NxGetCookingLib(NX_PHYSICS_SDK_VERSION);
+	instance->Cooking->NxInitCooking();
+
+	// Create PhysX character controller.
+	instance->Manager = NxCreateControllerManager( instance->Allocator );
+
+	// Create temporary arrays to hold mesh data.
+	std::vector<Ovgl::Vertex> vertices;
+	std::vector<Ovgl::Face> faces;
 
 	// Create pyramid shape.
 	vertices.resize(5);
 	faces.resize(6);
-	vertices[0].position.x = 0.0f;
-	vertices[0].position.y = 0.0f;
-	vertices[0].position.z = 0.0f;
-	vertices[1].position.x = -0.5f;
-	vertices[1].position.y = -0.5f;
-	vertices[1].position.z = 1.0f;
-	vertices[2].position.x = 0.5f;
-	vertices[2].position.y = -0.5f;
-	vertices[2].position.z = 1.0f;
-	vertices[3].position.x = -0.5f;
-	vertices[3].position.y = 0.5f;
-	vertices[3].position.z = 1.0f;
-	vertices[4].position.x = 0.5f;
-	vertices[4].position.y = 0.5f;
-	vertices[4].position.z = 1.0f;
+	vertices[0].position = Ovgl::Vector3Set( 0.0f, 0.0f, 0.0f );
+	vertices[1].position = Ovgl::Vector3Set( -0.5f, -0.5f, 1.0f );
+	vertices[2].position = Ovgl::Vector3Set( 0.5f, -0.5f, 1.0f );
+	vertices[3].position = Ovgl::Vector3Set( -0.5f, 0.5f, 1.0f );
+	vertices[4].position = Ovgl::Vector3Set( 0.5f, 0.5f, 1.0f);
 	faces[0].indices[0] = 2;
 	faces[0].indices[1] = 1;
 	faces[0].indices[2] = 0;
@@ -591,67 +469,324 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 	instance->Cooking->NxCookConvexMesh(ConvexMeshDesc, buf);
 	instance->Shapes[0] = instance->PhysX->createConvexMesh( buf );
 
-	// Build the default effect.
-	instance->DefaultEffect = BuildDefaultEffect( instance );
-
-	// Build the Skybox effect.
-	instance->SkyboxEffect = BuildSkyboxEffect( instance );
+	// Build the default media.
+	BuildDefaultMedia( instance );
 
 	// Initialize FbxSdk
 	instance->FBXManager = KFbxSdkManager::Create();
 
-	// Return AxInstance
 	return instance;
 }
 
 void Ovgl::Instance::Release()
 {
-	delete Allocator;
-	delete DSPSettings->pMatrixCoefficients;
-	delete DeviceDetails;
-	delete DSPSettings;
+	//delete Allocator;
+	//delete DSPSettings->pMatrixCoefficients;
+	//delete DeviceDetails;
+	//delete DSPSettings;
 	for( DWORD r = 0; r < RenderTargets.size(); r++ )
 	{
 		RenderTargets[r]->Release();
 	}
-	MasteringVoice->DestroyVoice();
-	XAudio2->StopEngine();
-	XAudio2->Release();
-	Factory->Release();
-	D3DDevice->ClearState();
-	MainSprite->Release();
-	D3DDevice->Release();
+	//MasteringVoice->DestroyVoice();
+	//XAudio2->StopEngine();
+	//XAudio2->Release();
 	CoUninitialize();
 };
 
-void Ovgl::Effect::set_variable(const std::string& variable, UINT count, float data[] )
+void Ovgl::Material::set_variable(const std::string& variable, const std::vector<float>& data )
 {
-	SFX->GetVariableByName( variable.c_str() )->SetRawValue( data, 0, count * 4 );
+	Variables.push_back( make_pair( variable, data ) );
 }
 
-void Ovgl::Effect::set_texture(const std::string& variable, Texture* texture)
+void Ovgl::Material::set_texture(const std::string& variable, Texture* texture)
 {
-	SFX->GetVariableByName( variable.c_str() )->AsShaderResource()->SetResource(texture->SRV);
+	Textures.push_back( make_pair( variable, texture ) );
 }
 
-//void Ovgl::Effect::Release()
-//{
-//	Layout->Release();
-//	SFX->Release();
-//	for( DWORD e = 0; e < Inst->Effects.size(); e++ )
-//	{
-//		if( Inst->Effects[e] == this )
-//		{
-//			Inst->Effects.erase( Inst->Effects.begin() + e );
-//		}
-//	}
-//	delete this;
-//}
-
+void Ovgl::Shader::Release()
+{
+	for( DWORD e = 0; e < MLibrary->Shaders.size(); e++ )
+	{
+		if( MLibrary->Shaders[e] == this )
+		{
+			MLibrary->Shaders.erase( MLibrary->Shaders.begin() + e );
+		}
+	}
+	delete this;
+}
 
 Ovgl::MediaLibrary* Ovgl::Instance::CreateMediaLibrary( const std::string& file )
 {
 	Ovgl::MediaLibrary* MediaLibrary = new Ovgl::MediaLibrary;
 	MediaLibrary->Inst = this;
 	return MediaLibrary;
+}
+
+HWND						hWnd;
+Ovgl::Instance*				Inst;
+Ovgl::RenderTarget*			RenderTarget;
+Ovgl::MediaLibrary*			MediaLibrary;
+Ovgl::Scene*				Scene;
+Ovgl::AudioBuffer*			Music;
+Ovgl::AudioBuffer*			FootStep;
+Ovgl::Mesh*					PavilionMesh;
+Ovgl::Mesh*					ChairMesh;
+Ovgl::Object*				Pavilion;
+Ovgl::Prop*					Chair;
+Ovgl::Actor*				Actor;
+Ovgl::Light*				Light;
+Ovgl::Emitter*				Emitter;
+Ovgl::Texture*				Texture1;
+Ovgl::Texture*				Texture2;
+Ovgl::Texture*				Texture3;
+Ovgl::Material*				Material1;
+Ovgl::Material*				Material2;
+Ovgl::Material*				Material3;
+Ovgl::Material*				Material4;
+Ovgl::Material*				Material5;
+bool						g_Active;
+bool						g_Sizing;
+
+LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+   switch( message )
+    {
+        case WM_KEYDOWN:
+		{
+            if( wParam == VK_ESCAPE )
+                PostQuitMessage( 0 );
+			if( wParam == 0x57 && (lParam >> 30 & 1) == 0 )
+			{
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.0f, 0.0f, 1.0f );
+				//FootStep->CreateAudioInstance(NULL);
+			}
+			if( wParam == 0x53 && (lParam >> 30 & 1) == 0 )
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.0f, 0.0f, -1.0f );
+			if( wParam == 0x44 && (lParam >> 30 & 1) == 0 )
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 1.0f, 0.0f, 0.0f );
+			if( wParam == 0x41 && (lParam >> 30 & 1) == 0 )
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( -1.0f, 0.0f, 0.0f );
+			if( wParam == VK_SPACE && (lParam >> 30 & 1) == 0 )
+				Actor->Jump( 1.0f );
+			if( wParam == VK_CONTROL && (lParam >> 30 & 1) == 0 )
+				Actor->crouch = true;
+            break;
+		}
+
+		case WM_KEYUP:
+		{
+			if( wParam == 0x57 )
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.0f, 0.0f, 1.0f );
+			if( wParam == 0x53 )
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.0f, 0.0f, -1.0f );
+			if( wParam == 0x44 )
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 1.0f, 0.0f, 0.0f );
+			if( wParam == 0x41 )
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( -1.0f, 0.0f, 0.0f );
+			if( wParam == VK_CONTROL )
+				Actor->crouch = false;
+            break;
+		}
+
+		case WM_ENTERSIZEMOVE:
+		{
+			g_Sizing = true;
+			break;
+		}
+
+		case WM_EXITSIZEMOVE:
+		{
+			g_Sizing = false;
+			break;
+		}
+
+        case WM_ACTIVATEAPP:
+		{
+			if( !g_Sizing )
+			{
+				if( wParam )
+				{
+					RECT WindowRect;
+					GetWindowRect( hWnd, &WindowRect );
+					ClipCursor( &WindowRect );
+					ShowCursor( false );
+					g_Active = true;
+				}
+				else
+				{
+					ClipCursor( NULL );
+					ShowCursor( TRUE );
+					g_Active = false;
+				}
+			}
+			break;
+		}
+
+        case WM_ACTIVATE:
+		{
+			if( RenderTarget->GetFullscreen() )
+			{
+				if( LOWORD(wParam) == WA_INACTIVE )
+				{
+					ShowWindow( hWnd, SW_MINIMIZE );
+					RenderTarget->SetFullscreen( false);
+				}
+			}
+            break;
+		}
+
+        case WM_DESTROY:
+        {
+            PostQuitMessage( 0 );
+            break;
+        }
+    }
+
+    return DefWindowProc( hWnd, message, wParam, lParam );
+}
+
+int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
+{
+    WNDCLASSEX wcex;
+	ZeroMemory( &wcex, sizeof( wcex ) );
+    wcex.cbSize = sizeof( WNDCLASSEX );
+    wcex.lpfnWndProc = WinProc;
+	wcex.hInstance = GetModuleHandle( NULL );
+	wcex.hIcon = NULL;
+    wcex.hCursor = LoadCursor( NULL, IDC_ARROW );
+    wcex.lpszClassName = L"DefaultWindowClass";
+    RegisterClassEx( &wcex );
+	RECT DesktopRect;
+	GetWindowRect(GetDesktopWindow(), &DesktopRect);
+	hWnd = CreateWindow( L"DefaultWindowClass", L"test", WS_OVERLAPPED, CW_USEDEFAULT, CW_USEDEFAULT, DesktopRect.right, DesktopRect.bottom, NULL, NULL, wcex.hInstance, NULL );
+	ShowWindow( hWnd, SW_SHOW );
+	Inst = Ovgl::Create( 0 );
+	RenderTarget = Inst->CreateRenderTarget(hWnd, NULL, 0);
+
+	DEVMODE dmScreenSettings;
+	memset(&dmScreenSettings,0,sizeof(dmScreenSettings));
+	dmScreenSettings.dmSize=sizeof(dmScreenSettings);
+	dmScreenSettings.dmPelsWidth	= DesktopRect.right;
+	dmScreenSettings.dmPelsHeight	= DesktopRect.bottom;
+	dmScreenSettings.dmBitsPerPel	= 32;
+	dmScreenSettings.dmFields=DM_BITSPERPEL|DM_PELSWIDTH|DM_PELSHEIGHT;
+
+	ChangeDisplaySettings( &dmScreenSettings, CDS_FULLSCREEN );
+	MediaLibrary = Inst->CreateMediaLibrary("");
+	Music = MediaLibrary->ImportOGG( "..\\media\\audio\\glacier.ogg" );
+	FootStep = MediaLibrary->ImportOGG( "..\\media\\audio\\foot_step.ogg" );
+	Texture1 = MediaLibrary->ImportCubeMap( "..\\media\\textures\\skybox\\posx.png", "..\\media\\textures\\skybox\\negx.png", "..\\media\\textures\\skybox\\posy.png",
+											"..\\media\\textures\\skybox\\negy.png", "..\\media\\textures\\skybox\\posz.png", "..\\media\\textures\\skybox\\negz.png");
+	Texture2 = MediaLibrary->ImportTexture( "..\\media\\textures\\white marble.png" );
+	Texture3 = MediaLibrary->ImportTexture( "..\\media\\textures\\green wall.png" );
+	PavilionMesh = MediaLibrary->ImportFBX( "..\\media\\meshes\\plane.fbx", "Cube" );
+	ChairMesh = MediaLibrary->ImportFBX( "..\\media\\meshes\\chair.fbx", "Chair" );
+	Material1 = MediaLibrary->CreateMaterial();
+	Material1->set_texture("txDiffuse", Texture2);
+	std::vector<float> EMI(1);
+	std::vector<float> Diffuse(4);
+	EMI[0] = 0.1f;
+	Diffuse[0] = 1.0f;
+	Diffuse[1] = 1.0f;
+	Diffuse[2] = 1.0f;
+	Diffuse[3] = 1.0f;
+	Material1->set_variable( "Diffuse", Diffuse );
+	Material1->set_variable( "EMI", EMI );
+
+	Material2 = MediaLibrary->CreateMaterial();
+	Material2->set_texture("txDiffuse", NULL);
+	EMI[0] = 1.0f;
+	Diffuse[0] = 1.0f;
+	Diffuse[1] = 1.0f;
+	Diffuse[2] = 1.0f;
+	Diffuse[3] = 0.15f;
+	Material2->set_variable( "Diffuse", Diffuse );
+	Material2->set_variable( "EMI", EMI );
+	Material2->NoZWrite = true;
+	Material2->PostRender = true;
+
+	Material3 = MediaLibrary->CreateMaterial();
+	Material3->set_texture("txDiffuse", Texture3);
+	EMI[0] = 0.1f;
+	Diffuse[0] = 1.0f;
+	Diffuse[1] = 1.0f;
+	Diffuse[2] = 1.0f;
+	Diffuse[3] = 1.0f;
+	Material3->set_variable( "Diffuse", Diffuse );
+	Material3->set_variable( "EMI", EMI );
+
+	Material4 = MediaLibrary->CreateMaterial();
+	Material4->set_texture("txDiffuse", Texture2);
+
+	Material5 = MediaLibrary->CreateMaterial();
+	EMI[0] = 0.1f;
+	Diffuse[0] = 1.0f;
+	Diffuse[1] = 1.0f;
+	Diffuse[2] = 1.0f;
+	Diffuse[3] = 1.0f;
+	Material5->set_variable( "Diffuse", Diffuse );
+	Material5->set_variable( "EMI", EMI );
+
+	Scene = MediaLibrary->CreateScene();
+	Scene->skybox = Texture1;
+	Pavilion = Scene->CreateObject(PavilionMesh, &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
+	Pavilion->subsets[0] = Material1;
+	//Pavilion->subsets[1] = Material2;
+	//Pavilion->subsets[2] = Material3;
+	//Pavilion->subsets[3] = Material4;
+	//Pavilion->subsets[4] = Material5;
+	Chair = Scene->CreateProp(ChairMesh, &Ovgl::MatrixTranslation( 0.0f, 0.0f, -15.0f ));
+	Light = Scene->CreateLight(&Ovgl::MatrixTranslation( 0.0f, 10.0f, 4.0f ), &Ovgl::Vector4Set( 1.0f, 1.0f, 1.0f, 1.0f ));
+	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( 0.0f, 5.0f, 0.0f ) );
+	RenderTarget->view = Actor->camera;
+	Emitter = Scene->CreateEmitter( &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ) );
+	Music->CreateAudioInstance( Emitter, false );
+
+	Ovgl::Emitter* Emitter2;
+	Emitter2 = Scene->CreateEmitter( &Ovgl::MatrixTranslation( 0.0f, 0.0f, -15.0f ) );
+	Music->CreateAudioInstance( Emitter2, true );
+	DWORD previousTime = timeGetTime();
+
+	// Main message loop
+    MSG msg = {0};
+    while( WM_QUIT != msg.message )
+    {
+        if( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
+        {
+            TranslateMessage( &msg );
+            DispatchMessage( &msg );
+        }
+        else
+        {
+            DWORD currentTime = timeGetTime();
+			DWORD elapsedTime = currentTime - previousTime;
+			Scene->Update(elapsedTime);
+			RenderTarget->Render();
+			if( g_Active )
+			{
+				RECT WindowRect;
+				GetWindowRect( hWnd, &WindowRect );
+				POINT Point;
+				GetCursorPos( &Point );
+				long mx = Point.x - ((WindowRect.left + WindowRect.right) / 2);
+				long my = Point.y - ((WindowRect.top +  WindowRect.bottom) / 2);
+				Actor->direction.z = Actor->direction.z + (mx / 1000.0f);
+				Actor->direction.y = Actor->direction.y + (my / 1000.0f);
+				if(Actor->direction.y < Ovgl::DegToRad(-90.0f))
+				{
+					Actor->direction.y = Ovgl::DegToRad(-90.0f);
+				}
+				else if(Actor->direction.y > Ovgl::DegToRad(90.0f))
+				{
+					Actor->direction.y = Ovgl::DegToRad(90.0f);
+				}
+				SetCursorPos( (WindowRect.left + WindowRect.right) / 2, (WindowRect.top +  WindowRect.bottom) / 2 );
+			}
+			previousTime = currentTime;
+        }
+    }
+	Inst->Release();
+	UnregisterClass( L"DefaultWindowClass", NULL );
+	return 0;
 }

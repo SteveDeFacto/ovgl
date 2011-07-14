@@ -129,8 +129,8 @@ namespace Ovgl
 			std::vector<Frame*>					keyframes;
 			DWORD								subset_count;
 			DWORD								root_bone;
-			ID3D10Buffer*						VertexBuffer;
-			ID3D10Buffer**						IndexBuffers;
+			GLuint								VertexBuffer;
+			GLuint*								IndexBuffers;
 			void Save( const std::string& file );
 			void GenerateBoneMeshes();
 			void GenerateVertexNormals();

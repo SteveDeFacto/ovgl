@@ -52,7 +52,7 @@ namespace Ovgl
 		class AudioEmitter;
 		class AudioVoice;
 		class Instance;
-		class Effect;
+		class Shader;
 		class Joint;
 		class Vector3;
 
@@ -179,9 +179,9 @@ namespace Ovgl
 			*/
 			std::vector<CMesh*>						bones;
 			/**
-			* List of effects that are used for each subset of the mesh.
+			* List of Shaders that are used for each subset of the mesh.
 			*/
-			std::vector<Effect*>					subsets;
+			std::vector<Material*>					subsets;
 			/**
 			* List of matrices that are taken from the bones and can be passed directly to the shaders to be rendered.
 			*/
@@ -247,9 +247,9 @@ namespace Ovgl
 			*/
 			Mesh* mesh;
 			/**
-			* List of effects that are used for each subset of the mesh.
+			* List of shaders that are used for each subset of the mesh.
 			*/
-			std::vector<Effect*> subsets;
+			std::vector<Material*> subsets;
 			/**
 			* Sets the pose of this object.
 			* @param matrix The matrix which defines the new pose for this object.
@@ -381,7 +381,11 @@ namespace Ovgl
 			*/
 			NxScene*								physics_scene;
 			/**
-			* This array contains all static objects on the set.
+			* 
+			*/
+			Texture*								skybox;
+			/**
+			* This array contains all static objects within the scene.
 			*/
 			std::vector<Object*>					objects;
 			/**

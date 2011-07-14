@@ -30,7 +30,7 @@ public:
 	virtual NxControllerAction  onShapeHit(const NxControllerShapeHit& hit)
 	{
 		NxActor& shape = hit.shape->getActor();
-		NxF32 coeff = shape.getMass() * hit.length * 30.0f;
+		NxF32 coeff = shape.getMass() * hit.length * 10;
 		shape.addForceAtLocalPos(hit.dir*coeff, NxVec3(0,0,0), NX_IMPULSE);
 		Ovgl::Actor* actor = (Ovgl::Actor*)hit.controller->getUserData();
 		if( acos(hit.worldNormal.y) > Ovgl::DegToRad(45.0f) )
@@ -120,7 +120,7 @@ Ovgl::Prop* Ovgl::Scene::CreateProp( Ovgl::Mesh* mesh, Ovgl::Matrix44* matrix )
 	prop->subsets.resize(mesh->subset_count);
 	for( DWORD s = 0; s < prop->subsets.size(); s++)
 	{
-		prop->subsets[s] = Inst->DefaultEffect;
+		prop->subsets[s] = Inst->DefaultMedia->Materials[0];
 	}
 	for( DWORD i = 0; i < mesh->bones.size(); i++ )
 	{
@@ -169,7 +169,7 @@ Ovgl::Object* Ovgl::Scene::CreateObject( Ovgl::Mesh* mesh, Ovgl::Matrix44* matri
 	object->subsets.resize(mesh->subset_count);
 	for( DWORD s = 0; s < object->subsets.size(); s++)
 	{
-		object->subsets[s] = Inst->DefaultEffect;
+		object->subsets[s] = Inst->DefaultMedia->Materials[0];
 	}
 	NxActorDesc actorDesc;
 	NxTriangleMeshShapeDesc TriangleMeshShapeDesc;
@@ -632,30 +632,30 @@ void Ovgl::Scene::Update( DWORD UpdateTime )
 	for( UINT c = 0; c < cameras.size(); c++ )
 	{
 		Ovgl::Matrix44* cmatrix = &cameras[c]->getPose();
-		X3DAUDIO_LISTENER listener = {0};
-		listener.OrientFront = D3DXVECTOR3( cmatrix->_31, cmatrix->_32, cmatrix->_33);
-		listener.OrientTop = D3DXVECTOR3( cmatrix->_21, cmatrix->_22, cmatrix->_23);
-		listener.Position = D3DXVECTOR3( cmatrix->_41, cmatrix->_42, cmatrix->_43);
+		ALfloat ListenerOri[] = { cmatrix->_21, cmatrix->_22, cmatrix->_23, cmatrix->_31, cmatrix->_32, cmatrix->_33 };
+		ALfloat ListenerPos[] = { cmatrix->_41, cmatrix->_42, cmatrix->_43 };
+		ALfloat ListenerVel[] = { 0.0, 0.0, 0.0 };
+		alListenerfv(AL_POSITION,	ListenerPos);
+		alListenerfv(AL_VELOCITY,	ListenerVel);
+		alListenerfv(AL_ORIENTATION, ListenerOri);
+
 		for( UINT i = 0; i < cameras[c]->voices.size(); i++ )
 		{
 			if(cameras[c]->voices[i] != NULL)
 			{
 				if(cameras[c]->voices[i]->instance->emitter != NULL)
 				{
-					XAUDIO2_VOICE_STATE state = {0};
-					cameras[c]->voices[i]->voice->GetState(&state);
-					if(state.BuffersQueued != 0)
+					ALint state;
+					alGetSourcei(cameras[c]->voices[i]->source, AL_SOURCE_STATE, &state);
+					if(state == AL_PLAYING)
 					{
 						Ovgl::Matrix44* ematrix = &cameras[c]->voices[i]->instance->emitter->getPose();
-						X3DAUDIO_EMITTER emitter = {0};
-						emitter.ChannelCount = 1;
-						emitter.CurveDistanceScaler = 14.0f;
-						emitter.pVolumeCurve = (X3DAUDIO_DISTANCE_CURVE*)&X3DAudioDefault_LinearCurve;
-						emitter.OrientFront = D3DXVECTOR3( ematrix->_31, ematrix->_32, ematrix->_33);
-						emitter.OrientTop = D3DXVECTOR3( ematrix->_21, ematrix->_22, ematrix->_23);
-						emitter.Position = D3DXVECTOR3( ematrix->_41, ematrix->_42, ematrix->_43);
-						X3DAudioCalculate( this->Inst->X3DAudio, &listener, &emitter, X3DAUDIO_CALCULATE_MATRIX | X3DAUDIO_CALCULATE_LPF_DIRECT, this->Inst->DSPSettings );
-						cameras[c]->voices[i]->voice->SetOutputMatrix( this->Inst->MasteringVoice, 2, this->Inst->DeviceDetails->OutputFormat.Format.nChannels, this->Inst->DSPSettings->pMatrixCoefficients );
+						ALfloat SourceOri[] = { ematrix->_21, ematrix->_22, ematrix->_23, ematrix->_31, ematrix->_32, ematrix->_33 };
+						ALfloat SourcePos[] = { ematrix->_41, ematrix->_42, ematrix->_43 };
+						ALfloat SourceVel[] = { 0.0, 0.0, 0.0 };
+						alSourcefv( cameras[c]->voices[i]->source, AL_POSITION, SourcePos );
+						alSourcefv( cameras[c]->voices[i]->source, AL_VELOCITY, SourceVel );
+						alSourcefv( cameras[c]->voices[i]->source, AL_ORIENTATION, SourceOri );
 					}
 				}
 			}

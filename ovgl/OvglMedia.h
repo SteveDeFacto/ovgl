@@ -25,7 +25,7 @@ namespace Ovgl
 		class Scene;
 		class Mesh;
 		class Instance;
-		class Effect;
+		class Shader;
 		class Texture;
 
 		class __declspec(dllexport) MediaLibrary
@@ -33,17 +33,20 @@ namespace Ovgl
 		public:
 			Instance* Inst;
 			std::vector<Scene*> Scenes;
-			std::vector<Effect*> Effects;
+			std::vector<Shader*> Shaders;
+			std::vector<Material*> Materials;
 			std::vector<Mesh*> Meshes;
 			std::vector<Texture*> Textures;
 			std::vector<AudioBuffer*> AudioBuffers;
 			Mesh* ImportFBX( const std::string& file, const std::string& mesh );
-			Effect* ImportFX( const std::string& file );
-			Texture* ImportDDS( const std::string& file );
+			Shader* ImportCG( const std::string& file );
+			Texture* ImportTexture( const std::string& file );
+			Texture* ImportCubeMap( const std::string& POS_X, const std::string& NEG_X, const std::string& POS_Y, const std::string& NEG_Y, const std::string& POS_Z, const std::string& NEG_Z );
 			AudioBuffer* ImportOGG( const std::string& file );
 			Scene* CreateScene();
-			Effect* CreateEffect( const std::string& code );
+			Shader* CreateShader( const std::string& code );
 			Mesh* CreateMesh();
+			Material* CreateMaterial();
 			Texture* CreateTexture();
 			AudioBuffer* CreateAudioBuffer();
 			void Save( const std::string& file );

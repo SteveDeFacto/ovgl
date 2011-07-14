@@ -129,12 +129,52 @@ Ovgl::Matrix44 Ovgl::MatrixIdentity()
 Ovgl::Matrix44 Ovgl::MatrixInverse ( Ovgl::Vector4* in_vec, Ovgl::Matrix44* in_mat)
 {
 	Ovgl::Matrix44 out = {0};
-	D3DXMATRIX temp;
-	CopyMemory(&temp, in_mat, sizeof(Ovgl::Matrix44));
-	D3DXMatrixInverse( &temp, NULL, &temp );
-	CopyMemory(&out, &temp, sizeof(Ovgl::Matrix44));
+	float inv[16], det;
+	inv[0] =   in_mat->_22*in_mat->_33*in_mat->_44 - in_mat->_22*in_mat->_34*in_mat->_43 - in_mat->_32*in_mat->_23*in_mat->_44
+	+ in_mat->_32*in_mat->_24*in_mat->_43 + in_mat->_42*in_mat->_23*in_mat->_34 - in_mat->_42*in_mat->_24*in_mat->_33;
+	inv[4] =  -in_mat->_21*in_mat->_33*in_mat->_44 + in_mat->_21*in_mat->_34*in_mat->_43 + in_mat->_31*in_mat->_23*in_mat->_44
+	- in_mat->_31*in_mat->_24*in_mat->_43 - in_mat->_41*in_mat->_23*in_mat->_34 + in_mat->_41*in_mat->_24*in_mat->_33;
+	inv[8] =   in_mat->_21*in_mat->_32*in_mat->_44 - in_mat->_21*in_mat->_34*in_mat->_42 - in_mat->_31*in_mat->_22*in_mat->_44
+	+ in_mat->_31*in_mat->_24*in_mat->_42 + in_mat->_41*in_mat->_22*in_mat->_34 - in_mat->_41*in_mat->_24*in_mat->_32;
+	inv[12] = -in_mat->_21*in_mat->_32*in_mat->_43 + in_mat->_21*in_mat->_33*in_mat->_42 + in_mat->_31*in_mat->_22*in_mat->_43
+	- in_mat->_31*in_mat->_23*in_mat->_42 - in_mat->_41*in_mat->_22*in_mat->_33 + in_mat->_41*in_mat->_23*in_mat->_32;
+	inv[1] =  -in_mat->_12*in_mat->_33*in_mat->_44 + in_mat->_12*in_mat->_34*in_mat->_43 + in_mat->_32*in_mat->_13*in_mat->_44
+	- in_mat->_32*in_mat->_14*in_mat->_43 - in_mat->_42*in_mat->_13*in_mat->_34 + in_mat->_42*in_mat->_14*in_mat->_33;
+	inv[5] =   in_mat->_11*in_mat->_33*in_mat->_44 - in_mat->_11*in_mat->_34*in_mat->_43 - in_mat->_31*in_mat->_13*in_mat->_44
+	+ in_mat->_31*in_mat->_14*in_mat->_43 + in_mat->_41*in_mat->_13*in_mat->_34 - in_mat->_41*in_mat->_14*in_mat->_33;
+	inv[9] =  -in_mat->_11*in_mat->_32*in_mat->_44 + in_mat->_11*in_mat->_34*in_mat->_42 + in_mat->_31*in_mat->_12*in_mat->_44
+	- in_mat->_31*in_mat->_14*in_mat->_42 - in_mat->_41*in_mat->_12*in_mat->_34 + in_mat->_41*in_mat->_14*in_mat->_32;
+	inv[13] =  in_mat->_11*in_mat->_32*in_mat->_43 - in_mat->_11*in_mat->_33*in_mat->_42 - in_mat->_31*in_mat->_12*in_mat->_43
+	+ in_mat->_31*in_mat->_13*in_mat->_42 + in_mat->_41*in_mat->_12*in_mat->_33 - in_mat->_41*in_mat->_13*in_mat->_32;
+	inv[2] =   in_mat->_12*in_mat->_23*in_mat->_44 - in_mat->_12*in_mat->_24*in_mat->_43 - in_mat->_22*in_mat->_13*in_mat->_44
+	+ in_mat->_22*in_mat->_14*in_mat->_43 + in_mat->_42*in_mat->_13*in_mat->_24 - in_mat->_42*in_mat->_14*in_mat->_23;
+	inv[6] =  -in_mat->_11*in_mat->_23*in_mat->_44 + in_mat->_11*in_mat->_24*in_mat->_43 + in_mat->_21*in_mat->_13*in_mat->_44
+	- in_mat->_21*in_mat->_14*in_mat->_43 - in_mat->_41*in_mat->_13*in_mat->_24 + in_mat->_41*in_mat->_14*in_mat->_23;
+	inv[10] =  in_mat->_11*in_mat->_22*in_mat->_44 - in_mat->_11*in_mat->_24*in_mat->_42 - in_mat->_21*in_mat->_12*in_mat->_44
+	+ in_mat->_21*in_mat->_14*in_mat->_42 + in_mat->_41*in_mat->_12*in_mat->_24 - in_mat->_41*in_mat->_14*in_mat->_22;
+	inv[14] = -in_mat->_11*in_mat->_22*in_mat->_43 + in_mat->_11*in_mat->_23*in_mat->_42 + in_mat->_21*in_mat->_12*in_mat->_43
+	- in_mat->_21*in_mat->_13*in_mat->_42 - in_mat->_41*in_mat->_12*in_mat->_23 + in_mat->_41*in_mat->_13*in_mat->_22;
+	inv[3] =  -in_mat->_12*in_mat->_23*in_mat->_34 + in_mat->_12*in_mat->_24*in_mat->_33 + in_mat->_22*in_mat->_13*in_mat->_34
+	- in_mat->_22*in_mat->_14*in_mat->_33 - in_mat->_32*in_mat->_13*in_mat->_24 + in_mat->_32*in_mat->_14*in_mat->_23;
+	inv[7] =   in_mat->_11*in_mat->_23*in_mat->_34 - in_mat->_11*in_mat->_24*in_mat->_33 - in_mat->_21*in_mat->_13*in_mat->_34
+	+ in_mat->_21*in_mat->_14*in_mat->_33 + in_mat->_31*in_mat->_13*in_mat->_24 - in_mat->_31*in_mat->_14*in_mat->_23;
+	inv[11] = -in_mat->_11*in_mat->_22*in_mat->_34 + in_mat->_11*in_mat->_24*in_mat->_32 + in_mat->_21*in_mat->_12*in_mat->_34
+	- in_mat->_21*in_mat->_14*in_mat->_32 - in_mat->_31*in_mat->_12*in_mat->_24 + in_mat->_31*in_mat->_14*in_mat->_22;
+	inv[15] =  in_mat->_11*in_mat->_22*in_mat->_33 - in_mat->_11*in_mat->_23*in_mat->_32 - in_mat->_21*in_mat->_12*in_mat->_33
+	+ in_mat->_21*in_mat->_13*in_mat->_32 + in_mat->_31*in_mat->_12*in_mat->_23 - in_mat->_31*in_mat->_13*in_mat->_22;
+
+	det = in_mat->_11*inv[0] + in_mat->_12*inv[4] + in_mat->_13*inv[8] + in_mat->_14*inv[12];
+	if (det == 0.0f)
+		return out;
+
+	det = 1.0f / det;
+
+	for (int c = 0; c < 4; c++)
+		for (int r = 0; r < 4; r++)
+			out[c][r] = inv[(c*4) + r] * det;
     return out;
 }
+
 
 Ovgl::Matrix44 Ovgl::MatrixScaling( float x, float y, float z )
 {
@@ -156,6 +196,28 @@ Ovgl::Matrix44 Ovgl::MatrixTranslation( float x, float y, float z )
 	out._42 = y;
 	out._43 = z;
 	out._44 = 1;
+	return out;
+}
+
+Ovgl::Matrix44 Ovgl::MatrixTranspose( Ovgl::Matrix44* in_mat )
+{
+	Ovgl::Matrix44 out = {0};
+	out._11 = in_mat->_11;
+	out._21 = in_mat->_12;
+	out._31 = in_mat->_13;
+	out._41 = in_mat->_14;
+	out._12 = in_mat->_21;
+	out._22 = in_mat->_22;
+	out._32 = in_mat->_23;
+	out._42 = in_mat->_24;
+	out._13 = in_mat->_31;
+	out._23 = in_mat->_32;
+	out._33 = in_mat->_33;
+	out._43 = in_mat->_34;
+	out._14 = in_mat->_41;
+	out._24 = in_mat->_42;
+	out._34 = in_mat->_43;
+	out._44 = in_mat->_44;
 	return out;
 }
 
@@ -236,16 +298,29 @@ Ovgl::Matrix44 Ovgl::MatrixRotationAxis( Ovgl::Vector3* axis, float angle )
 	return out;
 }
 
-
-Ovgl::Matrix44 Ovgl::MatrixPerspectiveLH( float ViewWidth, float ViewHeight, float NearZ, float FarZ )
+Ovgl::Matrix44 Ovgl::MatrixPerspectiveLH( float fov, float aspect, float zn, float zf)
 {
 	Ovgl::Matrix44 out = {0};
-	D3DXMATRIX temp;
-	D3DXMatrixPerspectiveFovLH( &temp, ViewWidth, ViewHeight, NearZ, FarZ );
-	CopyMemory(&out, &temp, sizeof(Ovgl::Matrix44));
+	float yScale = cos(fov/2) / sin(fov/2);
+	float xScale = yScale / aspect;
+	out._11 = xScale;
+	out._12 = 0;
+	out._13 = 0;
+	out._14 = 0;
+	out._21 = 0;
+	out._22 = yScale;
+	out._23 = 0;
+	out._24 = 0;
+	out._31 = 0;
+	out._32 = 0;
+	out._33 = zf/(zf-zn);
+	out._34 = 1;
+	out._41 = 0;
+	out._42 = 0;
+	out._43 = -zn*zf/(zf-zn);
+	out._44 = 0;
 	return out;
 }
-
 
 Ovgl::Matrix44 Ovgl::MatrixRotationQuaternion( Ovgl::Vector4* q )
 {

@@ -24,24 +24,30 @@
 #include "OvglScene.h"
 #include "OvglAudio.h"
 
-Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emitter )
+Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emitter, bool loop )
 {
 	Ovgl::AudioInstance* instance = new Ovgl::AudioInstance;
 	instance->paused = false;
 	instance->emitter = emitter;
 	Ovgl::AudioVoice* voice = new Ovgl::AudioVoice;
 	voice->instance = instance;
-	XAUDIO2_SEND_DESCRIPTOR sendDescriptors[1];
-	sendDescriptors[0].Flags = XAUDIO2_SEND_USEFILTER;
-	sendDescriptors[0].pOutputVoice = Inst->MasteringVoice;
-	const XAUDIO2_VOICE_SENDS sendList = { 1, sendDescriptors };
-	Inst->XAudio2->CreateSourceVoice( &voice->voice, format, 0, 2.0f, NULL, &sendList );
-	XAUDIO2_BUFFER XA2_Buffer = {0};
-	XA2_Buffer.pAudioData = (BYTE*)&data[0];
-	XA2_Buffer.AudioBytes = data.size();
-	XA2_Buffer.Flags = XAUDIO2_END_OF_STREAM;;
-	voice->voice->SubmitSourceBuffer( &XA2_Buffer );
-	voice->voice->Start( 0 );
+	alGenSources(1, &voice->source);
+	if( !emitter && format == AL_FORMAT_STEREO16 )
+	{
+		alSourcei( voice->source, AL_BUFFER, stereo );
+	}
+	else
+	{
+		alSourcei( voice->source, AL_BUFFER, mono );
+	}
+	if( !emitter )
+	{
+		alSourcei( voice->source, AL_SOURCE_RELATIVE, AL_TRUE );
+	}
+	alSourcef( voice->source, AL_PITCH,	1.0f );
+	alSourcef( voice->source, AL_GAIN, 1.0f );
+	alSourcei( voice->source, AL_LOOPING, loop );
+	alSourcePlay( voice->source );
 	instance->voices.push_back(voice);
 	if( emitter )
 	{
@@ -61,40 +67,40 @@ Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emit
 
 void Ovgl::AudioInstance::Play( bool loop )
 {
-	for( UINT v = 0; v < voices.size(); v++ )
-	{
-		voices[v]->voice->Start( 0 );
-	}
-	paused = false;
+	//for( UINT v = 0; v < voices.size(); v++ )
+	//{
+	//	voices[v]->voice->Start( 0 );
+	//}
+	//paused = false;
 }
 
 
 void Ovgl::AudioInstance::Stop()
 {
-	for( UINT v = 0; v < voices.size(); v++ )
-	{
-		voices[v]->voice->Stop( 0 );
-		voices[v]->voice->FlushSourceBuffers();
-		voices[v]->voice->DestroyVoice();
-	}
+	//for( UINT v = 0; v < voices.size(); v++ )
+	//{
+	//	voices[v]->voice->Stop( 0 );
+	//	voices[v]->voice->FlushSourceBuffers();
+	//	voices[v]->voice->DestroyVoice();
+	//}
 }
 
 void Ovgl::AudioInstance::Pause()
 {
-	if( paused )
-	{
-		for( UINT v = 0; v < voices.size(); v++ )
-		{
-			voices[v]->voice->Start( 0 );
-		}
-		paused = false;
-	}
-	else
-	{
-		for( UINT v = 0; v < voices.size(); v++ )
-		{
-			voices[v]->voice->Stop( 0 );
-		}
-		paused = true;
-	}
+	//if( paused )
+	//{
+	//	for( UINT v = 0; v < voices.size(); v++ )
+	//	{
+	//		voices[v]->voice->Start( 0 );
+	//	}
+	//	paused = false;
+	//}
+	//else
+	//{
+	//	for( UINT v = 0; v < voices.size(); v++ )
+	//	{
+	//		voices[v]->voice->Stop( 0 );
+	//	}
+	//	paused = true;
+	//}
 }

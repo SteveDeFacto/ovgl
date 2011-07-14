@@ -18,8 +18,8 @@
 
 namespace Ovgl
 {
-	#define OvglPi (3.14159265358979323846)
-	
+	#define OvglPi	3.1415926535897932384626433832795
+
 	extern "C"
 	{
 		class Matrix33;
@@ -97,13 +97,14 @@ namespace Ovgl
 		__declspec(dllexport) Matrix44 MatrixInverse( Vector4* in_vec, Matrix44* in_mat );
 		__declspec(dllexport) Matrix44 MatrixScaling( float x, float y, float z );
 		__declspec(dllexport) Matrix44 MatrixTranslation( float x, float y, float z );
+		__declspec(dllexport) Matrix44 MatrixTranspose( Matrix44* in_mat );
 		__declspec(dllexport) Matrix44 MatrixRotationX( float angle );
 		__declspec(dllexport) Matrix44 MatrixRotationY( float angle );
 		__declspec(dllexport) Matrix44 MatrixRotationZ( float angle );
 		__declspec(dllexport) Matrix44 MatrixRotationEuler( float yaw, float pitch, float roll );
 		__declspec(dllexport) Matrix44 MatrixRotationAxis( Vector3* axis, float angle );
 		__declspec(dllexport) Matrix44 MatrixRotationQuaternion(Vector4* q);
-		__declspec(dllexport) Matrix44 MatrixPerspectiveLH( float ViewWidth, float ViewHeight, float NearZ, float FarZ );
+		__declspec(dllexport) Matrix44 MatrixPerspectiveLH( float fov, float aspect, float zn, float zf);
 		__declspec(dllexport) Vector4 QuaternionRotationMatrix( Matrix44* matrix );
 		__declspec(dllexport) Vector4 QuaternionRotationAxis( Vector3* axis, float angle );
 		__declspec(dllexport) Vector4 QuaternionRotationEuler( float yaw, float pitch, float roll );

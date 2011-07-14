@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}\\modules")
 
-find_package( DX10 )
+find_package( OpenGL )
+find_package( OpenAL )
+find_package( CG )
+find_package( FreeImage )
 find_package( PhysX )
 find_package( FBXSDK )
 find_package( Ogg )

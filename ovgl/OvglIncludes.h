@@ -29,20 +29,27 @@
 
 // C++ Standard Library Headers
 #include <stdio.h>
+#include <math.h>
 #include <algorithm>
 #include <iostream>
 #include <vector>
 #include <string>
 
-// XAudio2 Headers
-#include <xaudio2.h>
-#include <xaudio2fx.h>
-#include <x3daudio.h>
+// OpenAl Headers
+#include <al.h>
+#include <alc.h>
 
-// DirectX Headers
-#include <d3d10.h>
-#include <d3dx10.h>
-#include <DXGI.h>
+// OpenGL Headers
+#include <gl\glew.h>
+#include <gl\wglew.h>
+#include <gl\gl.h>
+
+// FreeImage Headers
+#include <FreeImage.h>
+
+// Cg Headers
+#include <Cg/cg.h>
+#include <Cg/cgGL.h>
 
 // PhysX Headers
 #include <NxPhysics.h>

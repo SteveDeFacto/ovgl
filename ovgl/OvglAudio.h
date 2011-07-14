@@ -17,9 +17,6 @@
 */
 
 // Forward declare external classes
-struct IXAudio2SourceVoice;
-struct tWAVEFORMATEX;
-typedef tWAVEFORMATEX WAVEFORMATEX;
 
 namespace Ovgl
 {
@@ -35,10 +32,12 @@ namespace Ovgl
 		{
 		public:
 			Instance*							Inst;
-			std::vector<char>					data;
-			WAVEFORMATEX*						format;
-			IXAudio2*							xaudio;
-			AudioInstance* CreateAudioInstance( Emitter* emitter );
+			ALenum								format;
+			ALsizei								frequency;
+			ALuint								stereo;
+			ALuint								mono;
+			std::vector<signed short>			data;
+			AudioInstance* CreateAudioInstance( Emitter* emitter, bool loop );
 		};
 
 		class __declspec(dllexport) AudioInstance
@@ -57,7 +56,7 @@ namespace Ovgl
 		{
 		public:
 			AudioInstance*						instance;
-			IXAudio2SourceVoice*				voice;
+			ALuint								source;
 		};
 	}
 }

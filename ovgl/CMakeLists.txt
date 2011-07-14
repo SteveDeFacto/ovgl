@@ -6,7 +6,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ".\\..\\lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ".\\..\\lib")
 set(CMAKE_DEBUG_POSTFIX "d")
 
-include_directories(${DX3D10_INCLUDE_PATH}
+include_directories(${OPENAL_INCLUDE_DIR}
+${CG_INCLUDE_DIR}
+${FREEIMAGE_INCLUDE_DIR}
 ${FBX_INCLUDE_DIR}
 ${OGG_INCLUDE_DIR}
 ${VORBIS_INCLUDE_DIR}
@@ -16,7 +18,9 @@ ${PHYSX_FOUNDATION_INCLUDE_DIR}
 ${PHYSX_COOKING_INCLUDE_DIR}
 ${PHYSX_CHARACTER_INCLUDE_DIR})
 
-link_directories(${D3D10_LIBRARY}
+link_directories(${OPENAL_LIBRARY_DIR}
+${CG_LIBRARY_DIR}
+${FREEIMAGE_LIBRARY_DIR}
 ${FBX_LIBRARY_DIR}
 ${OGG_LIBRARY_DIR}
 ${VORBIS_LIBRARY_DIR}
@@ -27,32 +31,33 @@ add_library( Ovgl SHARED "OvglAudio.h"
 "OvglIncludes.h"
 "OvglInstance.h"
 "OvglMath.h"
-"OvglMesh.h"
 "OvglMedia.h"
+"OvglMesh.h"
 "OvglScene.h"
 "OvglAudio.cpp"
 "OvglGraphics.cpp"
 "OvglInstance.cpp"
 "OvglMath.cpp"
-"OvglMesh.cpp"
 "OvglMedia.cpp"
+"OvglMesh.cpp"
 "OvglScene.cpp")
 
 target_link_libraries( Ovgl "wininet.lib"
 "winmm.lib"
-"d3d10.lib"
-optimized "d3dx10.lib"
-debug "d3dx10d.lib"
-"DXGI.lib"
+"opengl32.lib"
+"glew32.lib"
+"OpenAL32.lib"
+"FreeImage.lib"
+"cg.lib"
+"cgGL.lib"
 "PhysXLoader.lib"
 "PhysXCooking.lib"
 "NxCharacter.lib"
 "libogg_static.lib"
 "libvorbis_static.lib"
 "libvorbisfile_static.lib"
-"x3daudio.lib"
-optimized "fbxsdk_20113_1.lib"
-debug "fbxsdk_20113_1d.lib")
+optimized "fbxsdk-2012.1-md.lib"
+debug "fbxsdk-2012.1-mdd.lib")
 
 add_definitions( -DNOMINMAX -DWIN32_LEAN_AND_MEAN -DKFBX_DLLINFO )
 
