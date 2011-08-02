@@ -521,14 +521,28 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, const std::s
 							face.indices[1] = FaceIndices[2];
 							face.indices[2] = FaceIndices[3];
 							mesh->faces.push_back( face );
-							mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p));
+							if(FBXLayerMats)
+							{
+								mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p));
+							}
+							else
+							{
+								mesh->attributes.push_back(0);
+							}
 						}
 						Ovgl::Face face;
 						face.indices[0] = FaceIndices[0];
 						face.indices[1] = FaceIndices[1];
 						face.indices[2] = FaceIndices[2];
 						mesh->faces.push_back( face );
-						mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p));
+						if(FBXLayerMats)
+						{
+							mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p));
+						}
+						else
+						{
+							mesh->attributes.push_back(0);
+						}
 					}
 
 					// Get animation frames for this mesh.
@@ -794,19 +808,10 @@ Ovgl::Scene* Ovgl::MediaLibrary::CreateScene( )
 {
 	Ovgl::Scene* scene = new Ovgl::Scene;
 	scene->Inst = Inst;
-	NxSceneDesc sceneDesc;
-	sceneDesc.gravity.set( 0.0f, -9.8f, 0.0f );
-	if( Inst->PhysX->getHWVersion() != NX_HW_VERSION_NONE)
-		#ifdef _DEBUG
-			sceneDesc.simType = NX_SIMULATION_SW;
-		#else
-			sceneDesc.simType = NX_SIMULATION_HW;
-		#endif
-	scene->physics_scene = Inst->PhysX->createScene(sceneDesc);
-	NxMaterial* defaultMaterial = scene->physics_scene->getMaterialFromIndex(0);
-	defaultMaterial->setRestitution(0.0f);
-	defaultMaterial->setStaticFriction(0.5f);
-	defaultMaterial->setDynamicFriction(0.5f);
+	scene->DynamicsWorld = new btDiscreteDynamicsWorld(Inst->PhysicsDispatcher,Inst->PhysicsBroadphase,Inst->PhysicsSolver,Inst->PhysicsConfiguration);
+	scene->DynamicsWorld->setGravity(btVector3( 0.0f,-9.8f, 0.0f ));
+	btContactSolverInfo& info = scene->DynamicsWorld->getSolverInfo();
+	info.m_numIterations = 20; 
 	Scenes.push_back(scene);
 	return scene;
 };

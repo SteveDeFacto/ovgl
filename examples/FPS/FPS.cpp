@@ -24,13 +24,26 @@
 HWND						hWnd;
 Ovgl::Instance*				Inst;
 Ovgl::RenderTarget*			RenderTarget;
+Ovgl::MediaLibrary*			MediaLibrary;
+Ovgl::Scene*				Scene;
 Ovgl::AudioBuffer*			Music;
 Ovgl::AudioBuffer*			FootStep;
-Ovgl::Scene*				Scene;
+Ovgl::Mesh*					PavilionMesh;
+Ovgl::Mesh*					ChairMesh;
+Ovgl::Object*				Pavilion;
+Ovgl::Prop*					Chair;
 Ovgl::Actor*				Actor;
+Ovgl::Light*				Light;
+Ovgl::Camera*				Camera;
 Ovgl::Emitter*				Emitter;
 Ovgl::Texture*				Texture1;
 Ovgl::Texture*				Texture2;
+Ovgl::Texture*				Texture3;
+Ovgl::Material*				Material1;
+Ovgl::Material*				Material2;
+Ovgl::Material*				Material3;
+Ovgl::Material*				Material4;
+Ovgl::Material*				Material5;
 bool						g_Active;
 bool						g_Sizing;
 
@@ -43,18 +56,15 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
             if( wParam == VK_ESCAPE )
                 PostQuitMessage( 0 );
 			if( wParam == 0x57 && (lParam >> 30 & 1) == 0 )
-			{
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.0f, 0.0f, 1.0f );
-				FootStep->CreateAudioInstance(NULL);
-			}
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(0.0f, 0.0f, 0.1f);
 			if( wParam == 0x53 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 0.0f, 0.0f, -1.0f );
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(0.0f, 0.0f, -0.1f);
 			if( wParam == 0x44 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( 1.0f, 0.0f, 0.0f );
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(0.1f, 0.0f, 0.0f);
 			if( wParam == 0x41 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set( -1.0f, 0.0f, 0.0f );
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(-0.1f, 0.0f, 0.0f);
 			if( wParam == VK_SPACE && (lParam >> 30 & 1) == 0 )
-				Actor->Jump( 1.0f );
+				Actor->controller->jump();
 			if( wParam == VK_CONTROL && (lParam >> 30 & 1) == 0 )
 				Actor->crouch = true;
             break;
@@ -63,13 +73,13 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 		case WM_KEYUP:
 		{
 			if( wParam == 0x57 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.0f, 0.0f, 1.0f );
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(0.0f, 0.0f, 0.1f);
 			if( wParam == 0x53 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 0.0f, 0.0f, -1.0f );
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(0.0f, 0.0f, -0.1f);
 			if( wParam == 0x44 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( 1.0f, 0.0f, 0.0f );
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(0.1f, 0.0f, 0.0f);
 			if( wParam == 0x41 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set( -1.0f, 0.0f, 0.0f );
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(-0.1f, 0.0f, 0.0f);
 			if( wParam == VK_CONTROL )
 				Actor->crouch = false;
             break;
@@ -143,28 +153,99 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
     wcex.hCursor = LoadCursor( NULL, IDC_ARROW );
     wcex.lpszClassName = L"DefaultWindowClass";
     RegisterClassEx( &wcex );
-	hWnd = NULL;
-	hWnd = CreateWindow( L"DefaultWindowClass", L"test", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wcex.hInstance, NULL );
+	RECT DesktopRect;
+	GetWindowRect(GetDesktopWindow(), &DesktopRect);
+	hWnd = CreateWindow( L"DefaultWindowClass", L"test", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, DesktopRect.right, DesktopRect.bottom, NULL, NULL, wcex.hInstance, NULL );
 	ShowWindow( hWnd, SW_SHOW );
 	Inst = Ovgl::Create( 0 );
 	RenderTarget = Inst->CreateRenderTarget(hWnd, NULL, 0);
-	RenderTarget->CreateText("..\\..\\media\\textures\\Grass.dds", &Ovgl::Vector4Set( 0.0f, 0.0f, 512.0f, 512.0f ));
-	Music = Inst->CreateAudioBuffer( "..\\..\\media\\audio\\glacier.ogg" );
-	FootStep = Inst->CreateAudioBuffer( "..\\..\\media\\audio\\foot_step.ogg" );
-	Scene = Inst->CreateScene( "..\\..\\media\\meshes\\HL2.bin", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
-	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( -75.0f, 5.0f, 0.0f ) );
+
+	DEVMODE dmScreenSettings = {0};
+	dmScreenSettings.dmSize			= sizeof(dmScreenSettings);
+	dmScreenSettings.dmPelsWidth	= DesktopRect.right;
+	dmScreenSettings.dmPelsHeight	= DesktopRect.bottom;
+	dmScreenSettings.dmBitsPerPel	= 32;
+	dmScreenSettings.dmFields		= DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+	ChangeDisplaySettings( &dmScreenSettings, CDS_FULLSCREEN );
+
+	MediaLibrary = Inst->CreateMediaLibrary("");
+	Music = MediaLibrary->ImportOGG( "..\\media\\audio\\Fireproof Babies - Swim below as Leviathans.ogg" );
+	FootStep = MediaLibrary->ImportOGG( "..\\media\\audio\\foot_step.ogg" );
+	Texture1 = MediaLibrary->ImportCubeMap( "..\\media\\textures\\skybox\\posx.png", "..\\media\\textures\\skybox\\negx.png", "..\\media\\textures\\skybox\\posy.png",
+											"..\\media\\textures\\skybox\\negy.png", "..\\media\\textures\\skybox\\posz.png", "..\\media\\textures\\skybox\\negz.png");
+	Texture2 = MediaLibrary->ImportTexture( "..\\media\\textures\\white marble.png" );
+	Texture3 = MediaLibrary->ImportTexture( "..\\media\\textures\\test.jpg" );
+	PavilionMesh = MediaLibrary->ImportFBX( "..\\media\\meshes\\PlaneTest.fbx", "Plane" );
+	ChairMesh = MediaLibrary->ImportFBX( "..\\media\\meshes\\Woman.fbx", "Woman" );
+	Material1 = MediaLibrary->CreateMaterial();
+	Material1->set_texture("txDiffuse", Texture2);
+	std::vector<float> EMI(1);
+	std::vector<float> Diffuse(4);
+	EMI[0] = 0.1f;
+	Diffuse[0] = 1.0f;
+	Diffuse[1] = 1.0f;
+	Diffuse[2] = 1.0f;
+	Diffuse[3] = 1.0f;
+	Material1->set_variable( "Diffuse", Diffuse );
+	Material1->set_variable( "EMI", EMI );
+
+	Material2 = MediaLibrary->CreateMaterial();
+	Material2->set_texture("txDiffuse", NULL);
+	EMI[0] = 1.0f;
+	Diffuse[0] = 1.0f;
+	Diffuse[1] = 1.0f;
+	Diffuse[2] = 1.0f;
+	Diffuse[3] = 0.15f;
+	Material2->set_variable( "Diffuse", Diffuse );
+	Material2->set_variable( "EMI", EMI );
+	Material2->NoZWrite = true;
+	Material2->PostRender = true;
+
+	Material3 = MediaLibrary->CreateMaterial();
+	Material3->set_texture("txDiffuse", Texture3);
+	EMI[0] = 0.1f;
+	Diffuse[0] = 1.0f;
+	Diffuse[1] = 1.0f;
+	Diffuse[2] = 1.0f;
+	Diffuse[3] = 1.0f;
+	Material3->set_variable( "Diffuse", Diffuse );
+	Material3->set_variable( "EMI", EMI );
+
+	Material4 = MediaLibrary->CreateMaterial();
+	Material4->set_texture("txDiffuse", Texture2);
+
+	Material5 = MediaLibrary->CreateMaterial();
+	EMI[0] = 0.1f;
+	Diffuse[0] = 1.0f;
+	Diffuse[1] = 1.0f;
+	Diffuse[2] = 1.0f;
+	Diffuse[3] = 1.0f;
+	Material5->set_variable( "Diffuse", Diffuse );
+	Material5->set_variable( "EMI", EMI );
+
+	Scene = MediaLibrary->CreateScene();
+	Scene->skybox = Texture1;
+	Pavilion = Scene->CreateObject(PavilionMesh, &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
+	Pavilion->subsets[0] = Material1;
+	Pavilion->subsets[1] = Material2;
+	Pavilion->subsets[2] = Material3;
+	Pavilion->subsets[3] = Material4;
+	Pavilion->subsets[4] = Material5;
+	Chair = Scene->CreateProp(ChairMesh, &Ovgl::MatrixTranslation( 0.0f, 15.0f, -5.0f ));
+	Light = Scene->CreateLight(&Ovgl::MatrixTranslation( 0.0f, 10.0f, 0.0f ), &Ovgl::Vector4Set( 1.0f, 1.0f, 1.0f, 1.0f ));
+	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( 0.0f, 15.0f, 0.0f ) );
+//	Camera = Scene->CreateCamera(&Ovgl::MatrixTranslation( 0.0f, 3.0f, 0.0f ));
 	RenderTarget->view = Actor->camera;
-	Music->CreateAudioInstance( NULL );
-	Texture1 = Inst->CreateTexture("..\\..\\media\\textures\\Skybox.dds");
-	Texture2 = Inst->CreateTexture("..\\..\\media\\textures\\Grass.dds");
-	Inst->SkyboxEffect->set_texture( "txEnvironment", Texture1);
-	Inst->DefaultEffect->set_texture( "txEnvironment", Texture1);
-	Inst->DefaultEffect->set_texture( "txDiffuse", Texture2);
-	float data0[1] = { 0.25f};
-	Inst->DefaultEffect->set_variable( "Environment_map_intensity", 1, data0); 
-	float data[4] = { 0.25f, 0.25f, 0.25f, 1.0f };
-	Inst->DefaultEffect->set_variable( "Ambient", 4, data); 
+	Emitter = Scene->CreateEmitter( &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ) );
+	Music->CreateAudioInstance( Emitter, false );
+
+	Ovgl::Emitter* Emitter2;
+	Emitter2 = Scene->CreateEmitter( &Ovgl::MatrixTranslation( 0.0f, 20.0f, 0.0f ) );
+	Music->CreateAudioInstance( Emitter2, true );
+	RenderTarget->CreateText( "Hello World!", &Ovgl::Vector4Set( 50.0f, 0.0f, 250.0f, 100.0f ) );
+
 	DWORD previousTime = timeGetTime();
+
 	// Main message loop
     MSG msg = {0};
     while( WM_QUIT != msg.message )

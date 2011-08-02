@@ -17,7 +17,6 @@
 */
 
 // Forward declare external classes
-class NxActor;
 
 namespace Ovgl
 {
@@ -96,7 +95,7 @@ namespace Ovgl
 		class __declspec(dllexport) Bone
 		{
 		public:
-			NxConvexMesh*						convex;
+			btConvexHullShape*					convex;
 			Mesh*								mesh;
 			Matrix44							matrix;
 			float								length;
@@ -110,7 +109,7 @@ namespace Ovgl
 		{
 		public:
 			Scene* scene;
-			NxActor* actor;
+			btRigidBody* actor;
 			void setPose( Matrix44* matrix );
 			Matrix44 getPose();
 			void SetFlags( DWORD flags );

@@ -17,10 +17,6 @@
 */
 
 // Forward declare external classes
-class NxScene;
-class NxCapsuleController;
-class NxCapsuleControllerDesc;
-class NxD6Joint;
 
 namespace Ovgl
 {
@@ -80,7 +76,7 @@ namespace Ovgl
 		public:
 			Scene* scene;
 			CMesh* obj[1];
-			NxD6Joint* joint;
+			btGeneric6DofConstraint* joint;
 			void Release();
 		};
 
@@ -299,17 +295,10 @@ namespace Ovgl
 		{
 		public:
 			/**
-			* This is a pointer to the physics scene capsule controller. This is generally only for internal use.
-			*/			
-			NxCapsuleController* controller;
-			/**
-			* This is the paramatures that were used to create the physics scene capsule controller. This is generally only for internal use.
-			*/					
-			NxCapsuleControllerDesc* desc;
-			/**
 			* This is a pointer to the scene that this actor was created by and resides in.
 			*/
 			Scene* scene;
+			btKinematicCharacterController* controller;
 			/**
 			* This is the view of the actor. You can set it as the view to a render target to see out of the actor's eyes.
 			*/
@@ -335,9 +324,13 @@ namespace Ovgl
 			*/
 			Vector3 velocity;
 			/**
-			* None
+			*
 			*/
-			RayHit hit;
+			float height;
+			/**
+			*
+			*/
+			float radius;
 			/**
 			* The actor's current crouch state
 			*/
@@ -347,13 +340,9 @@ namespace Ovgl
 			*/
 			bool grounded;
 			/**
-			* Tells the actor which way to move.
-			*/
-			void SetTrajectory( Vector3 vec );
-			/**
 			* Tells the actor where to look.
 			*/
-			void SetDirection( Vector3 vec );
+			void SetDirection( Vector3* vec );
 			/**
 			* Makes the actor jump.
 			* @param force This tells the actor how high to jump.
@@ -379,7 +368,7 @@ namespace Ovgl
 			/**
 			* This is a pointer to the PhysX scene.
 			*/
-			NxScene*								physics_scene;
+			btDiscreteDynamicsWorld*				DynamicsWorld;
 			/**
 			* 
 			*/
@@ -455,7 +444,7 @@ namespace Ovgl
 			* @param obj2 Second Ovgl::CMesh.
 			* @param anchor This is the point in which the two Ovgl::CMesh are anchored. If this is set to NULL the anchor will be placed at the position of the first Ovgl::CMesh;
 			*/
-			Joint* CreateJoint( CMesh* obj1, CMesh* obj2, Vector3* anchor );
+			Joint* CreateJoint( CMesh* obj1, CMesh* obj2);
 			/**
 			* This function updates the animations, audio emition points, and the physics objects of the scene.
 			* @param update_time The amount of time that has passed since the last scene update.

@@ -6,7 +6,7 @@ find_package( OpenGL )
 find_package( OpenAL )
 find_package( CG )
 find_package( FreeImage )
-find_package( PhysX )
+find_package( Bullet )
 find_package( FBXSDK )
 find_package( Ogg )
 

@@ -12,11 +12,7 @@ ${FREEIMAGE_INCLUDE_DIR}
 ${FBX_INCLUDE_DIR}
 ${OGG_INCLUDE_DIR}
 ${VORBIS_INCLUDE_DIR}
-${PHYSX_INCLUDE_DIR}
-${PHYSX_LOADER_INCLUDE_DIR}
-${PHYSX_FOUNDATION_INCLUDE_DIR}
-${PHYSX_COOKING_INCLUDE_DIR}
-${PHYSX_CHARACTER_INCLUDE_DIR})
+${BULLET_INCLUDE_DIR}
 
 link_directories(${OPENAL_LIBRARY_DIR}
 ${CG_LIBRARY_DIR}
@@ -24,7 +20,7 @@ ${FREEIMAGE_LIBRARY_DIR}
 ${FBX_LIBRARY_DIR}
 ${OGG_LIBRARY_DIR}
 ${VORBIS_LIBRARY_DIR}
-${PHYSX_LIBRARY_DIR})
+${BULLET_LIBRARY_DIR})
 
 add_library( Ovgl SHARED "OvglAudio.h"
 "OvglGraphics.h"
@@ -50,14 +46,17 @@ target_link_libraries( Ovgl "wininet.lib"
 "FreeImage.lib"
 "cg.lib"
 "cgGL.lib"
-"PhysXLoader.lib"
-"PhysXCooking.lib"
-"NxCharacter.lib"
 "libogg_static.lib"
 "libvorbis_static.lib"
 "libvorbisfile_static.lib"
 optimized "fbxsdk-2012.1-md.lib"
+optimized "BulletDynamics.lib"
+optimized "BulletCollision.lib"
+optimized "LinearMath.lib"
 debug "fbxsdk-2012.1-mdd.lib")
+debug "BulletDynamicsd.lib"
+debug "BulletCollisiond.lib"
+debug "LinearMathd.lib"
 
 add_definitions( -DNOMINMAX -DWIN32_LEAN_AND_MEAN -DKFBX_DLLINFO )
 

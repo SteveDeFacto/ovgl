@@ -290,7 +290,7 @@ void Ovgl::RenderTarget::Render()
 					{
 						glDepthMask (GL_TRUE);
 					}
-					
+
 					CGparameter CgWorldMatrix = cgGetNamedParameter( scene->props[i]->subsets[s]->ShaderProgram->VertexProgram, "World" );
 					cgGLSetMatrixParameterfc( CgWorldMatrix, (float*)&Ovgl::MatrixTranspose(&worldMat) );
 					CGparameter CgViewProjMatrix = cgGetNamedParameter( scene->props[i]->subsets[s]->ShaderProgram->VertexProgram, "ViewProj" );
@@ -395,86 +395,88 @@ void Ovgl::RenderTarget::Render()
 		}
 	}
 
-	//std::vector<D3DX10_SPRITE*> Sprites;
-	//for(UINT i = 0; i < Interfaces.size(); i++)
-	//{
-	//	if(Interfaces[i]->Enabled)
-	//	{
-	//		RECT AdjustedRect;
+	glDisable (GL_DEPTH_TEST);
+	glDepthMask (GL_FALSE);
+	glDisable( GL_LIGHTING );
+	glEnable(GL_TEXTURE_2D);
+//	glDisable( GL_BLEND );
 
-	//		// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
-	//		if( Interfaces[i]->Rect.w > 0 && Interfaces[i]->Rect.w < 1 )
-	//		{
-	//			AdjustedRect.left = (LONG)(ViewPort.Width * Interfaces[i]->Rect.w);
-	//		}
-	//		else
-	//		{
-	//			AdjustedRect.left = (LONG)Interfaces[i]->Rect.w;
-	//		}
+	// Get viewport
+	GLint iViewport[4];
+    glGetIntegerv( GL_VIEWPORT, iViewport );
 
-	//		// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
-	//		if( Interfaces[i]->Rect.x > 0 && Interfaces[i]->Rect.x < 1 )
-	//		{
-	//			AdjustedRect.top = (LONG)(ViewPort.Height * Interfaces[i]->Rect.x);
-	//		}
-	//		else
-	//		{
-	//			AdjustedRect.top = (LONG)Interfaces[i]->Rect.x;
-	//		}
+	glMatrixMode( GL_PROJECTION );
+	glPushMatrix();
+	glLoadIdentity();
 
-	//		// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
-	//		if( Interfaces[i]->Rect.y > 0 && Interfaces[i]->Rect.y < 1 )
-	//		{
-	//			AdjustedRect.right = (LONG)(ViewPort.Width * Interfaces[i]->Rect.y);
-	//		}
-	//		else
-	//		{
-	//			AdjustedRect.right = (LONG)Interfaces[i]->Rect.y;
-	//		}
+	// Set up the orthographic projection
+    glOrtho( iViewport[0], iViewport[0] + iViewport[2], iViewport[1] + iViewport[3], iViewport[1], -1, 1 );
 
-	//		// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
-	//		if( Interfaces[i]->Rect.z > 0 && Interfaces[i]->Rect.z < 1 )
-	//		{
-	//			AdjustedRect.bottom = (LONG)(ViewPort.Height * Interfaces[i]->Rect.z);
-	//		}
-	//		else
-	//		{
-	//			AdjustedRect.bottom = (LONG)Interfaces[i]->Rect.z;
-	//		}
+	for(UINT i = 0; i < Interfaces.size(); i++)
+	{
+		if(Interfaces[i]->Enabled)
+		{
+			RECT AdjustedRect;
 
-	//		// Get sprite location and size
-	//		float SpriteLeft, SpriteTop, SpriteWidth, SpriteHeight;
-	//		SpriteWidth = (float)(AdjustedRect.right - AdjustedRect.left);
-	//		SpriteHeight = (float)(AdjustedRect.bottom - AdjustedRect.top);
-	//		SpriteLeft = (float)(AdjustedRect.left + (SpriteWidth / 2));
-	//		SpriteTop =  (float)(ViewPort.Height - (AdjustedRect.top + (SpriteHeight / 2)));
+			// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
+			if( Interfaces[i]->Rect.w > 0 && Interfaces[i]->Rect.w < 1 )
+			{
+				AdjustedRect.left = (LONG)((iViewport[0] + iViewport[2]) * Interfaces[i]->Rect.w);
+			}
+			else
+			{
+				AdjustedRect.left = (LONG)Interfaces[i]->Rect.w;
+			}
 
-	//		// Set world matrix
-	//		D3DXMATRIX matScaling, matTranslation;
-	//		D3DXMatrixScaling(&matScaling, SpriteWidth, SpriteHeight, 1.0f );
-	//		D3DXMatrixTranslation( &matTranslation, SpriteLeft, SpriteTop, 0.0f);
-	//		Interfaces[i]->Sprite->matWorld = matScaling * matTranslation;
+			// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
+			if( Interfaces[i]->Rect.x > 0 && Interfaces[i]->Rect.x < 1 )
+			{
+				AdjustedRect.top = (LONG)((iViewport[1] + iViewport[3]) * Interfaces[i]->Rect.x);
+			}
+			else
+			{
+				AdjustedRect.top = (LONG)Interfaces[i]->Rect.x;
+			}
 
-	//		// Add sprite to list of sprites to be rendered
-	//		Sprites.push_back( Interfaces[i]->Sprite );
-	//	}
-	//}
+			// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
+			if( Interfaces[i]->Rect.y > 0 && Interfaces[i]->Rect.y < 1 )
+			{
+				AdjustedRect.right = (LONG)((iViewport[0] + iViewport[2]) * Interfaces[i]->Rect.y);
+			}
+			else
+			{
+				AdjustedRect.right = (LONG)Interfaces[i]->Rect.y;
+			}
 
-	//if(Sprites.size())
-	//{
-	//	Inst->D3DDevice->RSSetViewports( 1, &ViewPort );
-	//	Inst->D3DDevice->RSSetState(Inst->SolidRasterState);
-	//	D3DXMATRIX Projection;
-	//	D3DXMATRIX Scaling;
-	//	D3DXMatrixOrthoOffCenterLH(&Projection, 0.0f, (float)ViewPort.Width, 0.0f, (float)ViewPort.Height, 0.0f, 10.0f);
-	//	Inst->MainSprite->SetProjectionTransform( &Projection );
-	//	Inst->MainSprite->Begin( D3DX10_SPRITE_SORT_TEXTURE );
-	//	Inst->D3DDevice->OMSetRenderTargets( 1, &RenderTargetView, NULL );
-	//	Inst->D3DDevice->PSSetShaderResources( 0, 1, &Inst->ShaderResourceView );
-	//	Inst->MainSprite->DrawSpritesImmediate( Sprites[0], Sprites.size(), 0, 0 );
-	//	Inst->MainSprite->End();
-	//}
-	//
+			// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
+			if( Interfaces[i]->Rect.z > 0 && Interfaces[i]->Rect.z < 1 )
+			{
+				AdjustedRect.bottom = (LONG)((iViewport[1] + iViewport[3]) * Interfaces[i]->Rect.z);
+			}
+			else
+			{
+				AdjustedRect.bottom = (LONG)Interfaces[i]->Rect.z;
+			}
+
+			glMatrixMode( GL_MODELVIEW );
+			glPushMatrix();
+			glLoadIdentity();
+
+			glBindTexture( GL_TEXTURE_2D, Interfaces[i]->Texture->Image );
+
+			// Draw Interface
+			glBegin( GL_QUADS );
+				glTexCoord2i( 0, 1 );
+				glVertex2i( AdjustedRect.left, AdjustedRect.top );
+				glTexCoord2i( 1, 1 );
+				glVertex2i( AdjustedRect.right, AdjustedRect.top );
+				glTexCoord2i( 1, 0 );
+				glVertex2i( AdjustedRect.right, AdjustedRect.bottom );
+				glTexCoord2i( 0, 0 );
+				glVertex2i( AdjustedRect.left, AdjustedRect.bottom );
+			glEnd();
+		}
+	}
 
 	SwapBuffers(hDC);
 }
@@ -544,79 +546,48 @@ void Ovgl::Interface::UpdateText()
 	TextRect.right = (LONG)(AdjustedRect.right - AdjustedRect.left);
 	TextRect.bottom = (LONG)(AdjustedRect.bottom - AdjustedRect.top);
 	HDC hDC = CreateCompatibleDC(NULL);
-	byte* pSrcData;
-	BITMAPINFO bmi = { sizeof( BITMAPINFOHEADER ), TextRect.right, -TextRect.bottom, 1, 32, BI_RGB, 0, 0, 0, 0, 0};
+	GLubyte* pSrcData;
+	BITMAPINFO bmi = { sizeof( BITMAPINFOHEADER ), TextRect.right, TextRect.bottom, 1, 32, BI_RGB, 0, 0, 0, 0, 0};
 	HBITMAP hTempBmp = CreateDIBSection( hDC, &bmi, DIB_RGB_COLORS, (void**)&pSrcData, NULL, 0 );
 	HBITMAP hOldBmp = (HBITMAP)SelectObject(hDC, hTempBmp );
 	HFONT NewFont = CreateFontA( CSize, 0, 0, 0, (FW_BOLD * Bold), Italic, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, 0, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, Font.c_str() );
 	HBRUSH NewBrush = CreateSolidBrush(0);
 	SelectObject( hDC, NewFont );
 	SelectObject( hDC, NewBrush );
-	SetTextColor( hDC, RGB(0,0,255) );
+	SetTextColor( hDC, RGB(255,255,255) );
 	SetBkColor( hDC, 0);
 	DrawTextA(hDC, Text.c_str(), Text.size(), &TextRect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX);
 	GdiFlush();
 	DeleteObject(NewBrush);
 	DeleteObject(NewFont);	
 	DeleteObject(hTempBmp);
-	//ID3D10Texture2D* pTexture;
-	//D3D10_TEXTURE2D_DESC desc;
-	//ZeroMemory( &desc, sizeof( desc ) );
-	//desc.Width = TextRect.right;
-	//desc.Height = TextRect.bottom;
-	//desc.MipLevels = 1;
-	//desc.ArraySize = 1;
-	//desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	//desc.SampleDesc.Count = 1;
-	//desc.SampleDesc.Quality = 0;
-	//desc.Usage = D3D10_USAGE_DYNAMIC;
-	//desc.BindFlags = D3D10_BIND_SHADER_RESOURCE;
-	//desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
-	//desc.MiscFlags = 0;
-	//RenderTarget->Inst->D3DDevice->CreateTexture2D( &desc, NULL, &pTexture );
-	//D3D10_MAPPED_TEXTURE2D mappedTex;
-	//pTexture->Map( D3D10CalcSubresource(0, 0, 1), D3D10_MAP_WRITE_DISCARD, 0, &mappedTex );
 
-	//UCHAR* pTexels = (UCHAR*)mappedTex.pData;
-	//for( UINT row = 0; row < desc.Height; row++ )
-	//{
-	//	UINT rowStart = row * mappedTex.RowPitch;
-	//	for( UINT col = 0; col < desc.Width; col++ )
-	//	{
-	//		UINT colStart = col * 4;
-	//		pTexels[rowStart + colStart + 0] = 255;
-	//		pTexels[rowStart + colStart + 1] = 255;
-	//		pTexels[rowStart + colStart + 2] = 255;
-	//		pTexels[rowStart + colStart + 3] = pSrcData[((row * desc.Width) + col) * 4 ];
-	//	}
-	//}
-	//pTexture->Unmap( D3D10CalcSubresource(0, 0, 1) );
-	//DeleteDC(hDC);
-	//D3D10_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	//srvDesc.Format = desc.Format;
-	//srvDesc.ViewDimension = D3D10_SRV_DIMENSION_TEXTURE2D;
-	//srvDesc.Texture2D.MostDetailedMip = 0;
-	//srvDesc.Texture2D.MipLevels = desc.MipLevels;
-	//ID3D10ShaderResourceView *srvTexture = NULL;
-	//RenderTarget->Inst->D3DDevice->CreateShaderResourceView( pTexture, &srvDesc, &srvTexture );
-	//pTexture->Release();
-	//if(Sprite->pTexture) Sprite->pTexture->Release();
-	//Sprite->pTexture = srvTexture;
+	GLubyte* pTexels = new GLubyte[TextRect.right * TextRect.bottom * 4];
+	for( LONG row = 0; row < TextRect.bottom; row++ )
+	{
+		for( LONG col = 0; col < TextRect.right; col++ )
+		{
+			pTexels[(row * (TextRect.right * 4)) + (col * 4) + 0] = 255;
+			pTexels[(row * (TextRect.right * 4)) + (col * 4) + 1] = 255;
+			pTexels[(row * (TextRect.right * 4)) + (col * 4) + 2] = 255;
+			pTexels[(row * (TextRect.right * 4)) + (col * 4) + 3] = pSrcData[ ((row * (TextRect.right * 4)) + (col * 4)) ];
+		}
+	}
+
+	// Create OpenGL texture
+	glGenTextures( 1, &Texture->Image );
+	glBindTexture( GL_TEXTURE_2D, Texture->Image );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, TextRect.right, TextRect.bottom, 0, GL_RGBA, GL_UNSIGNED_BYTE, pTexels );
+	glBindTexture( GL_TEXTURE_2D, NULL );
+	DeleteDC(hDC);
 }
 
-Ovgl::Interface* Ovgl::RenderTarget::CreateSprite( const std::string& file, Ovgl::Vector4* rect )
+Ovgl::Interface* Ovgl::RenderTarget::CreateSprite( Ovgl::Texture* Texture, Ovgl::Vector4* rect )
 {
 	Ovgl::Interface* Sprite = new Ovgl::Interface;
-	//Sprite->Sprite = new D3DX10_SPRITE;
-	//ID3D10ShaderResourceView* srvTexture;
-	//D3DX10CreateShaderResourceViewFromFileA(Inst->D3DDevice, file.c_str(), NULL, NULL, &srvTexture, NULL);
-	//Sprite->Sprite->pTexture = srvTexture;
-	//Sprite->Sprite->TexCoord.x = 0;
-	//Sprite->Sprite->TexCoord.y = 0;
-	//Sprite->Sprite->TexSize.x = 1;
-	//Sprite->Sprite->TexSize.y = 1;
-	//Sprite->Sprite->TextureIndex = 0;
-	//Sprite->Sprite->ColorModulate = D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f );
+	Sprite->Texture = Texture;
 	Sprite->Enabled = true;
 	Sprite->Over = false;
 	Sprite->Font = "";
@@ -629,18 +600,8 @@ Ovgl::Interface* Ovgl::RenderTarget::CreateSprite( const std::string& file, Ovgl
 Ovgl::Interface* Ovgl::RenderTarget::CreateText( const std::string& text, Ovgl::Vector4* rect )
 {
 	Ovgl::Interface* Text = new Ovgl::Interface;
-	//Text->Sprite = new D3DX10_SPRITE;
-	//Text->Sprite->pTexture = NULL;
-	//Text->Sprite->TextureIndex = 0;
-	//Text->Sprite->TexCoord.x = 0;
-	//Text->Sprite->TexCoord.y = 0;
-	//Text->Sprite->TexSize.x = 1;
-	//Text->Sprite->TexSize.y = 1;
-	//Text->Sprite->ColorModulate = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-	//D3DXMATRIX matScaling, matTranslation;
-	//D3DXMatrixScaling(&matScaling, 256.0f, 256.0f, 1.0f );
-	//D3DXMatrixTranslation( &matTranslation, 0.0f, 0.0f, 0.0f );
-	//Text->Sprite->matWorld = matScaling * matTranslation;
+		// Create new texture
+	Text->Texture = new Ovgl::Texture;
 	Text->Text = text;
 	Text->Font = "Arial";
 	Text->Size = 24;

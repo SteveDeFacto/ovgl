@@ -36,7 +36,7 @@ namespace Ovgl
 			HGLRC hRC;
 			Ovgl::Vector4 Rect;
 			std::vector<Ovgl::Interface*> Interfaces;
-			Ovgl::Interface* CreateSprite( const std::string& file, Ovgl::Vector4* rect );
+			Ovgl::Interface* CreateSprite( Ovgl::Texture* Texture, Ovgl::Vector4* rect );
 			Ovgl::Interface* CreateText( const std::string& text, Ovgl::Vector4* rect );
 			bool GetFullscreen();
 			void SetFullscreen( bool state );
@@ -47,8 +47,8 @@ namespace Ovgl
 		class Interface
 		{
 		public:
-			//D3DX10_SPRITE*						Sprite;
 			Ovgl::RenderTarget*					RenderTarget;
+			Ovgl::Texture*						Texture;
 			int									CSize;
 			std::string							Text;
 			std::string							Font;

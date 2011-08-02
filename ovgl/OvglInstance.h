@@ -17,16 +17,6 @@
 */
 
 // Forward declare external classes
-struct IXAudio2;
-typedef BYTE X3DAUDIO_HANDLE[20];
-struct IXAudio2MasteringVoice;
-struct XAUDIO2_DEVICE_DETAILS;
-struct X3DAUDIO_DSP_SETTINGS;
-class NxPhysicsSDK;
-class NxCookingInterface;
-class NxUserAllocatorDefault;
-class NxControllerManager;
-class NxConvexMesh;
 
 namespace Ovgl
 {
@@ -107,16 +97,11 @@ namespace Ovgl
 			HDC										hDC;
 			HGLRC									hRC;
 			CGcontext								CgContext;
-			IXAudio2*								XAudio2;
-			X3DAUDIO_HANDLE							X3DAudio;
-			IXAudio2MasteringVoice*					MasteringVoice;
-			XAUDIO2_DEVICE_DETAILS*					DeviceDetails;
-			X3DAUDIO_DSP_SETTINGS*					DSPSettings;
-			NxPhysicsSDK*							PhysX;
-			NxCookingInterface*						Cooking;
-			NxUserAllocatorDefault*					Allocator;
-			NxControllerManager*					Manager;
-			NxConvexMesh*							Shapes[1];
+			btDefaultCollisionConfiguration*		PhysicsConfiguration;
+			btCollisionDispatcher*					PhysicsDispatcher;
+			btBroadphaseInterface*					PhysicsBroadphase;
+			btSequentialImpulseConstraintSolver*	PhysicsSolver;
+			btConvexHullShape*						Shapes[1];
 			void*									FBXManager;
 			MediaLibrary*							DefaultMedia;
 			std::vector<RenderTarget*>				RenderTargets;
