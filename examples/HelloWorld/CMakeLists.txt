@@ -21,20 +21,14 @@ copy "..\\..\\lib\\ovgl.dll" "..\\..\\bin\\HelloWorld\\ovgl.dll";
 COMMAND
 copy "..\\..\\lib\\ovgld.dll" "..\\..\\bin\\HelloWorld\\ovgld.dll";
 COMMAND
-copy "${PHYSX_BINARY_DIR}\\cudart32_30_9.dll" "..\\..\\bin\\HelloWorld\\cudart32_30_9.dll";
+copy "${FREEIMAGE_LIBRARY_DIR}\\FreeImage.dll" "..\\..\\bin\\HelloWorld\\FreeImage.dll";
 COMMAND
-copy "${PHYSX_BINARY_DIR}\\NxCharacter.dll" "..\\..\\bin\\HelloWorld\\NxCharacter.dll";
+copy "${CG_BINARY_DIR}\\cg.dll" "..\\..\\bin\\HelloWorld\\cg.dll";
 COMMAND
-copy "${PHYSX_BINARY_DIR}\\PhysXLoader.dll" "..\\..\\bin\\HelloWorld\\PhysXLoader.dll";
+copy "${CG_BINARY_DIR}\\cgGL.dll" "..\\..\\bin\\HelloWorld\\cgGL.dll";
 COMMAND
-copy "${PHYSX_BINARY_DIR}\\PhysXCore.dll" "..\\..\\bin\\HelloWorld\\PhysXCore.dll";
+copy "${FBX_LIBRARY_DIR}\\fbxsdk-2012.1.dll" "..\\..\\bin\\HelloWorld\\fbxsdk-2012.1.dll";
 COMMAND
-copy "${PHYSX_BINARY_DIR}\\PhysXCooking.dll" "..\\..\\bin\\HelloWorld\\PhysXCooking.dll";
-COMMAND
-copy "${PHYSX_BINARY_DIR}\\PhysXDevice.dll" "..\\..\\bin\\HelloWorld\\PhysXDevice.dll";
-COMMAND
-copy "${FBX_LIBRARY_DIR}\\fbxsdk_20113_1.dll" "..\\..\\bin\\HelloWorld\\fbxsdk_20113_1.dll";
-COMMAND
-copy "${FBX_LIBRARY_DIR}\\fbxsdk_20113_1d.dll" "..\\..\\bin\\HelloWorld\\fbxsdk_20113_1d.dll";
+copy "${FBX_LIBRARY_DIR}\\fbxsdk-2012.1d.dll" "..\\..\\bin\\HelloWorld\\fbxsdk-2012.1d.dll";
 VERBATIM
 )

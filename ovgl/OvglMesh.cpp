@@ -125,7 +125,7 @@ void Ovgl::Mesh::Update()
 	}
 	subset_count = index_subsets.size();
 
-	IndexBuffers = new GLuint[subset_count];
+	IndexBuffers = new unsigned int[subset_count];
 	for( DWORD i = 0; i < subset_count; i++ )
 	{
 		glGenBuffersARB( 1, &IndexBuffers[i] );

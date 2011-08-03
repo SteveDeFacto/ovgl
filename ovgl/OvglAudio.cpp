@@ -29,26 +29,6 @@ Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emit
 	Ovgl::AudioInstance* instance = new Ovgl::AudioInstance;
 	instance->paused = false;
 	instance->emitter = emitter;
-	Ovgl::AudioVoice* voice = new Ovgl::AudioVoice;
-	voice->instance = instance;
-	alGenSources(1, &voice->source);
-	if( !emitter && format == AL_FORMAT_STEREO16 )
-	{
-		alSourcei( voice->source, AL_BUFFER, stereo );
-	}
-	else
-	{
-		alSourcei( voice->source, AL_BUFFER, mono );
-	}
-	if( !emitter )
-	{
-		alSourcei( voice->source, AL_SOURCE_RELATIVE, AL_TRUE );
-	}
-	alSourcef( voice->source, AL_PITCH,	1.0f );
-	alSourcef( voice->source, AL_GAIN, 1.0f );
-	alSourcei( voice->source, AL_LOOPING, loop );
-	alSourcePlay( voice->source );
-	instance->voices.push_back(voice);
 	if( emitter )
 	{
 		for( UINT r = 0; r < this->Inst->RenderTargets.size(); r++ )
@@ -57,6 +37,26 @@ Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emit
 			{
 				if( Inst->RenderTargets[r]->view == emitter->scene->cameras[c] )
 				{
+					Ovgl::AudioVoice* voice = new Ovgl::AudioVoice;
+					voice->instance = instance;
+					alGenSources(1, &voice->source);
+					if( !emitter && format == AL_FORMAT_STEREO16 )
+					{
+						alSourcei( voice->source, AL_BUFFER, stereo );
+					}
+					else
+					{
+						alSourcei( voice->source, AL_BUFFER, mono );
+					}
+					if( !emitter )
+					{
+						alSourcei( voice->source, AL_SOURCE_RELATIVE, AL_TRUE );
+					}
+					alSourcef( voice->source, AL_PITCH,	1.0f );
+					alSourcef( voice->source, AL_GAIN, 1.0f );
+					alSourcei( voice->source, AL_LOOPING, loop );
+					alSourcePlay( voice->source );
+					instance->voices.push_back(voice);
 					emitter->scene->cameras[c]->voices.push_back(voice);
 				}
 			}

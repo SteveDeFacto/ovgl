@@ -113,7 +113,7 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	RenderTarget = Inst->CreateRenderTarget(hWnd, NULL, 0);
 
 	// Create add some text to the render target
-	RenderTarget->CreateText("Hello World!", &Ovgl::Vector4Set( 0.0f, 0.0f, 0.999f, 0.999f ));
+	RenderTarget->CreateText("Hello World!", &Ovgl::Vector4Set( 0.5f, 0.5f, 0.999f, 0.999f ));
 
 	// Main message loop
     MSG msg = {0};

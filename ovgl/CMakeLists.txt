@@ -12,7 +12,7 @@ ${FREEIMAGE_INCLUDE_DIR}
 ${FBX_INCLUDE_DIR}
 ${OGG_INCLUDE_DIR}
 ${VORBIS_INCLUDE_DIR}
-${BULLET_INCLUDE_DIR}
+${BULLET_INCLUDE_DIR})
 
 link_directories(${OPENAL_LIBRARY_DIR}
 ${CG_LIBRARY_DIR}
@@ -53,10 +53,10 @@ optimized "fbxsdk-2012.1-md.lib"
 optimized "BulletDynamics.lib"
 optimized "BulletCollision.lib"
 optimized "LinearMath.lib"
-debug "fbxsdk-2012.1-mdd.lib")
+debug "fbxsdk-2012.1-mdd.lib"
 debug "BulletDynamicsd.lib"
 debug "BulletCollisiond.lib"
-debug "LinearMathd.lib"
+debug "LinearMathd.lib")
 
 add_definitions( -DNOMINMAX -DWIN32_LEAN_AND_MEAN -DKFBX_DLLINFO )
 

@@ -17,6 +17,13 @@
 */
 
 // Forward declare external classes
+struct _CGprogram;
+struct _CGcontext;
+class btDefaultCollisionConfiguration;
+class btCollisionDispatcher;
+class btBroadphaseInterface;
+class btSequentialImpulseConstraintSolver;
+class btConvexHullShape;
 
 namespace Ovgl
 {
@@ -59,7 +66,7 @@ namespace Ovgl
 		{
 		public:
 			MediaLibrary*							MLibrary;
-			GLuint									Image;
+			UINT									Image;
 
 			void Release();
 		};
@@ -68,9 +75,9 @@ namespace Ovgl
 		{
 		public:
 			MediaLibrary*							MLibrary;
-			CGprogram								VertexProgram;
-			CGprogram								FragmentProgram;
-			CGprogram								GeometryProgram;
+			_CGprogram*								VertexProgram;
+			_CGprogram*								FragmentProgram;
+			_CGprogram*								GeometryProgram;
 			void Release();
 		};
 
@@ -96,7 +103,7 @@ namespace Ovgl
 			HWND									hWnd;
 			HDC										hDC;
 			HGLRC									hRC;
-			CGcontext								CgContext;
+			_CGcontext*								CgContext;
 			btDefaultCollisionConfiguration*		PhysicsConfiguration;
 			btCollisionDispatcher*					PhysicsDispatcher;
 			btBroadphaseInterface*					PhysicsBroadphase;

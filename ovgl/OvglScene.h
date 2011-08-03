@@ -17,6 +17,9 @@
 */
 
 // Forward declare external classes
+class btGeneric6DofConstraint;
+class btKinematicCharacterController;
+class btDiscreteDynamicsWorld;
 
 namespace Ovgl
 {

@@ -17,6 +17,7 @@
 */
 
 // Forward declare external classes
+class btRigidBody;
 
 namespace Ovgl
 {
@@ -128,8 +129,8 @@ namespace Ovgl
 			std::vector<Frame*>					keyframes;
 			DWORD								subset_count;
 			DWORD								root_bone;
-			GLuint								VertexBuffer;
-			GLuint*								IndexBuffers;
+			unsigned int						VertexBuffer;
+			unsigned int*						IndexBuffers;
 			void Save( const std::string& file );
 			void GenerateBoneMeshes();
 			void GenerateVertexNormals();

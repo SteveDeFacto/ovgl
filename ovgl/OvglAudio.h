@@ -32,10 +32,10 @@ namespace Ovgl
 		{
 		public:
 			Instance*							Inst;
-			ALenum								format;
-			ALsizei								frequency;
-			ALuint								stereo;
-			ALuint								mono;
+			int									format;
+			int									frequency;
+			unsigned int						stereo;
+			unsigned int						mono;
 			std::vector<signed short>			data;
 			AudioInstance* CreateAudioInstance( Emitter* emitter, bool loop );
 		};
@@ -56,7 +56,7 @@ namespace Ovgl
 		{
 		public:
 			AudioInstance*						instance;
-			ALuint								source;
+			unsigned int						source;
 		};
 	}
 }
