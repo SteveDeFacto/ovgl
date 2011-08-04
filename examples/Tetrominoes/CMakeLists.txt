@@ -21,20 +21,14 @@ copy "..\\..\\lib\\ovgl.dll" "..\\..\\bin\\Tetrominoes\\ovgl.dll";
 COMMAND
 copy "..\\..\\lib\\ovgld.dll" "..\\..\\bin\\Tetrominoes\\ovgld.dll";
 COMMAND
-copy "${PHYSX_BINARY_DIR}\\cudart32_30_9.dll" "..\\..\\bin\\Tetrominoes\\cudart32_30_9.dll";
+copy "${FREEIMAGE_LIBRARY_DIR}\\FreeImage.dll" "..\\..\\bin\\Tetrominoes\\FreeImage.dll";
 COMMAND
-copy "${PHYSX_BINARY_DIR}\\NxCharacter.dll" "..\\..\\bin\\Tetrominoes\\NxCharacter.dll";
+copy "${CG_BINARY_DIR}\\cg.dll" "..\\..\\bin\\Tetrominoes\\cg.dll";
 COMMAND
-copy "${PHYSX_BINARY_DIR}\\PhysXLoader.dll" "..\\..\\bin\\Tetrominoes\\PhysXLoader.dll";
+copy "${CG_BINARY_DIR}\\cgGL.dll" "..\\..\\bin\\Tetrominoes\\cgGL.dll";
 COMMAND
-copy "${PHYSX_BINARY_DIR}\\PhysXCore.dll" "..\\..\\bin\\Tetrominoes\\PhysXCore.dll";
+copy "${FBX_LIBRARY_DIR}\\fbxsdk-2012.1.dll" "..\\..\\bin\\Tetrominoes\\fbxsdk-2012.1.dll";
 COMMAND
-copy "${PHYSX_BINARY_DIR}\\PhysXCooking.dll" "..\\..\\bin\\Tetrominoes\\PhysXCooking.dll";
-COMMAND
-copy "${PHYSX_BINARY_DIR}\\PhysXDevice.dll" "..\\..\\bin\\Tetrominoes\\PhysXDevice.dll";
-COMMAND
-copy "${FBX_LIBRARY_DIR}\\fbxsdk_20113_1.dll" "..\\..\\bin\\Tetrominoes\\fbxsdk_20113_1.dll";
-COMMAND
-copy "${FBX_LIBRARY_DIR}\\fbxsdk_20113_1d.dll" "..\\..\\bin\\Tetrominoes\\fbxsdk_20113_1d.dll";
+copy "${FBX_LIBRARY_DIR}\\fbxsdk-2012.1d.dll" "..\\..\\bin\\Tetrominoes\\fbxsdk-2012.1d.dll";
 VERBATIM
 )

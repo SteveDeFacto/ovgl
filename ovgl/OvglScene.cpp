@@ -27,7 +27,7 @@
 
 struct DisablePairCollision : public btCollisionWorld::ContactResultCallback
 {
-	virtual	btScalar	addSingleResult(btManifoldPoint& cp,	const btCollisionObject* colObj0,int partId0,int index0,const btCollisionObject* colObj1,int partId1,int index1)
+	virtual	btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObject* colObj0, int partId0, int index0, const btCollisionObject* colObj1, int partId1, int index1)
 	{
 		btTransform frame;
 		frame.setIdentity();
@@ -42,6 +42,27 @@ struct DisablePairCollision : public btCollisionWorld::ContactResultCallback
 	}
 
 	btDiscreteDynamicsWorld*	DynamicsWorld;
+};
+
+struct onGroundCheck : public btCollisionWorld::ContactResultCallback
+{
+	virtual	btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObject* colObj0, int partId0, int index0, const btCollisionObject* colObj1, int partId1,int index1)
+	{
+		if((cp.m_normalWorldOnB.getY() * OvglPi) > OvglPi - maxSlope)
+		{
+			onGround = true;
+			((btRigidBody*)colObj0)->setFriction(3.0f);
+		}
+		else
+		{
+			onGround = false;
+			((btRigidBody*)colObj0)->setFriction(0.0f);
+		}
+		return 0;
+	}
+
+	float maxSlope;
+	bool onGround;
 };
 
 Ovgl::Camera* Ovgl::Scene::CreateCamera( Ovgl::Matrix44* matrix )
@@ -168,40 +189,41 @@ Ovgl::Object* Ovgl::Scene::CreateObject( Ovgl::Mesh* mesh, Ovgl::Matrix44* matri
 	Ovgl::CMesh* cmesh = new Ovgl::CMesh;
 	cmesh->scene = this;
 	cmesh->actor = new btRigidBody(rbInfo);
+	cmesh->actor->setCollisionFlags( cmesh->actor->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
 	object->cmesh = cmesh;
 	DynamicsWorld->addRigidBody(cmesh->actor, btBroadphaseProxy::StaticFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::CharacterFilter);
 	this->objects.push_back( object );
 	return object;
 };
 
-Ovgl::Actor* Ovgl::Scene::CreateActor( Ovgl::Mesh* mesh, float radius, float height, Ovgl::Matrix44* matirx )
+Ovgl::Actor* Ovgl::Scene::CreateActor( Ovgl::Mesh* mesh, float radius, float height, Ovgl::Matrix44* matrix )
 {
 	Ovgl::Actor* actor = new Ovgl::Actor;
 	actor->crouch = false;
-	actor->grounded = false;
+	actor->onGround = false;
 	actor->direction = Ovgl::Vector3Set( 0.0f, 0.0f, 0.0f );
 	actor->velocity = Ovgl::Vector3Set( 0.0f, 0.0f, 0.0f );
 	actor->trajectory = Ovgl::Vector3Set( 0.0f, 0.0f, 0.0f );
 	actor->height = height;
 	actor->radius = radius;
+	actor->maxSlope = 1.0f;
 	actor->scene = this;
-	btTransform startTransform;
-	startTransform.setIdentity();
-	startTransform.setOrigin(btVector3(matirx->_41, matirx->_42, matirx->_43));
-	btPairCachingGhostObject* ghost_object;
-	ghost_object = new btPairCachingGhostObject();
-	ghost_object->setWorldTransform(startTransform);
+	btTransform Transform;
+	Transform.setFromOpenGLMatrix((float*)matrix );
+	btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
 	btConvexShape* capsule = new btCapsuleShape(radius, height);
-	ghost_object->setCollisionShape(capsule);
-	ghost_object->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
-	actor->controller = new btKinematicCharacterController( ghost_object, capsule, height * 0.25f );
-	actor->controller->setUseGhostSweepTest(false);
-//	actor->controller->setMaxSlope(0);
-
-	DynamicsWorld->addCollisionObject( ghost_object, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
-	DynamicsWorld->addAction( actor->controller );
+	btRigidBody::btRigidBodyConstructionInfo rbInfo( 10, MotionState, capsule, btVector3(0,0,0) );
+	Ovgl::CMesh* cmesh = new Ovgl::CMesh;
+	cmesh->actor = new btRigidBody(rbInfo);
+	cmesh->actor->setActivationState( DISABLE_DEACTIVATION );
+	DynamicsWorld->addRigidBody(cmesh->actor, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::StaticFilter);
+	btTransform frameIn;
+	frameIn.setFromOpenGLMatrix((float*)matrix );
+	actor->Constraint = new btGeneric6DofConstraint( *cmesh->actor, frameIn, false );
+	DynamicsWorld->addConstraint(actor->Constraint, true);
+	actor->controller = cmesh;
 	Ovgl::Matrix44 camera_matrix;
-	camera_matrix = Ovgl::MatrixTranslation( matirx->_41, matirx->_42, matirx->_43 ) * Ovgl::MatrixTranslation( 0.0f, height, 0.0f );
+	camera_matrix = *matrix * Ovgl::MatrixTranslation( 0.0f, height, 0.0f );
 	actor->camera = CreateCamera( &camera_matrix );
 	actors.push_back(actor);
 	return actor;
@@ -227,10 +249,9 @@ Ovgl::Joint* Ovgl::Scene::CreateJoint( Ovgl::CMesh* obj1, Ovgl::CMesh* obj2)
 
 void Ovgl::Actor::Jump( float force )
 {
-	if( grounded )
+	if(onGround)
 	{
-		grounded = false;
-		velocity.y = force;
+		controller->actor->applyImpulse(btVector3(0.0f, abs(force) * 10.0f , 0.0f), btVector3(0.0f, 0.0f, 0.0f));
 	}
 }
 
@@ -353,25 +374,45 @@ void Ovgl::Scene::Update( DWORD UpdateTime )
 	{
 		Ovgl::Vector3 corrected_trajectory;
 		corrected_trajectory = Ovgl::Vector3Transform( &actors[a]->trajectory, &Ovgl::MatrixRotationY( -actors[a]->direction.z) );
-		actors[a]->controller->setWalkDirection(  btVector3(corrected_trajectory.x, corrected_trajectory.y, corrected_trajectory.z ));
+		onGroundCheck Callback;
+		Callback.maxSlope = actors[a]->maxSlope;
+		Callback.onGround = false;
+		DynamicsWorld->contactTest(actors[a]->controller->actor, Callback);
+		actors[a]->onGround = Callback.onGround;
+		btTransform frameInA, frameInB;
+		frameInA = actors[a]->controller->actor->getWorldTransform();
+		frameInA.getOrigin() += btVector3(corrected_trajectory.x, corrected_trajectory.y, corrected_trajectory.z);
+		frameInB.setIdentity();
+		actors[a]->Constraint->setFrames(frameInA, frameInB);
+
+		if(actors[a]->onGround)
+		{
+			actors[a]->Constraint->setEnabled(true);
+		}
+		else
+		{
+			actors[a]->Constraint->setEnabled(false);
+			actors[a]->controller->actor->applyImpulse(btVector3(corrected_trajectory.x, corrected_trajectory.y, corrected_trajectory.z), btVector3(0.0f, 0.0f, 0.0f));
+		}
+
+		btCollisionShape* shape = actors[a]->controller->actor->getCollisionShape();
+		if( (actors[a]->crouch) && (shape->getLocalScaling().getY() > 0.5f ))
+		{
+			shape->setLocalScaling( btVector3(1, shape->getLocalScaling().getY() - ((float)UpdateTime * 0.005f), 1 ) );
+			actors[a]->height -= ((float)UpdateTime * 0.005f);
+		}
+		else if( (!actors[a]->crouch) & (shape->getLocalScaling().getY() < 1.0f ) )
+		{
+			shape->setLocalScaling( btVector3(1, shape->getLocalScaling().getY() + ((float)UpdateTime * 0.005f), 1 ) );
+			actors[a]->height += ((float)UpdateTime * 0.005f);
+
+		}
+
 		Ovgl::Matrix44 matrix;
-		btPairCachingGhostObject* ghost;
-		ghost = actors[a]->controller->getGhostObject();
-		ghost->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
-		btVector3 actor_scale = ghost->getCollisionShape()->getLocalScaling();
+		matrix = actors[a]->controller->getPose();
 		Ovgl::Matrix44 cam_mat;
 		cam_mat = Ovgl::MatrixTranslation( 0.0f, 0.0f, actors[a]->radius / 2 ) * Ovgl::MatrixRotationEuler( actors[a]->direction.x, actors[a]->direction.y, actors[a]->direction.z) * Ovgl::MatrixTranslation(matrix._41, matrix._42, matrix._43) * Ovgl::MatrixTranslation( 0.0f, actors[a]->height / 2, 0.0f );
 		actors[a]->camera->setPose(&cam_mat);
-
-		if( (actors[a]->crouch) && (actor_scale.getY() > 0.5f ))
-		{
-			ghost->getCollisionShape()->setLocalScaling( btVector3(1, actor_scale.getY() - ((float)UpdateTime * 0.01f), 1 ) );
-
-		}
-		else if( (!actors[a]->crouch) & (actor_scale.getY() < 1.0f ) )
-		{
-			ghost->getCollisionShape()->setLocalScaling( btVector3(1, actor_scale.getY() + ((float)UpdateTime * 0.01f), 1 ) );
-		}
 	}
 
 	// Update camera positions.

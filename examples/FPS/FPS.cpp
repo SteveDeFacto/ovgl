@@ -56,16 +56,16 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
             if( wParam == VK_ESCAPE )
                 PostQuitMessage( 0 );
 			if( wParam == 0x57 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(0.0f, 0.0f, 0.1f);
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(0.0f, 0.0f, 0.3f);
 			if( wParam == 0x53 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(0.0f, 0.0f, -0.1f);
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(0.0f, 0.0f, -0.3f);
 			if( wParam == 0x44 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(0.1f, 0.0f, 0.0f);
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(0.3f, 0.0f, 0.0f);
 			if( wParam == 0x41 && (lParam >> 30 & 1) == 0 )
-				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(-0.1f, 0.0f, 0.0f);
+				Actor->trajectory = Actor->trajectory + Ovgl::Vector3Set(-0.3f, 0.0f, 0.0f);
 			if( wParam == VK_SPACE && (lParam >> 30 & 1) == 0 )
-				Actor->controller->jump();
-			if( wParam == VK_CONTROL && (lParam >> 30 & 1) == 0 )
+				Actor->Jump(5.0f);
+			if( wParam == VK_CONTROL && (lParam >> 30 & 1) == 0 && Actor->onGround )
 				Actor->crouch = true;
             break;
 		}
@@ -73,13 +73,13 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 		case WM_KEYUP:
 		{
 			if( wParam == 0x57 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(0.0f, 0.0f, 0.1f);
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(0.0f, 0.0f, 0.3f);
 			if( wParam == 0x53 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(0.0f, 0.0f, -0.1f);
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(0.0f, 0.0f, -0.3f);
 			if( wParam == 0x44 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(0.1f, 0.0f, 0.0f);
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(0.3f, 0.0f, 0.0f);
 			if( wParam == 0x41 )
-				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(-0.1f, 0.0f, 0.0f);
+				Actor->trajectory = Actor->trajectory - Ovgl::Vector3Set(-0.3f, 0.0f, 0.0f);
 			if( wParam == VK_CONTROL )
 				Actor->crouch = false;
             break;
@@ -227,10 +227,10 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	Scene->skybox = Texture1;
 	Pavilion = Scene->CreateObject(PavilionMesh, &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
 	Pavilion->subsets[0] = Material1;
-	Pavilion->subsets[1] = Material2;
-	Pavilion->subsets[2] = Material3;
-	Pavilion->subsets[3] = Material4;
-	Pavilion->subsets[4] = Material5;
+	//Pavilion->subsets[1] = Material2;
+	//Pavilion->subsets[2] = Material3;
+	//Pavilion->subsets[3] = Material4;
+	//Pavilion->subsets[4] = Material5;
 	Chair = Scene->CreateProp(ChairMesh, &Ovgl::MatrixTranslation( 0.0f, 15.0f, -5.0f ));
 	Light = Scene->CreateLight(&Ovgl::MatrixTranslation( 0.0f, 10.0f, 0.0f ), &Ovgl::Vector4Set( 1.0f, 1.0f, 1.0f, 1.0f ));
 	Actor = Scene->CreateActor( NULL, 0.25f, 0.75f, &Ovgl::MatrixTranslation( 0.0f, 15.0f, 0.0f ) );

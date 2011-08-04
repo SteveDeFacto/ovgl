@@ -34,6 +34,7 @@
 #include "OvglGraphics.h"
 #include "OvglAudio.h"
 #include "OvglMesh.h"
+#include "OvglMedia.h"
 #include "OvglScene.h"
 
 #endif

@@ -301,7 +301,11 @@ namespace Ovgl
 			* This is a pointer to the scene that this actor was created by and resides in.
 			*/
 			Scene* scene;
-			btKinematicCharacterController* controller;
+			/**
+			*
+			*/
+			CMesh* controller;
+			btGeneric6DofConstraint* Constraint;
 			/**
 			* This is the view of the actor. You can set it as the view to a render target to see out of the actor's eyes.
 			*/
@@ -329,6 +333,14 @@ namespace Ovgl
 			/**
 			*
 			*/
+			Vector3 position;
+			/**
+			*
+			*/
+			float maxSlope;
+			/**
+			*
+			*/
 			float height;
 			/**
 			*
@@ -341,7 +353,7 @@ namespace Ovgl
 			/**
 			* This will be true if the actor is standing on the ground.
 			*/
-			bool grounded;
+			bool onGround;
 			/**
 			* Tells the actor where to look.
 			*/
