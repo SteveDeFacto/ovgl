@@ -31,6 +31,15 @@ namespace Ovgl
 		public:
 			Instance* Inst;
 			Camera* view;
+			GLuint MultiSampleFrameBuffer;
+			GLuint EffectFrameBuffer;
+			GLuint DepthBuffer;
+			GLuint ColorBuffer;
+			GLuint HDRTex;
+			GLuint PrimaryTex;
+			GLuint SecondaryTex;
+			GLuint PrimaryBloomTex;
+			GLuint SecondaryBloomTex;
 			HWND hWnd;
 			HDC hDC;
 			HGLRC hRC;
@@ -38,6 +47,11 @@ namespace Ovgl
 			std::vector<Ovgl::Interface*> Interfaces;
 			Ovgl::Interface* CreateSprite( Ovgl::Texture* Texture, Ovgl::Vector4* rect );
 			Ovgl::Interface* CreateText( const std::string& text, Ovgl::Vector4* rect );
+			bool debugMode;
+			int bloom;
+			bool multiSample;
+			bool motionBlur;
+			void SetVSync( bool state );
 			bool GetFullscreen();
 			void SetFullscreen( bool state );
 			void Release();

@@ -29,6 +29,35 @@ bool FrameCompare ( Ovgl::Frame* frame1, Ovgl::Frame* frame2 )
    return frame1->time < frame2->time;
 }
 
+void Ovgl::MediaLibrary::Release()
+{
+	for( DWORD i = 0; i < AudioBuffers.size(); i++ )
+	{
+		AudioBuffers[i]->Release();
+	}
+	for( DWORD i = 0; i < Materials.size(); i++ )
+	{
+		Materials[i]->Release();
+	}
+	for( DWORD i = 0; i < Meshes.size(); i++ )
+	{
+		Meshes[i]->Release();
+	}
+	for( DWORD i = 0; i < Scenes.size(); i++ )
+	{
+		Scenes[i]->Release();
+	}
+	for( DWORD i = 0; i < Shaders.size(); i++ )
+	{
+		Shaders[i]->Release();
+	}
+	for( DWORD i = 0; i < Textures.size(); i++ )
+	{
+		Textures[i]->Release();
+	}
+	delete this;
+}
+
 void Ovgl::MediaLibrary::Save( const std::string& file )
 {
 	if(!file.empty())
@@ -182,7 +211,7 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 		FILE *input = NULL;
 		fopen_s(&input, file.c_str(),"rb");
 
-		// If file was unable to be opened present error message to debug output and 
+		// If file was unable to be opened present error message to debug output and end function
 		if ( input == NULL )
 		{
 			std::wstring wfile;
@@ -199,7 +228,7 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 		{
 			// Specify mesh variables.
 			Ovgl::Mesh* mesh = new Ovgl::Mesh;
-			mesh->Inst = Inst;
+			mesh->ml = this;
 			DWORD vertex_count;
 			DWORD face_count;
 			DWORD bone_count;
@@ -340,10 +369,12 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 	}
 }
 
-Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, const std::string& node )
+Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 {
 	if(!file.empty())
 	{
+		Ovgl::Mesh* mesh = new Ovgl::Mesh;
+		mesh->ml = this;
 		KFbxImporter* FBXImporter;
 		KFbxScene* FBXScene;
 		FBXImporter = KFbxImporter::Create( (KFbxSdkManager*)Inst->FBXManager, "" );
@@ -356,271 +387,346 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, const std::s
 			KFbxNodeAttribute::EAttributeType AttributeType = FBXScene->GetNode(n)->GetNodeAttribute()->GetAttributeType();
 			if ( AttributeType == KFbxNodeAttribute::eMESH )
 			{
-				KFbxNode* FBXNode = FBXScene->GetNode(n);
-				if( node.compare(FBXNode->GetName()) == 0)
+				DWORD VertexOffset = mesh->vertices.size();
+				DWORD AttributeOffset = 0;
+				for( DWORD i = 0; i < mesh->faces.size(); i++ )
 				{
-					Ovgl::Matrix44 matrix;
-					KFbxVector4 localT, localR, localS;
-					KFbxMesh* FBXMesh = (KFbxMesh*) FBXNode->GetNodeAttribute();
-					localT = FBXNode->GetParent()->LclTranslation.Get();
-					localR = FBXNode->GetParent()->LclRotation.Get();
-					localS = FBXNode->GetParent()->LclScaling.Get();
-					KFbxSkin *FBXSkin = (KFbxSkin*)FBXMesh->GetDeformer(0);
-					if(FBXSkin)
-					matrix = Ovgl::MatrixScaling( (float)localS[0], (float)localS[1], (float)localS[2] ) * Ovgl::MatrixRotationEuler( (float)((localR[0] + 90)  * OvglPi / 180), -(float)(localR[2] * OvglPi / 180), (float)(( localR[1] + 90) * OvglPi / 180) )  * Ovgl::MatrixTranslation( (float)localT[0], (float)localT[1], (float)localT[2] );
-					else
-					matrix = Ovgl::MatrixScaling( (float)localS[0], (float)localS[1], (float)localS[2] ) * Ovgl::MatrixRotationEuler( (float)((localR[0])  * OvglPi / 180), -(float)(localR[2] * OvglPi / 180), (float)(( localR[1] + 90) * OvglPi / 180) )  * Ovgl::MatrixTranslation( (float)localT[0], (float)localT[1], (float)localT[2] );
-					int ControlPointCount = FBXMesh->GetControlPointsCount();
-					KFbxVector4* ControlPoints = FBXMesh->GetControlPoints();
-					KFbxLayerElementUV* FBXLayerUVs = FBXMesh->GetLayer(0)->GetUVs();
-					KFbxLayerElementMaterial* FBXLayerMats = FBXMesh->GetLayer(0)->GetMaterials();
-					Ovgl::Vertex ZeroVertex = {0};
-					std::vector<Ovgl::Vertex> vertices(ControlPointCount);
-					std::vector<std::vector<float>> weights(ControlPointCount);
-					std::vector<std::vector<float>> indices(ControlPointCount);
-					std::vector<Ovgl::Face> faces;
-					std::vector<DWORD> attributes;
-					std::vector<KFbxNode*> BoneNodes;
-					Ovgl::Mesh* mesh = new Ovgl::Mesh;
-					mesh->Inst = Inst;
-					mesh->vertices.resize(ControlPointCount);
-					if(FBXSkin)
+					if( (mesh->attributes[i]+1) > AttributeOffset )
 					{
-						for (int c = 0; c < FBXSkin->GetClusterCount(); c++)
+						AttributeOffset++;
+					}
+				}
+
+				KFbxNode* FBXNode = FBXScene->GetNode(n);
+				Ovgl::Matrix44 matrix;
+				KFbxVector4 localT, localR, localS;
+				KFbxMesh* FBXMesh = (KFbxMesh*) FBXNode->GetNodeAttribute();
+				localT = FBXNode->LclTranslation.Get();
+				localR = FBXNode->LclRotation.Get();
+				localS = FBXNode->LclScaling.Get();
+				matrix = Ovgl::MatrixScaling( (float)localS[0], (float)localS[2], (float)localS[1] ) * Ovgl::MatrixRotationEuler( Ovgl::DegToRad((float)localR[2]), Ovgl::DegToRad((float)localR[0]), Ovgl::DegToRad((float)localR[1]) )  * Ovgl::MatrixTranslation( (float)localT[0], (float)localT[1], (float)localT[2] );
+				KFbxSkin *FBXSkin = (KFbxSkin*)FBXMesh->GetDeformer(0);
+				int ControlPointCount = FBXMesh->GetControlPointsCount();
+				KFbxVector4* ControlPoints = FBXMesh->GetControlPoints();
+				KFbxLayerElementUV* FBXLayerUVs = FBXMesh->GetLayer(0)->GetUVs();
+				KFbxLayerElementMaterial* FBXLayerMats = FBXMesh->GetLayer(0)->GetMaterials();
+				Ovgl::Vertex ZeroVertex = {0};
+				std::vector<std::vector<float>> weights(ControlPointCount);
+				std::vector<std::vector<float>> indices(ControlPointCount);
+				std::vector<Ovgl::Face> faces;
+				std::vector<DWORD> attributes;
+				std::vector<KFbxNode*> BoneNodes;
+				mesh->vertices.resize( VertexOffset + ControlPointCount);
+
+				// Get textures
+				int lNbMat = FBXMesh->GetNode()->GetSrcObjectCount(KFbxSurfaceMaterial::ClassId);
+				for (int lMaterialIndex = 0; lMaterialIndex < lNbMat; lMaterialIndex++)
+				{
+					KFbxSurfaceMaterial *lMaterial = (KFbxSurfaceMaterial *)FBXMesh->GetNode()->GetSrcObject(KFbxSurfaceMaterial::ClassId, lMaterialIndex);
+					Ovgl::Material* material = CreateMaterial();
+					mesh->materials.push_back( material );
+					if(lMaterial)
+					{
+						int lTextureIndex;
+						FOR_EACH_TEXTURE(lTextureIndex)
 						{
-							KFbxCluster* FBXCluster = FBXSkin->GetCluster(c);
-							KFbxCluster::ELinkMode lClusterMode = FBXCluster->GetLinkMode();
-							KFbxNode* FBXLinkNode = FBXCluster->GetLink();
-							BoneNodes.push_back(FBXLinkNode);
-							int CPIndexCount = FBXCluster->GetControlPointIndicesCount();
-							int* CPIndices = FBXCluster->GetControlPointIndices();
-							double* CPWeights = FBXCluster->GetControlPointWeights();
-							Ovgl::Bone* bone = new Ovgl::Bone;
-							bone->max.fromDoubles((double*)&FBXLinkNode->RotationMax.Get());
-							bone->min.fromDoubles((double*)&FBXLinkNode->RotationMin.Get());
-							KFbxXMatrix FBXLinkMatrix;
-							FBXCluster->GetTransformLinkMatrix(FBXLinkMatrix);
-							bone->matrix.fromDoubles( (double*)FBXLinkMatrix.Double44() );
-							bone->matrix = Ovgl::MatrixRotationZ(1.57f) * bone->matrix * Ovgl::MatrixRotationX(1.57f) * Ovgl::MatrixRotationY(1.57f);
-							bone->length = 1.0f;
-							bone->mesh = new Ovgl::Mesh;
-							bone->convex = NULL;
-							for(int i = 0; i < FBXLinkNode->GetChildCount(); i++)
+							KFbxProperty lProperty = lMaterial->FindProperty(KFbxLayerElement::TEXTURE_CHANNEL_NAMES[lTextureIndex]);
+							if( lProperty.IsValid() )
 							{
-								for (int cc = 0; cc < FBXSkin->GetClusterCount(); cc++)
+								KFbxTexture* lTexture = KFbxCast <KFbxTexture> (lProperty.GetSrcObject(KFbxTexture::ClassId, 0));
+								if(lTexture)
 								{
-									if(FBXSkin->GetCluster(cc)->GetLink() == FBXLinkNode->GetChild(i))
+									KFbxFileTexture *lFileTexture = KFbxCast<KFbxFileTexture>(lTexture);
+									std::string filename = lFileTexture->GetFileName();
+									Ovgl::Texture* texFound = NULL;
+									for ( unsigned int tex = 0; tex < Textures.size()-1; tex++)
 									{
-										bone->childen.push_back(cc);
+										if( filename.compare( Textures[tex]->File ) == 0 )
+										{
+											texFound = Textures[tex];
+										}
+									}
+									if( texFound != NULL )
+									{
+										material->set_texture("txDiffuse", texFound);
+									}
+									else
+									{
+										Ovgl::Texture* texture = ImportTexture(filename.c_str());
+										material->set_texture("txDiffuse", texture);
 									}
 								}
 							}
-							for (int cc = 0; cc < FBXSkin->GetClusterCount(); cc++)
-							{
-								if(FBXSkin->GetCluster(cc)->GetLink() == FBXLinkNode->GetParent())
-								{
-									bone->parent = cc;
-								}
-							}
-							mesh->bones.push_back(bone);
-							for (int v = 0 ; v < CPIndexCount ; v++)
-							{
-								weights[CPIndices[v]].push_back((float)CPWeights[v]);
-								indices[CPIndices[v]].push_back((float)c);
-							}
 						}
 					}
-					else
+				}
+
+				if(FBXSkin)
+				{
+					for (int c = 0; c < FBXSkin->GetClusterCount(); c++)
 					{
+						KFbxCluster* FBXCluster = FBXSkin->GetCluster(c);
+						KFbxCluster::ELinkMode lClusterMode = FBXCluster->GetLinkMode();
+						KFbxNode* FBXLinkNode = FBXCluster->GetLink();
+						BoneNodes.push_back(FBXLinkNode);
+						int CPIndexCount = FBXCluster->GetControlPointIndicesCount();
+						int* CPIndices = FBXCluster->GetControlPointIndices();
+						double* CPWeights = FBXCluster->GetControlPointWeights();
 						Ovgl::Bone* bone = new Ovgl::Bone;
-						bone->matrix = Ovgl::MatrixIdentity();
+						bone->max.fromDoubles((double*)&FBXLinkNode->RotationMax.Get());
+						bone->min.fromDoubles((double*)&FBXLinkNode->RotationMin.Get());
+						KFbxXMatrix FBXLinkMatrix;
+						FBXCluster->GetTransformLinkMatrix(FBXLinkMatrix);
+						bone->matrix.fromDoubles( (double*)FBXLinkMatrix.Double44() );
+						bone->matrix = (Ovgl::MatrixRotationZ(1.57f) * bone->matrix * Ovgl::MatrixRotationX(1.57f))* matrix;
 						bone->length = 1.0f;
 						bone->mesh = new Ovgl::Mesh;
 						bone->convex = NULL;
+						for(int i = 0; i < FBXLinkNode->GetChildCount(); i++)
+						{
+							for (int cc = 0; cc < FBXSkin->GetClusterCount(); cc++)
+							{
+								if(FBXSkin->GetCluster(cc)->GetLink() == FBXLinkNode->GetChild(i))
+								{
+									bone->childen.push_back(cc);
+								}
+							}
+						}
+						for (int cc = 0; cc < FBXSkin->GetClusterCount(); cc++)
+						{
+							if(FBXSkin->GetCluster(cc)->GetLink() == FBXLinkNode->GetParent())
+							{
+								bone->parent = cc;
+							}
+						}
 						mesh->bones.push_back(bone);
+						for (int v = 0 ; v < CPIndexCount ; v++)
+						{
+							weights[CPIndices[v]].push_back((float)CPWeights[v]);
+							indices[CPIndices[v]].push_back((float)c);
+						}
 					}
+				}
 
-					for (int w = 0; w < ControlPointCount; w++)
+				for (int w = 0; w < ControlPointCount; w++)
+				{
+					weights[w].resize(4);
+					indices[w].resize(4);
+					if(!FBXSkin)
+						weights[w][0] = 1.0f;
+				}
+				for( int p = 0; p < FBXMesh->GetPolygonCount(); p++ )
+				{
+					DWORD FaceIndices[4];
+					for( int i = 0; i < FBXMesh->GetPolygonSize(p); i++ )
 					{
-						weights[w].resize(4);
-						indices[w].resize(4);
-						if(!FBXSkin)
-							weights[w][0] = 1.0f;
+						int vi = FBXMesh->GetPolygonVertex( p, i );
+						Ovgl::Vertex vertex = {0};
+						KFbxVector4 normal;
+						KFbxVector2 uv;
+						FBXMesh->GetPolygonVertexNormal( p, i, normal );
+						vertex.position.x = (float)ControlPoints[vi][0];
+						vertex.position.y = (float)ControlPoints[vi][1];
+						vertex.position.z = (float)ControlPoints[vi][2];
+						vertex.position = Vector3Transform(&vertex.position, &(Ovgl::MatrixRotationX(1.57f) * matrix));
+						vertex.normal.x = (float)normal[0];
+						vertex.normal.y = (float)normal[1];
+						vertex.normal.z = (float)normal[2];
+						vertex.normal = Vector3Transform(&vertex.normal, &(Ovgl::MatrixRotationX(1.57f) * matrix.to3x3().to4x4()));
+						if( FBXLayerUVs )
+						{
+							int MappingMode = FBXLayerUVs->GetMappingMode();
+							int ReferenceMode = FBXLayerUVs->GetReferenceMode();
+							if( MappingMode == KFbxLayerElement::eBY_CONTROL_POINT )
+							{
+								if( ReferenceMode == KFbxLayerElement::eDIRECT )
+								{
+									uv = FBXLayerUVs->GetDirectArray().GetAt(vi);
+								}
+								else if( ReferenceMode == KFbxLayerElement::eINDEX_TO_DIRECT )
+								{
+									int id = FBXLayerUVs->GetIndexArray().GetAt(vi);
+									uv = FBXLayerUVs->GetDirectArray().GetAt(id);
+								}
+							}
+							else if( MappingMode == KFbxLayerElement::eBY_POLYGON_VERTEX )
+							{
+								int lTextureUVIndex = FBXMesh->GetTextureUVIndex(p, i);
+								if( ReferenceMode == KFbxLayerElement::eDIRECT || ReferenceMode == KFbxLayerElement::eINDEX_TO_DIRECT )
+								{
+									uv = FBXLayerUVs->GetDirectArray().GetAt(lTextureUVIndex);
+								}
+							}
+							vertex.texture.x = (float)uv[0];
+							vertex.texture.y = (float)uv[1];
+						}
+						else
+						{
+							vertex.texture.x = 0.5f;
+							vertex.texture.y = 0.5f;
+						}
+						vertex.weight[0] = weights[vi][0];
+						vertex.weight[1] = weights[vi][1];
+						vertex.weight[2] = weights[vi][2];
+						vertex.weight[3] = weights[vi][3];
+						vertex.indices[0] = indices[vi][0];
+						vertex.indices[1] = indices[vi][1];
+						vertex.indices[2] = indices[vi][2];
+						vertex.indices[3] = indices[vi][3];
+						if( vertex != mesh->vertices[vi] && mesh->vertices[vi] != ZeroVertex )
+						{
+							FaceIndices[i] = mesh->vertices.size();
+							mesh->vertices.push_back( vertex );
+						}
+						else
+						{
+							FaceIndices[i] = (DWORD)vi;
+							mesh->vertices[vi] = vertex;
+						}
 					}
-					for( int p = 0; p < FBXMesh->GetPolygonCount(); p++ )
+					if(FBXMesh->GetPolygonSize(p) == 4)
 					{
-						DWORD FaceIndices[4];
-						for( int i = 0; i < FBXMesh->GetPolygonSize(p); i++ )
-						{
-							int vi = FBXMesh->GetPolygonVertex( p, i );
-							Ovgl::Vertex vertex = {0};
-							KFbxVector4 normal;
-							KFbxVector2 uv;
-							FBXMesh->GetPolygonVertexNormal( p, i, normal );
-							vertex.position.x = (float)ControlPoints[vi][1];
-							vertex.position.y = (float)ControlPoints[vi][2];
-							vertex.position.z = (float)ControlPoints[vi][0];
-							vertex.normal.x = (float)normal[1];
-							vertex.normal.y = (float)normal[2];
-							vertex.normal.z = (float)normal[0];
-							if( FBXLayerUVs )
-							{
-								int MappingMode = FBXLayerUVs->GetMappingMode();
-								int ReferenceMode = FBXLayerUVs->GetReferenceMode();
-								if( MappingMode == KFbxLayerElement::eBY_CONTROL_POINT )
-								{
-									if( ReferenceMode == KFbxLayerElement::eDIRECT )
-									{
-										uv = FBXLayerUVs->GetDirectArray().GetAt(vi);
-									}
-									else if( ReferenceMode == KFbxLayerElement::eINDEX_TO_DIRECT )
-									{
-										int id = FBXLayerUVs->GetIndexArray().GetAt(vi);
-										uv = FBXLayerUVs->GetDirectArray().GetAt(id);
-									}
-								}
-								else if( MappingMode == KFbxLayerElement::eBY_POLYGON_VERTEX )
-								{
-									int lTextureUVIndex = FBXMesh->GetTextureUVIndex(p, i);
-									if( ReferenceMode == KFbxLayerElement::eDIRECT || ReferenceMode == KFbxLayerElement::eINDEX_TO_DIRECT )
-									{
-										uv = FBXLayerUVs->GetDirectArray().GetAt(lTextureUVIndex);
-									}
-								}
-								vertex.texture.x = (float)uv[0];
-								vertex.texture.y = (float)uv[1];
-							}
-							else
-							{
-								vertex.texture.x = 0.5f;
-								vertex.texture.y = 0.5f;
-							}
-							vertex.weight[0] = weights[vi][0];
-							vertex.weight[1] = weights[vi][1];
-							vertex.weight[2] = weights[vi][2];
-							vertex.weight[3] = weights[vi][3];
-							vertex.indices[0] = indices[vi][0];
-							vertex.indices[1] = indices[vi][1];
-							vertex.indices[2] = indices[vi][2];
-							vertex.indices[3] = indices[vi][3];
-							if( vertex != mesh->vertices[vi] && mesh->vertices[vi] != ZeroVertex )
-							{
-								FaceIndices[i] = mesh->vertices.size();
-								mesh->vertices.push_back( vertex );
-							}
-							else
-							{
-								FaceIndices[i] = (DWORD)vi;
-								mesh->vertices[vi] = vertex;
-							}
-						}
-						if(FBXMesh->GetPolygonSize(p) == 4)
-						{
-							Ovgl::Face face;
-							face.indices[0] = FaceIndices[0];
-							face.indices[1] = FaceIndices[2];
-							face.indices[2] = FaceIndices[3];
-							mesh->faces.push_back( face );
-							if(FBXLayerMats)
-							{
-								mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p));
-							}
-							else
-							{
-								mesh->attributes.push_back(0);
-							}
-						}
 						Ovgl::Face face;
 						face.indices[0] = FaceIndices[0];
-						face.indices[1] = FaceIndices[1];
-						face.indices[2] = FaceIndices[2];
+						face.indices[1] = FaceIndices[2];
+						face.indices[2] = FaceIndices[3];
 						mesh->faces.push_back( face );
 						if(FBXLayerMats)
 						{
-							mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p));
+							mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p) + AttributeOffset );
 						}
 						else
 						{
 							mesh->attributes.push_back(0);
 						}
 					}
-
-					// Get animation frames for this mesh.
-					for(DWORD bn = 0; bn < BoneNodes.size(); bn++ )
-					{	
-						KFbxAnimCurve* lAnimCurve[3];
-						lAnimCurve[0] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_X);
-						lAnimCurve[1] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Y);
-						lAnimCurve[2] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Z);
-						for( DWORD c = 0; c < 3; c++ )
+					Ovgl::Face face;
+					face.indices[0] = FaceIndices[0];
+					face.indices[1] = FaceIndices[1];
+					face.indices[2] = FaceIndices[2];
+					mesh->faces.push_back( face );
+					if(FBXLayerMats)
+					{
+						mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p) + AttributeOffset);
+					}
+					else
+					{
+						mesh->attributes.push_back(0);
+					}
+				}
+				
+				// Get animation frames for this mesh.
+				for(DWORD bn = 0; bn < BoneNodes.size(); bn++ )
+				{	
+					KFbxAnimCurve* lAnimCurve[3];
+					lAnimCurve[0] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_X);
+					lAnimCurve[1] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Y);
+					lAnimCurve[2] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Z);
+					for( DWORD c = 0; c < 3; c++ )
+					{
+						for( DWORD k = 0; k < (DWORD)lAnimCurve[c]->KeyGetCount(); k++ )
 						{
-							for( DWORD k = 0; k < (DWORD)lAnimCurve[c]->KeyGetCount(); k++ )
+							KFbxAnimCurveKey lKey = lAnimCurve[c]->KeyGet(k);
+							DWORD lKeyTime = (DWORD)lKey.GetTime().GetMilliSeconds();
+							float lKeyValue = lKey.GetValue();
+							bool found_frame = false;
+							for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
 							{
-								KFbxAnimCurveKey lKey = lAnimCurve[c]->KeyGet(k);
-								DWORD lKeyTime = (DWORD)lKey.GetTime().GetMilliSeconds();
-								float lKeyValue = lKey.GetValue();
-								bool found_frame = false;
-								for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
+								if( lKeyTime == mesh->keyframes[f]->time )
 								{
-									if( lKeyTime == mesh->keyframes[f]->time )
+									found_frame = true;
+									bool found_key = false;
+									for( DWORD k2 = 0; k2 < mesh->keyframes[f]->keys.size(); k2++ )
 									{
-										found_frame = true;
-										bool found_key = false;
-										for( DWORD k2 = 0; k2 < mesh->keyframes[f]->keys.size(); k2++ )
+										if( mesh->keyframes[f]->keys[k2].index == bn )
 										{
-											if( mesh->keyframes[f]->keys[k2].index == bn )
-											{
-												found_key = true;
-												mesh->keyframes[f]->keys[k2].rotation[c] = lKeyValue;
-											}
-										}
-										if( !found_key )
-										{
-											Ovgl::Key key;
-											key.index = bn;
-											ZeroMemory( &key.rotation, sizeof( Ovgl::Vector4 ) );
-											key.rotation[c] = lKeyValue;
-											mesh->keyframes[f]->keys.push_back(key);
+											found_key = true;
+											mesh->keyframes[f]->keys[k2].rotation[c] = lKeyValue;
 										}
 									}
+									if( !found_key )
+									{
+										Ovgl::Key key;
+										key.index = bn;
+										ZeroMemory( &key.rotation, sizeof( Ovgl::Vector4 ) );
+										key.rotation[c] = lKeyValue;
+										mesh->keyframes[f]->keys.push_back(key);
+									}
 								}
-								if( !found_frame )
-								{
-									Ovgl::Frame* frame = new Ovgl::Frame;
-									frame->time = lKeyTime;
-									frame->keys.clear();
-									mesh->keyframes.push_back(frame);
-								}
+							}
+							if( !found_frame )
+							{
+								Ovgl::Frame* frame = new Ovgl::Frame;
+								frame->time = lKeyTime;
+								frame->keys.clear();
+								mesh->keyframes.push_back(frame);
 							}
 						}
 					}
-				
-					// Convert euler angles to quaternions.
-					for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
-					{
-						for( DWORD k = 0; k < mesh->keyframes[f]->keys.size(); k++ )
-						{
-							Ovgl::Vector4 KeyEuler = mesh->keyframes[f]->keys[k].rotation;
-							mesh->keyframes[f]->keys[k].rotation = Ovgl::QuaternionRotationEuler( (KeyEuler.x / 180.0f) * (float)OvglPi, (KeyEuler.y / 180.0f) * (float)OvglPi, (KeyEuler.z / 180.0f) * (float)OvglPi );
-						}
-					}
-	
-					// Sort frame times.
-					std::sort(mesh->keyframes.begin(), mesh->keyframes.begin() + mesh->keyframes.size(), FrameCompare );
-					mesh->VertexBuffer = 0;
-					mesh->IndexBuffers = 0;
-					mesh->GenerateBoneMeshes();
-					mesh->Update();
-					Meshes.push_back( mesh );
-					return mesh;
 				}
+				
+				// Convert euler angles to quaternions.
+				for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
+				{
+					for( DWORD k = 0; k < mesh->keyframes[f]->keys.size(); k++ )
+					{
+						Ovgl::Vector4 KeyEuler = mesh->keyframes[f]->keys[k].rotation;
+						mesh->keyframes[f]->keys[k].rotation = Ovgl::QuaternionRotationEuler( (KeyEuler.x / 180.0f) * (float)OvglPi, (KeyEuler.y / 180.0f) * (float)OvglPi, (KeyEuler.z / 180.0f) * (float)OvglPi );
+					}
+				}
+
+				// Sort frame times.
+				std::sort(mesh->keyframes.begin(), mesh->keyframes.begin() + mesh->keyframes.size(), FrameCompare );
 			}
 		}
+		if(mesh->bones.size() == 0 )
+		{
+			Ovgl::Bone* bone = new Ovgl::Bone;
+			bone->matrix = Ovgl::MatrixIdentity();
+			bone->length = 1.0f;
+			bone->mesh = new Ovgl::Mesh;
+			bone->convex = NULL;
+			mesh->bones.push_back(bone);
+		}
+		else
+		{
+			mesh->GenerateBoneMeshes();
+		}
+		mesh->VertexBuffer = 0;
+		mesh->IndexBuffers = 0;
+		mesh->Update();
+		Meshes.push_back( mesh );
+		return mesh;
 	}
 	return NULL;
 }
 
-Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& POS_X, const std::string& NEG_X, const std::string& POS_Y, const std::string& NEG_Y, const std::string& POS_Z, const std::string& NEG_Z )
+Ovgl::Mesh* Ovgl::MediaLibrary::ImportBSP( const std::string& file )
+{
+	Ovgl::Mesh* mesh = new Ovgl::Mesh;
+	if(!file.empty())
+	{
+		FILE* f = NULL;
+		fopen_s( &f, file.c_str(), "rb" );
+		if ( f == NULL )
+		{
+			std::wstring wfile;
+			wfile = L"Ovgl::MediaLibrary::ImportBSP was unable to open the file ";
+			wfile.append( file.begin(), file.end() );
+			OutputDebugString( wfile.c_str() );
+			return NULL;
+		}
+		fseek(f, 0, SEEK_END);
+		DWORD filesize = ftell(f);
+		std::vector<char> buffer(filesize);
+		fread(&buffer[0], 1, filesize, f);
+
+		return mesh;
+	}
+	return NULL;
+}
+
+Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& front, const std::string& back, const std::string& top, const std::string& bottom, const std::string& left, const std::string& right )
 {
 	// Create new texture
 	Ovgl::Texture* texture = new Ovgl::Texture;
@@ -629,7 +735,7 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& POS_X, cons
 	texture->MLibrary = this;
 
 	// Create array of cube faces.
-	std::string CubeFaces[6] = {POS_X, NEG_X, POS_Y, NEG_Y, POS_Z, NEG_Z};
+	std::string CubeFaces[6] = {front, back, top, bottom, left, right};
 
 	glGenTextures(1, &texture->Image);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture->Image);
@@ -692,66 +798,92 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& POS_X, cons
 
 Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
 {
-	// Create new texture
-	Ovgl::Texture* texture = new Ovgl::Texture;
+	struct stat stFileInfo; 
+	int intStat = stat(file.c_str(), &stFileInfo); 
+	if(intStat == 0)
+	{ 
+		// Image format
+		FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 
-	// Set the texture's media library handle to this media library
-	texture->MLibrary = this;
+		// Check the file signature and deduce its format
+		fif = FreeImage_GetFileType( file.c_str(), 0 );
 
-	// Image format
-	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+		// If still unknown, try to guess the file format from the file extension
+		if( fif == FIF_UNKNOWN )
+		{
+			fif = FreeImage_GetFIFFromFilename( file.c_str() );
+		}
 
-	// Check the file signature and deduce its format
-	fif = FreeImage_GetFileType( file.c_str(), 0 );
+		// If still unkown, return NULL
+		if( fif == FIF_UNKNOWN )
+		{
+			return NULL;
+		}
 
-	// If still unknown, try to guess the file format from the file extension
-	if( fif == FIF_UNKNOWN )
-	{
-		fif = FreeImage_GetFIFFromFilename( file.c_str() );
+		// Load texture
+		FIBITMAP* dib = FreeImage_Load( fif, file.c_str() );
+		
+		// Check if file was loaded
+		if(dib == NULL)
+		{
+			return NULL;
+		}
+
+		// Get raw data and dimensions
+		DWORD w = FreeImage_GetWidth( dib );
+		DWORD h = FreeImage_GetHeight( dib );
+
+		// Check if texture is valid.
+		if( w == 0 && h == 0 )
+		{
+			return NULL;
+		}
+
+		// Convert to RGB format
+		dib = FreeImage_ConvertTo32Bits( dib );
+		BYTE* pixeles = FreeImage_GetBits( dib );
+		GLubyte* textura = new GLubyte[4*w*h];
+
+		for( DWORD j = 0; j < w * h; j++ )
+		{
+			textura[j*4+0] = pixeles[j*4+2];
+			textura[j*4+1] = pixeles[j*4+1];
+			textura[j*4+2] = pixeles[j*4+0];
+			textura[j*4+3] = pixeles[j*4+3];
+		}
+
+		// Create new texture
+		Ovgl::Texture* texture = new Ovgl::Texture;
+
+		// Set the texture's media library handle to this media library
+		texture->MLibrary = this;
+
+		// Set the texture's file name.
+		texture->File = file;
+		
+		// Create OpenGL texture
+		glGenTextures( 1, &texture->Image );
+		glBindTexture( GL_TEXTURE_2D, texture->Image );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture( GL_TEXTURE_2D, NULL );
+
+		// Release FreeImage's copy of the image
+		FreeImage_Unload( dib );
+
+		// Add texture to media library
+		Textures.push_back( texture );
+
+		// Return texture pointer
+		return texture;
 	}
-
-	// If still unkown, return NULL
-	if( fif == FIF_UNKNOWN )
+	else
 	{
+		// File does not exist!
 		return NULL;
-	}
-
-	// Load texture
-	FIBITMAP* dib = FreeImage_Load( fif, file.c_str() );
-
-	// Convert to RGB format
-	dib = FreeImage_ConvertTo32Bits( dib );
-
-	// Get raw data and dimensions
-	DWORD w = FreeImage_GetWidth( dib );
-	DWORD h = FreeImage_GetHeight( dib );
-	BYTE* pixeles = FreeImage_GetBits( dib );
-	GLubyte* textura = new GLubyte[4*w*h];
-
-	for( DWORD j = 0; j < w * h; j++ )
-	{
-		textura[j*4+0] = pixeles[j*4+2];
-		textura[j*4+1] = pixeles[j*4+1];
-		textura[j*4+2] = pixeles[j*4+0];
-		textura[j*4+3] = pixeles[j*4+3];
-	}
-
-	// Create OpenGL texture
-	glGenTextures( 1, &texture->Image );
-	glBindTexture( GL_TEXTURE_2D, texture->Image );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
-	glBindTexture( GL_TEXTURE_2D, NULL );
-
-	// Release FreeImage's copy of the image
-	FreeImage_Unload( dib );
-
-	// Add texture to media library
-	Textures.push_back( texture );
-
-	// Return texture pointer
-	return texture;
+	} 
 }
 
 Ovgl::Shader* Ovgl::MediaLibrary::ImportCG( const std::string& file )
@@ -764,7 +896,7 @@ Ovgl::Shader* Ovgl::MediaLibrary::ImportCG( const std::string& file )
 	const char* string;
 
 	// Create vertex program
-	shader->VertexProgram = cgCreateProgramFromFile( Inst->CgContext, CG_SOURCE, file.c_str(), CG_PROFILE_GPU_VP, "VS", NULL );
+	shader->VertexProgram = cgCreateProgramFromFile( Inst->CgContext, CG_SOURCE, file.c_str(), Inst->CgVertexProfile, "VS", NULL );
 	string = cgGetLastErrorString(&error);
 	if (error != CG_NO_ERROR)
 	{
@@ -780,7 +912,7 @@ Ovgl::Shader* Ovgl::MediaLibrary::ImportCG( const std::string& file )
 	}
 
 	// Create fragment program
-	shader->FragmentProgram = cgCreateProgram( Inst->CgContext, CG_SOURCE, file.c_str(), CG_PROFILE_GPU_FP, "FS", NULL );
+	shader->FragmentProgram = cgCreateProgram( Inst->CgContext, CG_SOURCE, file.c_str(), Inst->CgFragmentProfile, "FS", NULL );
 	string = cgGetLastErrorString(&error);
 	if (error != CG_NO_ERROR)
 	{
@@ -809,9 +941,13 @@ Ovgl::Scene* Ovgl::MediaLibrary::CreateScene( )
 	Ovgl::Scene* scene = new Ovgl::Scene;
 	scene->Inst = Inst;
 	scene->DynamicsWorld = new btDiscreteDynamicsWorld(Inst->PhysicsDispatcher,Inst->PhysicsBroadphase,Inst->PhysicsSolver,Inst->PhysicsConfiguration);
-	scene->DynamicsWorld->setGravity(btVector3( 0.0f,-9.8f, 0.0f ));
+	scene->DynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.0001f;
+	scene->DynamicsWorld->setGravity(btVector3( 0.0f, -9.8f, 0.0f ));
+	GLDebugDrawer* Drawer = new GLDebugDrawer;
+	Drawer->setDebugMode( btIDebugDraw::DBG_DrawWireframe );
+	scene->DynamicsWorld->setDebugDrawer( Drawer );
 	btContactSolverInfo& info = scene->DynamicsWorld->getSolverInfo();
-	info.m_numIterations = 20; 
+	info.m_numIterations = 20;
 	Scenes.push_back(scene);
 	return scene;
 };
@@ -824,8 +960,52 @@ Ovgl::Material* Ovgl::MediaLibrary::CreateMaterial( )
 	material->NoZBuffer = false;
 	material->NoZWrite = false;
 	material->PostRender = false;
+	std::vector<float> EMI(1);
+	std::vector<float> Diffuse(4);
+	EMI[0] = 0.1f;
+	Diffuse[0] = 1.0f;
+	Diffuse[1] = 1.0f;
+	Diffuse[2] = 1.0f;
+	Diffuse[3] = 1.0f;
+	material->set_texture("txDiffuse", Inst->DefaultMedia->Textures[0] );
+	material->set_texture("txEnvironment", Inst->DefaultMedia->Textures[0] );
+	material->set_variable( "Diffuse", Diffuse );
+	material->set_variable( "EMI", EMI );
 	Materials.push_back(material);
 	return material;
+};
+
+Ovgl::Texture* Ovgl::MediaLibrary::CreateTexture( unsigned int width, unsigned int height )
+{
+	// Create new texture
+	Ovgl::Texture* texture = new Ovgl::Texture;
+
+	// Set the texture's media library handle to this media library
+	texture->MLibrary = this;
+
+	GLubyte* textura = new GLubyte[4*width*height];
+
+	for( DWORD j = 0; j < width * height; j++ )
+	{
+		textura[j*4+0] = 255;
+		textura[j*4+1] = 255;
+		textura[j*4+2] = 255;
+		textura[j*4+3] = 255;
+	}
+
+	// Create OpenGL texture
+	glGenTextures( 1, &texture->Image );
+	glBindTexture( GL_TEXTURE_2D, texture->Image );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture( GL_TEXTURE_2D, NULL );
+
+	// Add texture to media library
+	Textures.push_back( texture );
+
+	return texture;
 };
 
 Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportOGG( const std::string& file )

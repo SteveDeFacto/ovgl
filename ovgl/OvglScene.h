@@ -304,16 +304,15 @@ namespace Ovgl
 			/**
 			*
 			*/
-			CMesh* controller;
-			btGeneric6DofConstraint* Constraint;
+			btKinematicCharacterController* controller;
+			/**
+			*
+			*/
+			btPairCachingGhostObject* ghostObject;
 			/**
 			* This is the view of the actor. You can set it as the view to a render target to see out of the actor's eyes.
 			*/
 			Camera* camera;
-			/**
-			* This is a pointer to the physics scene object that represents the actor with in the scene.
-			*/
-			CMesh* cmesh;
 			/**
 			* This is what defines the appearance of the actor.
 			*/			
@@ -321,11 +320,11 @@ namespace Ovgl
 			/**
 			* Which direction the actor is currently moving.
 			*/
-			Vector3 trajectory;
+			Vector3 walkDirection;
 			/**
 			* Which direction the actor is currently looking.
 			*/
-			Vector3 direction;
+			Vector3 lookDirection;
 			/**
 			* When the actor is not on the gound we need to know what his velocity is in the air.
 			*/
@@ -381,11 +380,11 @@ namespace Ovgl
 			*/
 			Instance*								Inst;
 			/**
-			* This is a pointer to the PhysX scene.
+			* This is a pointer to the bullet scene.
 			*/
 			btDiscreteDynamicsWorld*				DynamicsWorld;
 			/**
-			* 
+			* This texture is the cubemap for the skybox.
 			*/
 			Texture*								skybox;
 			/**

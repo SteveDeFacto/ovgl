@@ -89,7 +89,7 @@ void Ovgl::Mesh::GenerateBoneMeshes()
 		}
 		bones[b]->mesh->Clean( 0.001f, CLOSE_VERTICES );
 		bones[b]->mesh->QuickHull();
-		bones[b]->mesh->Simplify( 256, 0 );
+		bones[b]->mesh->Simplify( 100, 0 );
 	}
 }
 
@@ -152,24 +152,23 @@ void Ovgl::Mesh::Update()
 			root_bone = b1;
 		}
 	}
+	// Create triangle mesh.
+	btTriangleMesh* trimesh = new btTriangleMesh();
+	for( UINT t = 0; t < faces.size(); t++ )
+	{
+		btVector3* v0 = (btVector3*)&vertices[faces[t].indices[0]].position;
+		btVector3* v1 = (btVector3*)&vertices[faces[t].indices[1]].position;
+		btVector3* v2 = (btVector3*)&vertices[faces[t].indices[2]].position;
+		trimesh->addTriangle( *v0, *v1, *v2 );
+	}
+	TriangleMesh = new btBvhTriangleMeshShape(trimesh, false);
+	TriangleMesh->setMargin(0.0f);
 
-	// Create Bone Meshes.
+	// Create bone meshes.
 	for( DWORD i = 0; i < bones.size(); i++ )
 	{
 		if( (bones[i]->mesh->vertices.size() > 0) && (bones[i]->mesh->faces.size() > 0) )
 		{
-			//NxConvexMeshDesc ConvexMeshDesc;
-			//ConvexMeshDesc.numVertices = bones[i]->mesh->vertices.size();
-			//ConvexMeshDesc.pointStrideBytes = sizeof(Ovgl::Vertex);
-			//ConvexMeshDesc.points = &bones[i]->mesh->vertices[0];
-			//ConvexMeshDesc.numTriangles = bones[i]->mesh->faces.size();
-			//ConvexMeshDesc.triangleStrideBytes = sizeof(Ovgl::Face);
-			//ConvexMeshDesc.triangles = &bones[i]->mesh->faces[0];
-			//ConvexMeshDesc.flags = NX_CF_COMPUTE_CONVEX | NX_CF_INFLATE_CONVEX;
-			//NxStreamDefault buf;
-			//Inst->Cooking->NxCookConvexMesh(ConvexMeshDesc, buf);
-			//bones[i]->convex = Inst->PhysX->createConvexMesh(buf);
-
 			bones[i]->convex = new btConvexHullShape((float*)&bones[i]->mesh->vertices[0], bones[i]->mesh->vertices.size(), sizeof(Ovgl::Vertex));
 		}
 		else
@@ -238,18 +237,6 @@ void Ovgl::Mesh::Update()
 			faces[11].indices[0] = 5;
 			faces[11].indices[1] = 3;
 			faces[11].indices[2] = 7;
-			//NxConvexMeshDesc ConvexMeshDesc;    
-			//ConvexMeshDesc.numVertices = vertices.size();
-			//ConvexMeshDesc.numTriangles = faces.size();
-			//ConvexMeshDesc.pointStrideBytes = sizeof(Ovgl::Vertex);
-			//ConvexMeshDesc.triangleStrideBytes = sizeof(Ovgl::Face);
-			//ConvexMeshDesc.points = &vertices[0];
-			//ConvexMeshDesc.triangles = &faces[0];
-			//ConvexMeshDesc.flags = 0;
-			//NxStreamDefault buf;
-			//Inst->Cooking->NxCookConvexMesh(ConvexMeshDesc, buf);
-			//bones[i]->convex = Inst->PhysX->createConvexMesh( buf );
-
 			bones[i]->convex = new btConvexHullShape((float*)&vertices[0], vertices.size(), sizeof(Ovgl::Vertex));
 		}
 	}
@@ -261,19 +248,24 @@ void Ovgl::Mesh::Save( const std::string& file  )
 
 void Ovgl::Mesh::Release()
 {
-//	for( DWORD m = 0; m < Inst->Meshes.size(); m++ )
-//	{
-//		if( Inst->Meshes[m] == this )
-//		{
-//			Inst->Meshes.erase( Inst->Meshes.begin() + m );
-//		}
-//	}
-//	VertexBuffer->Release();
-//	for( DWORD i = 0; i < subset_count; i++)
-//	{
-//		IndexBuffers[i]->Release();
-//	}
-//	delete this;
+	for( unsigned int i = 0; i < bones.size(); i++ )
+	{
+		delete bones[i]->convex;
+	}
+	delete this->TriangleMesh;
+	for( DWORD m = 0; m < ml->Meshes.size(); m++ )
+	{
+		if( ml->Meshes[m] == this )
+		{
+			ml->Meshes.erase( ml->Meshes.begin() + m );
+		}
+	}
+	glDeleteBuffers( 1, &VertexBuffer );
+	for( DWORD i = 0; i < subset_count; i++)
+	{
+		glDeleteBuffers( 1, &IndexBuffers[i] );
+	}
+	delete this;
 }
 
 Ovgl::Matrix44 Ovgl::CMesh::getPose()
@@ -404,7 +396,9 @@ void Ovgl::CMesh::setPose( Ovgl::Matrix44* matrix )
 
 void Ovgl::CMesh::Release()
 {
-	//scene->physics_scene->releaseActor( *actor );
+//	delete actor->getMotionState();
+	scene->DynamicsWorld->removeCollisionObject(actor);
+	delete actor;
 }
 
 void Ovgl::Mesh::CubeCloud( float sx, float sy, float sz, int count )

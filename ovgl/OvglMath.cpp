@@ -303,7 +303,7 @@ Ovgl::Matrix44 Ovgl::MatrixPerspectiveLH( float fov, float aspect, float zn, flo
 	Ovgl::Matrix44 out = {0};
 	float yScale = cos(fov/2) / sin(fov/2);
 	float xScale = yScale / aspect;
-	out._11 = xScale;
+	out._11 = -xScale;
 	out._12 = 0;
 	out._13 = 0;
 	out._14 = 0;
@@ -352,6 +352,50 @@ Ovgl::Matrix44 Ovgl::MatrixRotationQuaternion( Ovgl::Vector4* q )
 	out._42 = 0.0f;
 	out._43 = 0.0f;
 	out._44 = 1.0f;
+	return out;
+}
+
+Ovgl::Matrix44 Ovgl::MatrixSwapYZ( Ovgl::Matrix44* in_mat )
+{
+	Ovgl::Matrix44 out = {0};
+	out._11 = in_mat->_11;
+	out._12 = in_mat->_13;
+	out._13 = in_mat->_12;
+	out._14 = in_mat->_14;
+	out._21 = in_mat->_21;
+	out._22 = in_mat->_23;
+	out._23 = in_mat->_22;
+	out._24 = in_mat->_24;
+	out._31 = in_mat->_31;
+	out._32 = in_mat->_33;
+	out._33 = in_mat->_32;
+	out._34 = in_mat->_34;
+	out._41 = in_mat->_41;
+	out._42 = in_mat->_43;
+	out._43 = in_mat->_42;
+	out._44 = in_mat->_44;
+	return out;
+}
+
+Ovgl::Matrix44 Ovgl::MatrixSwapXZ( Ovgl::Matrix44* in_mat )
+{
+	Ovgl::Matrix44 out = {0};
+	out._11 = in_mat->_13;
+	out._12 = in_mat->_12;
+	out._13 = in_mat->_11;
+	out._14 = in_mat->_14;
+	out._21 = in_mat->_23;
+	out._22 = in_mat->_22;
+	out._23 = in_mat->_21;
+	out._24 = in_mat->_24;
+	out._31 = in_mat->_33;
+	out._32 = in_mat->_32;
+	out._33 = in_mat->_31;
+	out._34 = in_mat->_34;
+	out._41 = in_mat->_43;
+	out._42 = in_mat->_42;
+	out._43 = in_mat->_41;
+	out._44 = in_mat->_44;
 	return out;
 }
 
@@ -464,6 +508,29 @@ Ovgl::Vector4 Ovgl::QuaternionRotationEuler( float yaw, float pitch, float roll 
 	return out;
 }
 
+Ovgl::Vector3 Ovgl::EulerRotationMatrix( Matrix44* matrix )
+{
+	Ovgl::Vector3 out = {0};
+	if (matrix->_21 > 0.998)
+	{ 
+		out.x = atan2(matrix->_13, matrix->_33);
+		out.z = (float)(OvglPi/2);
+		out.y = 0;
+		return out;
+	}
+	if (matrix->_21 < -0.998)
+	{
+		out.x = atan2(matrix->_13, matrix->_33);
+		out.z = (float)(-OvglPi/2);
+		out.y = 0;
+		return out;
+	}
+	out.x = atan2(-matrix->_31,matrix->_11);
+	out.y = atan2(-matrix->_23,matrix->_22);
+	out.z = asin(matrix->_21);
+	return out;
+}
+
 float& Ovgl::Vector2::operator [] (size_t index)
 {
 	return (&x)[index];
@@ -541,6 +608,54 @@ Ovgl::Vector3 Ovgl::Vector3::operator * ( const float& in ) const
 	out.y = y * in;
 	out.z = z * in;
 	return out;
+}
+
+bool Ovgl::Vector3::operator == ( const Ovgl::Vector3& in ) const
+{
+	if( memcmp(this, &in, sizeof(Ovgl::Vector3)) == 0 )
+		return true;
+	else
+		return false;
+}
+
+bool Ovgl::Vector3::operator != ( const Ovgl::Vector3& in ) const
+{
+	if( memcmp(this, &in, sizeof(Ovgl::Vector3)) != 0 )
+		return true;
+	else
+		return false;
+}
+
+Ovgl::Vector2 Ovgl::Vector2::operator - ( const Ovgl::Vector2& in ) const
+{
+	Ovgl::Vector2 out = {0};
+	out.x = x - in.x;
+	out.y = y - in.y;
+	return out;
+}
+
+Ovgl::Vector2 Ovgl::Vector2::operator / ( const float& in ) const
+{
+	Ovgl::Vector2 out = {0};
+	out.x = x / in;
+	out.y = y / in;
+	return out;
+}
+
+bool Ovgl::Vector2::operator == ( const Ovgl::Vector2& in ) const
+{
+	if( memcmp(this, &in, sizeof(Ovgl::Vector2)) == 0 )
+		return true;
+	else
+		return false;
+}
+
+bool Ovgl::Vector2::operator != ( const Ovgl::Vector2& in ) const
+{
+	if( memcmp(this, &in, sizeof(Ovgl::Vector2)) != 0 )
+		return true;
+	else
+		return false;
 }
 
 void Ovgl::Vector3::toDoubles( double* data )
@@ -630,6 +745,12 @@ Ovgl::Vector2 Ovgl::Vector2Set( float x, float y )
 Ovgl::Vector4 Ovgl::Vector4Lerp( Ovgl::Vector4& vec1, Ovgl::Vector4& vec2, float u)
 {
 	return (vec1 * (1 - u)) + (vec2 * u);
+}
+
+float Ovgl::Round( float expression, int numdecimalplaces)
+{
+	float aa = floorf(expression * pow(10.0f, numdecimalplaces)) / pow(10.0f, numdecimalplaces);
+	return floorf(expression * pow(10.0f, numdecimalplaces)) / pow(10.0f, numdecimalplaces);
 }
 
 float Ovgl::Lerp( float val1, float val2, float u)

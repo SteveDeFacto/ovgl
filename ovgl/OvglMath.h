@@ -31,8 +31,11 @@ namespace Ovgl
 		class __declspec(dllexport) Vector2
 		{
 		public:
-
 			float x, y;
+			Vector2 operator - ( const Vector2& ) const;
+			Vector2 operator / ( const float& ) const;
+			bool operator == (const Vector2&) const;
+			bool operator != (const Vector2&) const;
 			float& operator[](size_t index);
 		};
 
@@ -47,6 +50,8 @@ namespace Ovgl
 			Vector3 operator * ( const Vector3& ) const;
 			Vector3 operator / ( const float& ) const;
 			Vector3 operator * ( const float& ) const;
+			bool operator == (const Vector3&) const;
+			bool operator != (const Vector3&) const;
 			void toDoubles( double* data );
 			void fromDoubles( double* data );
 		};
@@ -94,6 +99,8 @@ namespace Ovgl
 		};
 	
 		__declspec(dllexport) Matrix44 MatrixIdentity();
+		__declspec(dllexport) Matrix44 MatrixSwapYZ( Matrix44* in_mat );
+		__declspec(dllexport) Matrix44 MatrixSwapXZ( Matrix44* in_mat );
 		__declspec(dllexport) Matrix44 MatrixInverse( Vector4* in_vec, Matrix44* in_mat );
 		__declspec(dllexport) Matrix44 MatrixScaling( float x, float y, float z );
 		__declspec(dllexport) Matrix44 MatrixTranslation( float x, float y, float z );
@@ -108,6 +115,7 @@ namespace Ovgl
 		__declspec(dllexport) Vector4 QuaternionRotationMatrix( Matrix44* matrix );
 		__declspec(dllexport) Vector4 QuaternionRotationAxis( Vector3* axis, float angle );
 		__declspec(dllexport) Vector4 QuaternionRotationEuler( float yaw, float pitch, float roll );
+		__declspec(dllexport) Vector3 EulerRotationMatrix( Matrix44* matrix );
 		__declspec(dllexport) Vector4 Vector4Set( float w, float x, float y, float z );
 		__declspec(dllexport) Vector4 Vector4Lerp( Vector4& vec1, Vector4& vec2, float u);
 		__declspec(dllexport) Vector3 Vector3Set( float x, float y, float z );
@@ -116,6 +124,7 @@ namespace Ovgl
 		__declspec(dllexport) Vector3 Vector3Normalize( Vector3* vector );
 		__declspec(dllexport) Vector3 Vector3Center( std::vector<Vector3>& vertices );
 		__declspec(dllexport) Vector2 Vector2Set( float x, float y );
+		__declspec(dllexport) float Round( float expression, int numdecimalplaces );
 		__declspec(dllexport) float Distance( Vector3* vector1, Vector3* vector2);
 		__declspec(dllexport) float Vector3Dot( Vector3* vec1, Vector3* vec2 );
 		__declspec(dllexport) float Lerp( float vec1, float vec2, float u);

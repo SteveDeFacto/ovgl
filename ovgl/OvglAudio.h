@@ -38,6 +38,7 @@ namespace Ovgl
 			unsigned int						mono;
 			std::vector<signed short>			data;
 			AudioInstance* CreateAudioInstance( Emitter* emitter, bool loop );
+			void Release();
 		};
 
 		class __declspec(dllexport) AudioInstance
@@ -50,6 +51,7 @@ namespace Ovgl
 			void Stop();
 			void Pause();
 			void Set();
+			void Release();
 		};
 
 		class __declspec(dllexport) AudioVoice
@@ -57,6 +59,7 @@ namespace Ovgl
 		public:
 			AudioInstance*						instance;
 			unsigned int						source;
+			void Release();
 		};
 	}
 }

@@ -67,6 +67,7 @@ namespace Ovgl
 		public:
 			MediaLibrary*							MLibrary;
 			UINT									Image;
+			std::string								File;
 
 			void Release();
 		};
@@ -104,11 +105,12 @@ namespace Ovgl
 			HDC										hDC;
 			HGLRC									hRC;
 			_CGcontext*								CgContext;
+			CGprofile								CgVertexProfile;
+			CGprofile								CgFragmentProfile;
 			btDefaultCollisionConfiguration*		PhysicsConfiguration;
 			btCollisionDispatcher*					PhysicsDispatcher;
 			btBroadphaseInterface*					PhysicsBroadphase;
 			btSequentialImpulseConstraintSolver*	PhysicsSolver;
-			btConvexHullShape*						Shapes[1];
 			void*									FBXManager;
 			MediaLibrary*							DefaultMedia;
 			std::vector<RenderTarget*>				RenderTargets;

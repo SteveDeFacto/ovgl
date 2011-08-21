@@ -32,11 +32,15 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 
 	Ovgl::Shader* DefaultEffect = new Ovgl::Shader;
 	Ovgl::Shader* SkyboxEffect = new Ovgl::Shader;
-	Ovgl::Shader* SpriteEffect = new Ovgl::Shader;
+	Ovgl::Shader* BlurEffect = new Ovgl::Shader;
+	Ovgl::Shader* BloomEffect = new Ovgl::Shader;
+	Ovgl::Shader* AddEffect = new Ovgl::Shader;
 
 	DefaultEffect->MLibrary = inst->DefaultMedia;
 	SkyboxEffect->MLibrary = inst->DefaultMedia;
-	SpriteEffect->MLibrary = inst->DefaultMedia;
+	BlurEffect->MLibrary = inst->DefaultMedia;
+	BloomEffect->MLibrary = inst->DefaultMedia;
+	AddEffect->MLibrary = inst->DefaultMedia;
 
 	std::string shader;
 
@@ -53,15 +57,15 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 
 	"struct FS_INPUT"
 	"{"
-	"  float4 posVS					: POSITION;"
-	"  float4 posWS					: TEXCOORD0;"
-	"  float2 tex					: TEXCOORD1;"
-	"  float4 norm					: TEXCOORD2;"
+	"	float4 posVS				: POSITION;"
+	"	float4 posWS				: TEXCOORD0;"
+	"	float2 tex					: TEXCOORD1;"
+	"	float4 norm					: TEXCOORD2;"
 	"};"
 
 	"struct FS_OUTPUT"
 	"{"
-	"  float4 color					: COLOR;"
+	"	float4 color				: COLOR;"
 	"};"
 
 	"float4 Ambient = float4( 0.0f, 0.0f, 0.0f, 1.0f );"
@@ -73,49 +77,49 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 	"float4 LightColors[16]			: LIGHTCOLORS;"
 	"float4x4 World					: WORLD;"
 	"float4x4 ViewProj				: VIEWPROJ;"
-	"float4x4 Bones[64]			: BONES;"
+	"float4x4 Bones[64]				: BONES;"
 	"uniform sampler2D txDiffuse;"
 	"uniform samplerCUBE txEnvironment;"
 
 	"FS_INPUT VS( VS_INPUT In )"
 	"{"
-	"  FS_INPUT Out;"
-	"  float4x4 skinTransform = 0;"
-	"  float3x3 normTransform = 0;"
-	"  skinTransform += Bones[In.bi.x] * In.bw.x;"
-	"  skinTransform += Bones[In.bi.y] * In.bw.y;"
-	"  skinTransform += Bones[In.bi.z] * In.bw.z;"
-	"  skinTransform += Bones[In.bi.w] * In.bw.w;"
-	"  normTransform += (float3x3)(Bones[In.bi.x] * In.bw.x);"
-	"  normTransform += (float3x3)(Bones[In.bi.y] * In.bw.y);"
-	"  normTransform += (float3x3)(Bones[In.bi.z] * In.bw.z);"
-	"  normTransform += (float3x3)(Bones[In.bi.w] * In.bw.w);"
-	"  Out.posVS = mul(float4(In.pos, 1), skinTransform);"
-	"  Out.posWS = Out.posVS;"
-	"  Out.norm = float4(In.norm, 1);"
-	"  Out.tex = In.tex;"
-	"  Out.posVS = mul(Out.posVS, ViewProj);"
-	"  return Out;"
+	"	FS_INPUT Out;"
+	"	float4x4 skinTransform = 0;"
+	"	float3x3 normTransform = 0;"
+	"	skinTransform += Bones[In.bi.x] * In.bw.x;"
+	"	skinTransform += Bones[In.bi.y] * In.bw.y;"
+	"	skinTransform += Bones[In.bi.z] * In.bw.z;"
+	"	skinTransform += Bones[In.bi.w] * In.bw.w;"
+	"	normTransform += (float3x3)(Bones[In.bi.x] * In.bw.x);"
+	"	normTransform += (float3x3)(Bones[In.bi.y] * In.bw.y);"
+	"	normTransform += (float3x3)(Bones[In.bi.z] * In.bw.z);"
+	"	normTransform += (float3x3)(Bones[In.bi.w] * In.bw.w);"
+	"	Out.posVS = mul(float4(In.pos, 1), skinTransform);"
+	"	Out.posWS = Out.posVS;"
+	"	Out.norm = float4(In.norm, 1);"
+	"	Out.tex = In.tex;"
+	"	Out.posVS = mul(Out.posVS, ViewProj);"
+	"	return Out;"
 	"}"
 
 	"FS_OUTPUT FS( FS_INPUT In )"
 	"{"
-	"  FS_OUTPUT Out;"
-	"  float4 light = float4( 0, 0, 0, 0 );"
-	"  for(float i = 0; i < LightCount; i++)"
-	"  {"
-	"	float4 lightDir = Lights[i] - In.posWS;"
-	"	float4 NdotL = saturate(dot(In.norm, normalize(lightDir)));"
-	"	float4 attenuation = 1/length(lightDir);"
-	"	light += LightColors[i] * NdotL * attenuation * 10;"
-	"  }"
-	"  float4 envColor = texCUBE( txEnvironment, reflect( normalize( In.posWS.xyz - ViewPos.xyz ), In.norm.xyz ) ) * EMI;"
-	"  float4 texColor = tex2D( txDiffuse, In.tex );"
-	"  Out.color = ( (texColor + envColor) * Diffuse) * (light + Ambient);"
-	"  return Out;"
+	"	FS_OUTPUT Out;"
+	"	float4 light = float4( 0, 0, 0, 0 );"
+	"	for(float i = 0; i < LightCount; i++)"
+	"	{"
+	"		float4 lightDir = Lights[i] - In.posWS;"
+	"		float4 NdotL = saturate(dot(In.norm, normalize(lightDir)));"
+	"		float4 attenuation = 1/length(lightDir);"
+	"		light += LightColors[i] * NdotL * attenuation * 10;"
+	"	}"
+	"	float4 envColor = texCUBE( txEnvironment, reflect( normalize( In.posWS.xyz - ViewPos.xyz ), In.norm.xyz ) ) * EMI;"
+	"	float4 texColor = tex2D( txDiffuse, In.tex );"
+	"	Out.color = ( (texColor + envColor) * Diffuse) * (light + Ambient);"
+	"	Out.color.w = min(1.0, Out.color.w);"
+	"	return Out;"
 	"}";
-
-	DefaultEffect->VertexProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), CG_PROFILE_GPU_VP, "VS", NULL );
+	DefaultEffect->VertexProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgVertexProfile, "VS", NULL );
 	CGerror error;
 	const char* string;
 	string = cgGetLastErrorString(&error);
@@ -130,7 +134,7 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 		OutputDebugStringA( string );
 	}
 
-	DefaultEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), CG_PROFILE_GPU_FP, "FS", NULL );
+	DefaultEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
 	string = cgGetLastErrorString(&error);
 	if (error != CG_NO_ERROR)
 	{
@@ -185,7 +189,7 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 	"	return Out;"
 	"}";
 
-	SkyboxEffect->VertexProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), CG_PROFILE_GPU_VP, "VS", NULL );
+	SkyboxEffect->VertexProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgVertexProfile, "VS", NULL );
 	string = cgGetLastErrorString(&error);
 	if (error != CG_NO_ERROR)
 	{
@@ -198,7 +202,7 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 		OutputDebugStringA( string );
 	}
 
-	SkyboxEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), CG_PROFILE_GPU_FP, "FS", NULL );
+	SkyboxEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
 	string = cgGetLastErrorString(&error);
 	if (error != CG_NO_ERROR)
 	{
@@ -214,16 +218,11 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 	SkyboxEffect->GeometryProgram = NULL;
 
 	shader =
-	"struct VS_INPUT"
-	"{"
-	"	float2 pos				: ATTR0;"
-	"	float2 tex				: ATTR1;"
-	"};"
 
 	"struct FS_INPUT"
 	"{"
 	"  float4 pos				: POSITION;"
-	"  float3 tex				: TEXCOORD0;"
+	"  float2 tex				: TEXCOORD0;"
 	"};"
 
 	"struct FS_OUTPUT"
@@ -231,60 +230,168 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 	"  float4 color				: COLOR;"
 	"};"
 
-	"uniform sampler2D txDiffuse;"
-	"float4x4 World;"
-
-	"FS_INPUT VS( VS_INPUT In )"
+	"float PixelKernel[13] ="
 	"{"
-	"	FS_INPUT Out;"
-	"	Out.pos = mul( float4( In.pos.xy, -10.0, 0.0 ), World );"
-	"	Out.tex = float3( In.tex, 0.0 );"
-	"	return Out;"
-	"}"
+	"	-6,"
+	"	-5,"
+	"	-4,"
+	"	-3,"
+	"	-2,"
+	"	-1,"
+	"	0,"
+	"	1,"
+	"	2,"
+	"	3,"
+	"	4,"
+	"	5,"
+	"	6,"
+	"};"
+
+	"static const float BlurWeights[13] ="
+	"{"
+	"	0.002216,"
+	"	0.008764,"
+	"	0.026995,"
+	"	0.064759,"
+	"	0.120985,"
+	"	0.176033,"
+	"	0.199471,"
+	"	0.176033,"
+	"	0.120985,"
+	"	0.064759,"
+	"	0.026995,"
+	"	0.008764,"
+	"	0.002216,"
+	"};"
+
+	"float2 direction;"
+
+	"uniform sampler2D txDiffuse;"
 
 	"FS_OUTPUT FS( FS_INPUT In)"
 	"{"
 	"	FS_OUTPUT Out;"
-	"	Out.color = float4( 1.0, 1.0, 1.0, 1.0 );"
-	//"	Out.color = tex2D( txDiffuse, In.tex );"
-	"	return Out;"
+    "	float2 samp = In.tex;"
+    "	for (int i = 0; i < 13; i++)"
+	"	{"
+	"		samp = In.tex + (direction * PixelKernel[i]);"
+	"		Out.color += tex2D(txDiffuse, samp) * BlurWeights[i];"
+    "	}"
+    "	return Out;"
 	"}";
 
-	SpriteEffect->VertexProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), CG_PROFILE_GPU_VP, "VS", NULL );
+	BlurEffect->VertexProgram = NULL;
+
+	BlurEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
 	string = cgGetLastErrorString(&error);
 	if (error != CG_NO_ERROR)
 	{
 		OutputDebugStringA( string );
 	}
-	cgGLLoadProgram( SpriteEffect->VertexProgram );
+	cgGLLoadProgram( BlurEffect->FragmentProgram );
 	string = cgGetLastErrorString(&error);
 	if (error != CG_NO_ERROR)
 	{
 		OutputDebugStringA( string );
 	}
 
-	SpriteEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), CG_PROFILE_GPU_FP, "FS", NULL );
+	BlurEffect->GeometryProgram = NULL;
+
+	shader =
+	"struct FS_INPUT"
+	"{"
+	"  float4 pos				: POSITION;"
+	"  float2 tex				: TEXCOORD0;"
+	"};"
+
+	"struct FS_OUTPUT"
+	"{"
+	"  float4 color				: COLOR;"
+	"};"
+
+	"float Luminance = 1.0f;"
+
+	"uniform sampler2D txDiffuse;"
+
+	"FS_OUTPUT FS( FS_INPUT In)"
+	"{"
+	"	FS_OUTPUT Out;"
+    "	Out.color = tex2D(txDiffuse, In.tex);"
+	"	Out.color = Out.color - Luminance;"
+	"	Out.color = max(float4(0.0, 0.0, 0.0, 0.0), Out.color);"
+    "	return Out;"
+	"}";
+
+	BloomEffect->VertexProgram = NULL;
+
+	BloomEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
 	string = cgGetLastErrorString(&error);
 	if (error != CG_NO_ERROR)
 	{
 		OutputDebugStringA( string );
 	}
-	cgGLLoadProgram( SpriteEffect->FragmentProgram );
+	cgGLLoadProgram( BloomEffect->FragmentProgram );
 	string = cgGetLastErrorString(&error);
 	if (error != CG_NO_ERROR)
 	{
 		OutputDebugStringA( string );
 	}
 
-	SpriteEffect->GeometryProgram = NULL;
+	BloomEffect->GeometryProgram = NULL;
+
+	shader =
+	"struct FS_INPUT"
+	"{"
+	"  float4 pos				: POSITION;"
+	"  float2 tex				: TEXCOORD0;"
+	"};"
+
+	"struct FS_OUTPUT"
+	"{"
+	"  float4 color				: COLOR;"
+	"};"
+
+	"uniform sampler2D txDiffuse1;"
+	"uniform sampler2D txDiffuse2;"
+
+	"FS_OUTPUT FS( FS_INPUT In)"
+	"{"
+	"	FS_OUTPUT Out;"
+    "	Out.color = tex2D(txDiffuse1, In.tex);"
+	"	Out.color += tex2D(txDiffuse2, In.tex);"
+	"	Out.color.w = 1.0;"
+    "	return Out;"
+	"}";
+
+	AddEffect->VertexProgram = NULL;
+
+	AddEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
+	cgGLLoadProgram( AddEffect->FragmentProgram );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
+
+	AddEffect->GeometryProgram = NULL;
 
 	inst->DefaultMedia->Shaders.push_back( DefaultEffect );
 	inst->DefaultMedia->Shaders.push_back( SkyboxEffect );
-	inst->DefaultMedia->Shaders.push_back( SpriteEffect );
+	inst->DefaultMedia->Shaders.push_back( BlurEffect );
+	inst->DefaultMedia->Shaders.push_back( BloomEffect );
+	inst->DefaultMedia->Shaders.push_back( AddEffect );
 
 	// Create Default Material
 	Ovgl::Material* DefaultMaterial = new Ovgl::Material;
+	
 	DefaultMaterial->ShaderProgram = DefaultEffect;
+	DefaultMaterial->MLibrary = inst->DefaultMedia;
+	DefaultMaterial->set_texture("txDiffuse", DefaultMaterial->MLibrary->CreateTexture( 256, 256) );
 	DefaultMaterial->NoZBuffer = false;
 	DefaultMaterial->NoZWrite = false;
 	DefaultMaterial->PostRender = false;
@@ -361,11 +468,18 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 	attributes[11] = 0;
 
 	Ovgl::Mesh* mesh = new Ovgl::Mesh;
+	mesh->ml = inst->DefaultMedia;
 	mesh->vertices = vertices;
 	mesh->faces = faces;
 	mesh->attributes = attributes;
 	mesh->IndexBuffers = NULL;
 	mesh->VertexBuffer = NULL;
+	Ovgl::Bone* bone = new Ovgl::Bone;
+	bone->matrix = Ovgl::MatrixIdentity();
+	bone->length = 1.0f;
+	bone->mesh = new Ovgl::Mesh;
+	bone->convex = NULL;
+	mesh->bones.push_back(bone);
 	mesh->Update();
 	inst->DefaultMedia->Meshes.push_back(mesh);
 }
@@ -379,18 +493,95 @@ Ovgl::RenderTarget* Ovgl::Instance::CreateRenderTarget( HWND hWnd, RECT* rect, D
 	rendertarget->hWnd = hWnd;
 	rendertarget->hDC = GetDC(hWnd);
 	rendertarget->view = NULL;
-	PIXELFORMATDESCRIPTOR pfd;
-	ZeroMemory( &pfd, sizeof( pfd ) );
-	pfd.nSize = sizeof( pfd );
-	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cColorBits = 32;
-	pfd.cDepthBits = 32;
-	int iFormat = ChoosePixelFormat( rendertarget->hDC, &pfd );
-	SetPixelFormat( rendertarget->hDC, iFormat, &pfd );
-	SwapBuffers( rendertarget->hDC );
-	this->RenderTargets.push_back(rendertarget);
+	rendertarget->debugMode = false;
+	rendertarget->bloom = 4;
+	rendertarget->motionBlur = true;
+	rendertarget->multiSample = true;
+
+	int pixelFormat;
+	UINT numFormats;
+	float fAttributes[] = {0,0};
+
+	int iAttributes[] = { WGL_DRAW_TO_WINDOW_ARB,GL_TRUE,
+		WGL_SUPPORT_OPENGL_ARB,GL_TRUE,
+		WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
+		WGL_COLOR_BITS_ARB,24,
+		WGL_ALPHA_BITS_ARB,0,
+		WGL_DEPTH_BITS_ARB,0,
+		WGL_STENCIL_BITS_ARB,0,
+		WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+		0, 0};
+	wglChoosePixelFormatARB( rendertarget->hDC, iAttributes, fAttributes,1, &pixelFormat, &numFormats);
+	SetPixelFormat( rendertarget->hDC, pixelFormat, NULL );
+	wglMakeCurrent( rendertarget->hDC, hRC );
+	SwapBuffers(rendertarget->hDC);
+
+	// Multi sample framebuffer
+	glGenFramebuffers(1, &rendertarget->MultiSampleFrameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, rendertarget->MultiSampleFrameBuffer);
+
+	// Multi sample colorbuffer
+	glGenRenderbuffers(1, &rendertarget->ColorBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, rendertarget->ColorBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA16F, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rendertarget->ColorBuffer);
+
+	// Multi sample depthbuffer
+	glGenRenderbuffers(1, &rendertarget->DepthBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, rendertarget->DepthBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT24, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rendertarget->DepthBuffer);
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		OutputDebugString( L"Unable to create multi sample frame buffer" );
+	}
+
+	// Effect framebuffer
+	glGenFramebuffers(1, &rendertarget->EffectFrameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, rendertarget->EffectFrameBuffer);
+
+	// Create and bind texture
+	glGenTextures(1, &rendertarget->PrimaryTex);
+	glBindTexture(GL_TEXTURE_2D, rendertarget->PrimaryTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, 0, GL_RGBA, GL_FLOAT, NULL);
+
+	glGenTextures(1, &rendertarget->SecondaryTex);
+	glBindTexture(GL_TEXTURE_2D, rendertarget->SecondaryTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glGenTextures(1, &rendertarget->PrimaryBloomTex);
+	glBindTexture(GL_TEXTURE_2D, rendertarget->PrimaryBloomTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (WindowRect.right - WindowRect.left)/4, (WindowRect.bottom - WindowRect.top)/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glGenTextures(1, &rendertarget->SecondaryBloomTex);
+	glBindTexture(GL_TEXTURE_2D, rendertarget->SecondaryBloomTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (WindowRect.right - WindowRect.left)/4, (WindowRect.bottom - WindowRect.top)/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		OutputDebugString( L"Unable to create effect frame buffer" );
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	RenderTargets.push_back(rendertarget);
 	return rendertarget;
 };
 
@@ -412,43 +603,76 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
     wcex.hCursor = NULL;
     wcex.lpszClassName = L"OvglWinClass";
     RegisterClassEx( &wcex );
-	instance->hWnd = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
-
+	HWND temphWindow = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
+	instance->hWnd = temphWindow;
 	// Set window pixel format
-	instance->hDC = GetDC( instance->hWnd );
+	instance->hDC = GetDC( temphWindow );
 	PIXELFORMATDESCRIPTOR pfd;
 	ZeroMemory( &pfd, sizeof( pfd ) );
 	pfd.nSize = sizeof( pfd );
 	pfd.nVersion = 1;
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cColorBits = 32;
-	pfd.cDepthBits = 32;
+	pfd.cColorBits = 24;
 	int iFormat = ChoosePixelFormat( instance->hDC, &pfd );
-	SetPixelFormat( instance->hDC, iFormat, &pfd );
+	SetPixelFormat( instance->hDC, iFormat, NULL );
 
 	// Create GL context
 	HGLRC tempContext = wglCreateContext( instance->hDC );
 	wglMakeCurrent( instance->hDC, tempContext );
+	instance->hRC = tempContext;
 	glewInit();
-	int attribs[] =
-	{
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-		WGL_CONTEXT_MINOR_VERSION_ARB, 1,
-		0
-	};
-	instance->hRC = wglCreateContextAttribsARB( instance->hDC, 0, attribs );
-	wglMakeCurrent( NULL, NULL );
-	wglDeleteContext( tempContext );
-	wglMakeCurrent( instance->hDC, instance->hRC );
 
+	// Create a simple hidden window so we can create a GL context from it
+	instance->hWnd = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
+
+	instance->hDC = GetDC( instance->hWnd );
+
+	int pixelFormat;
+	UINT numFormats;
+	float fAttributes[] = {0,0};
+
+	int iAttributes[] = 
+	{
+		WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+		WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+		WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
+		WGL_COLOR_BITS_ARB, 24,
+		WGL_ALPHA_BITS_ARB, 0,
+		WGL_DEPTH_BITS_ARB, 0,
+		WGL_STENCIL_BITS_ARB, 0,
+		WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+		0, 0
+	};
+	wglChoosePixelFormatARB( instance->hDC, iAttributes, fAttributes, 1, &pixelFormat, &numFormats);
+	SetPixelFormat( instance->hDC, pixelFormat, NULL );
+
+	if( atof((const char*)glGetString(GL_VERSION)) >= 3.1 )
+	{
+		int attribs[] =
+		{
+			WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 1,
+			0
+		};
+		instance->hRC = wglCreateContextAttribsARB( instance->hDC, 0, attribs );
+		wglMakeCurrent( NULL, NULL );
+		wglDeleteContext( tempContext );
+		DestroyWindow( temphWindow );
+		wglMakeCurrent( instance->hDC, instance->hRC );
+	}
+	else
+	{
+		OutputDebugString( L"OpenGL 3.1 is not supported." );
+	}
 	glEnable (GL_BLEND);
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable (GL_CULL_FACE);
-	glFrontFace(GL_CW);
 
 	// Initialize CG
 	instance->CgContext = cgCreateContext();
+	instance->CgVertexProfile = cgGLGetLatestProfile(CG_GL_VERTEX);
+	instance->CgFragmentProfile = cgGLGetLatestProfile(CG_GL_FRAGMENT);
 
 	// Initialize OpenAL
 	ALCdevice *device = alcOpenDevice(NULL);
@@ -458,40 +682,10 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 	// Initialize Bullet
 	instance->PhysicsConfiguration = new btDefaultCollisionConfiguration();
 	instance->PhysicsDispatcher = new	btCollisionDispatcher(instance->PhysicsConfiguration);
-	instance->PhysicsBroadphase = new btDbvtBroadphase();
+	btVector3 worldMin(-1000,-1000,-1000);
+	btVector3 worldMax(1000,1000,1000);
+	instance->PhysicsBroadphase = new btAxisSweep3(worldMin,worldMax);
 	instance->PhysicsSolver = new btSequentialImpulseConstraintSolver;
-
-	// Create temporary arrays to hold mesh data.
-	std::vector<Ovgl::Vertex> vertices;
-	std::vector<Ovgl::Face> faces;
-
-	// Create pyramid shape.
-	vertices.resize(5);
-	faces.resize(6);
-	vertices[0].position = Ovgl::Vector3Set( 0.0f, 0.0f, 0.0f );
-	vertices[1].position = Ovgl::Vector3Set( -0.5f, -0.5f, 1.0f );
-	vertices[2].position = Ovgl::Vector3Set( 0.5f, -0.5f, 1.0f );
-	vertices[3].position = Ovgl::Vector3Set( -0.5f, 0.5f, 1.0f );
-	vertices[4].position = Ovgl::Vector3Set( 0.5f, 0.5f, 1.0f);
-	faces[0].indices[0] = 2;
-	faces[0].indices[1] = 1;
-	faces[0].indices[2] = 0;
-	faces[1].indices[0] = 4;
-	faces[1].indices[1] = 2;
-	faces[1].indices[2] = 0;
-	faces[2].indices[0] = 3;
-	faces[2].indices[1] = 4;
-	faces[2].indices[2] = 0;
-	faces[3].indices[0] = 1;
-	faces[3].indices[1] = 3;
-	faces[3].indices[2] = 0;
-	faces[4].indices[0] = 3;
-	faces[4].indices[1] = 1;
-	faces[4].indices[2] = 2;
-	faces[5].indices[0] = 2;
-	faces[5].indices[1] = 4;
-	faces[5].indices[2] = 3;
-	instance->Shapes[0] = new btConvexHullShape((float*)&vertices[0], vertices.size(), sizeof(Ovgl::Vertex));
 
 	// Build the default media.
 	BuildDefaultMedia( instance );
@@ -504,21 +698,64 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 
 void Ovgl::Instance::Release()
 {
+	for( DWORD i = 0; i < MediaLibraries.size(); i++ )
+	{
+		MediaLibraries[i]->Release();
+	}
 	for( DWORD r = 0; r < RenderTargets.size(); r++ )
 	{
 		RenderTargets[r]->Release();
 	}
+
+	DefaultMedia->Release();
+
+	delete PhysicsSolver;
+	delete PhysicsBroadphase;
+	delete PhysicsDispatcher;
+	delete PhysicsConfiguration;
+
 	CoUninitialize();
 };
 
 void Ovgl::Material::set_variable(const std::string& variable, const std::vector<float>& data )
 {
-	Variables.push_back( make_pair( variable, data ) );
+	bool Found = false;
+	for( unsigned int i = 0; i < Variables.size(); i++ )
+	{
+		if(Variables[i].first.compare(variable) == 0)
+		{
+			Variables[i].second = data;
+			Found = true;
+		}
+	}
+	if(!Found)
+	{
+		Variables.push_back( make_pair( variable, data ) );
+	}
 }
 
 void Ovgl::Material::set_texture(const std::string& variable, Texture* texture)
 {
-	Textures.push_back( make_pair( variable, texture ) );
+	bool Found = false;
+	for( unsigned int i = 0; i < Textures.size(); i++ )
+	{
+		if(Textures[i].first.compare(variable) == 0)
+		{
+			Textures[i].second = texture;
+			Found = true;
+		}
+	}
+	if(!Found)
+	{
+		Textures.push_back( make_pair( variable, texture ) );
+	}
+}
+
+void Ovgl::Material::Release()
+{
+	this->Textures.clear();
+	this->Variables.clear();
+	delete this;
 }
 
 void Ovgl::Shader::Release()
@@ -530,6 +767,22 @@ void Ovgl::Shader::Release()
 			MLibrary->Shaders.erase( MLibrary->Shaders.begin() + e );
 		}
 	}
+	cgDestroyProgram( VertexProgram );
+	cgDestroyProgram( FragmentProgram );
+	cgDestroyProgram( GeometryProgram );
+	delete this;
+}
+
+void Ovgl::Texture::Release()
+{
+	for( unsigned int i = 0; i < MLibrary->Textures.size(); i++ )
+	{
+		if( MLibrary->Textures[i] == this )
+		{
+			MLibrary->Textures.erase( MLibrary->Textures.begin() + i );
+		}
+	}
+	glDeleteTextures(1, &Image);
 	delete this;
 }
 
@@ -537,5 +790,6 @@ Ovgl::MediaLibrary* Ovgl::Instance::CreateMediaLibrary( const std::string& file 
 {
 	Ovgl::MediaLibrary* MediaLibrary = new Ovgl::MediaLibrary;
 	MediaLibrary->Inst = this;
+	MediaLibraries.push_back(MediaLibrary);
 	return MediaLibrary;
 }

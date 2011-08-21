@@ -55,14 +55,7 @@
 #include <btBulletDynamicsCommon.h>
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
-
-// PhysX Headers
-//#include <NxPhysics.h>
-//#include <NxCooking.h>
-//#include <NxUserAllocatorDefault.h>
-//#include <NxControllerManager.h>
-//#include <NxCapsuleController.h>
-//#include "NxStreamDefault.h"
+#include <..\\OpenGL\\GLDebugDrawer.h>
 
 // FBX Headers
 #include <fbxsdk.h>

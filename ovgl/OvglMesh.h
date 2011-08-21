@@ -121,16 +121,18 @@ namespace Ovgl
 		class __declspec(dllexport) Mesh
 		{
 		public:
-			Instance*							Inst;
+			MediaLibrary*						ml;
 			std::vector<Vertex>					vertices;
 			std::vector<Face>					faces;
 			std::vector<DWORD>					attributes;
 			std::vector<Bone*>					bones;
 			std::vector<Frame*>					keyframes;
+			std::vector<Material*>				materials;
 			DWORD								subset_count;
 			DWORD								root_bone;
 			unsigned int						VertexBuffer;
 			unsigned int*						IndexBuffers;
+			btBvhTriangleMeshShape*				TriangleMesh;
 			void Save( const std::string& file );
 			void GenerateBoneMeshes();
 			void GenerateVertexNormals();

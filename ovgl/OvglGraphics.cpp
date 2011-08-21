@@ -47,10 +47,11 @@ void Ovgl::RenderTarget::Render()
 	GetWindowRect( hWnd, &WindowRect );
 
 	// Set the viewport to fit the window
-	glViewport( 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top );
 
 	if( view != NULL )
 	{
+		glBindFramebuffer(GL_FRAMEBUFFER, MultiSampleFrameBuffer);
+		glViewport( 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top );
 		Ovgl::Scene* scene = view->scene;
 		Ovgl::Matrix44 viewProj = (Ovgl::MatrixInverse( &Ovgl::Vector4Set(0,0,0,0), &view->getPose() ) * view->projMat);
 
@@ -76,6 +77,17 @@ void Ovgl::RenderTarget::Render()
 
 		// Disable depth test
 		glDisable (GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE);
+
+		// Multisample.
+		if(multiSample)
+		{
+			glEnable(GL_MULTISAMPLE_ARB);
+		}
+		else
+		{
+			glDisable(GL_MULTISAMPLE_ARB);
+		}
 
 		// Set skybox shader View variable
 		CGparameter CgView = cgGetNamedParameter( Inst->DefaultMedia->Shaders[1]->VertexProgram, "View" );
@@ -112,15 +124,15 @@ void Ovgl::RenderTarget::Render()
 		cgGLBindProgram( Inst->DefaultMedia->Shaders[1]->VertexProgram );
 		cgGLBindProgram( Inst->DefaultMedia->Shaders[1]->FragmentProgram );
 
-		cgGLEnableProfile( CG_PROFILE_GPU_VP );
-		cgGLEnableProfile( CG_PROFILE_GPU_FP );
+		cgGLEnableProfile( Inst->CgVertexProfile );
+		cgGLEnableProfile( Inst->CgFragmentProfile );
 
 		// Draw skybox
 		glDrawElements( GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0 );
 
 		// Disable profiles
-		cgGLDisableProfile( CG_PROFILE_GPU_VP );
-		cgGLDisableProfile( CG_PROFILE_GPU_FP );
+		cgGLDisableProfile( Inst->CgVertexProfile );
+		cgGLDisableProfile( Inst->CgFragmentProfile );
 
 		// Disable vertex attributes
 		glDisableVertexAttribArrayARB( 0 );
@@ -188,7 +200,6 @@ void Ovgl::RenderTarget::Render()
 						CgLightColor=cgGetArrayParameter( CgLightColors, v );
 						cgGLSetParameter4fv(CgLightColor, (float*)&LightColors[v * 4]);
 					}
-
 					for( DWORD v = 0; v < scene->objects[i]->subsets[s]->Textures.size(); v++)
 					{
 						if(scene->objects[i]->subsets[s]->Textures[v].second)
@@ -240,15 +251,15 @@ void Ovgl::RenderTarget::Render()
 					cgGLBindProgram( scene->objects[i]->subsets[s]->ShaderProgram->VertexProgram );
 					cgGLBindProgram( scene->objects[i]->subsets[s]->ShaderProgram->FragmentProgram );
 
-					cgGLEnableProfile( CG_PROFILE_GPU_VP );
-					cgGLEnableProfile( CG_PROFILE_GPU_FP );
+					cgGLEnableProfile( Inst->CgVertexProfile );
+					cgGLEnableProfile( Inst->CgFragmentProfile );
 
 					int BufferSize;
 					glGetBufferParameteriv( GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &BufferSize);
 					glDrawElements( GL_TRIANGLES, BufferSize / sizeof(DWORD), GL_UNSIGNED_INT, 0 );
 
-					cgGLDisableProfile( CG_PROFILE_GPU_VP );
-					cgGLDisableProfile( CG_PROFILE_GPU_FP );
+					cgGLDisableProfile( Inst->CgVertexProfile );
+					cgGLDisableProfile( Inst->CgFragmentProfile );
 
 					// Disable vertex attributes
 					glDisableVertexAttribArrayARB( 0 );
@@ -366,15 +377,15 @@ void Ovgl::RenderTarget::Render()
 					cgGLBindProgram( scene->props[i]->subsets[s]->ShaderProgram->VertexProgram );
 					cgGLBindProgram( scene->props[i]->subsets[s]->ShaderProgram->FragmentProgram );
 
-					cgGLEnableProfile( CG_PROFILE_GPU_VP );
-					cgGLEnableProfile( CG_PROFILE_GPU_FP );
+					cgGLEnableProfile( Inst->CgVertexProfile );
+					cgGLEnableProfile( Inst->CgFragmentProfile );
 
 					int BufferSize;
 					glGetBufferParameteriv( GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &BufferSize);
 					glDrawElements( GL_TRIANGLES, BufferSize / sizeof(DWORD), GL_UNSIGNED_INT, 0 );
 
-					cgGLDisableProfile( CG_PROFILE_GPU_VP );
-					cgGLDisableProfile( CG_PROFILE_GPU_FP );
+					cgGLDisableProfile( Inst->CgVertexProfile );
+					cgGLDisableProfile( Inst->CgFragmentProfile );
 
 					// Disable vertex attributes
 					glDisableVertexAttribArrayARB( 0 );
@@ -393,20 +404,276 @@ void Ovgl::RenderTarget::Render()
 				}
 			}
 		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
-
+	glDisable(GL_MULTISAMPLE_ARB);
 	glDisable (GL_DEPTH_TEST);
 	glDepthMask (GL_FALSE);
 	glDisable( GL_LIGHTING );
 	glEnable(GL_TEXTURE_2D);
-//	glDisable( GL_BLEND );
+	glDisable (GL_BLEND);
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
+	glMatrixMode( GL_PROJECTION );
+	glLoadIdentity();
+
+	// Blit MultiSampleTexture to BaseTexture to apply effects.
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, MultiSampleFrameBuffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, EffectFrameBuffer);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+	glBlitFramebuffer(0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+	if(bloom)
+	{
+		// Render bloom effect
+		glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryBloomTex, 0);
+		glViewport( 0, 0, (WindowRect.right - WindowRect.left)/4, (WindowRect.bottom - WindowRect.top)/4 );
+
+		CGparameter CgFSTexture = cgGetNamedParameter( Inst->DefaultMedia->Shaders[3]->FragmentProgram, "txDiffuse" );
+		cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
+		cgGLEnableTextureParameter( CgFSTexture );
+
+		// Set vertex attributes
+		glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Ovgl::Vertex), ((char *)NULL + (0)) );
+		glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Ovgl::Vertex), ((char *)NULL + (12)) );
+
+		// Enable vertex attributes
+		glEnableVertexAttribArrayARB( 0 );
+		glEnableVertexAttribArrayARB( 1 );
+
+		// Bind vertex and fragment programs
+		cgGLBindProgram( Inst->DefaultMedia->Shaders[3]->FragmentProgram );
+
+		cgGLEnableProfile( Inst->CgFragmentProfile );
+
+		glBegin(GL_QUADS);
+			glTexCoord2f( 0.0f, 0.0f );
+			glVertex3f(-1.0f,-1.0f, -1.0f);
+			glTexCoord2f( 1.0f, 0.0f );
+			glVertex3f(1.0f,-1.0f, -1.0f);
+			glTexCoord2f( 1.0f, 1.0f );
+			glVertex3f(1.0f, 1.0f, -1.0f);
+			glTexCoord2f( 0.0f, 1.0f );
+			glVertex3f(-1.0f, 1.0f, -1.0f);
+		glEnd();
+
+		cgGLDisableProfile( Inst->CgFragmentProfile );
+
+		// Disable vertex attributes
+		glDisableVertexAttribArrayARB( 0 );
+		glDisableVertexAttribArrayARB( 1 );
+
+		bool flipflop = true;
+		for( float i = 0; i < (float)OvglPi; i = i + ((float)(OvglPi) / bloom))
+		{
+			float x = sin(i) * 0.005f;
+			float y = cos(i) * 0.005f;
+
+			if( flipflop )
+			{
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, SecondaryBloomTex, 0);
+				CGparameter CgFSTexture2 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "txDiffuse" );
+				cgGLSetTextureParameter( CgFSTexture2, PrimaryBloomTex );
+				cgGLEnableTextureParameter( CgFSTexture2 );
+			}
+			else
+			{
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryBloomTex, 0);
+				CGparameter CgFSTexture2 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "txDiffuse" );
+				cgGLSetTextureParameter( CgFSTexture2, SecondaryBloomTex );
+				cgGLEnableTextureParameter( CgFSTexture2 );
+			}
+
+			CGparameter CgDirection2 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "direction" );
+			cgGLSetParameter2f( CgDirection2, x, y );
+
+			// Set vertex attributes
+			glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Ovgl::Vertex), ((char *)NULL + (0)) );
+			glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Ovgl::Vertex), ((char *)NULL + (12)) );
+
+			// Enable vertex attributes
+			glEnableVertexAttribArrayARB( 0 );
+			glEnableVertexAttribArrayARB( 1 );
+	
+			// Bind vertex and fragment programs
+			cgGLBindProgram( Inst->DefaultMedia->Shaders[2]->FragmentProgram );
+
+			cgGLEnableProfile( Inst->CgFragmentProfile );
+
+			glBegin(GL_QUADS);
+				glTexCoord2f( 0.0f, 0.0f );
+				glVertex3f(-1.0f,-1.0f, -1.0f);
+				glTexCoord2f( 1.0f, 0.0f );
+				glVertex3f(1.0f,-1.0f, -1.0f);
+				glTexCoord2f( 1.0f, 1.0f );
+				glVertex3f(1.0f, 1.0f, -1.0f);
+				glTexCoord2f( 0.0f, 1.0f );
+				glVertex3f(-1.0f, 1.0f, -1.0f);
+			glEnd();
+
+			cgGLDisableProfile( Inst->CgFragmentProfile );
+
+			// Disable vertex attributes
+			glDisableVertexAttribArrayARB( 0 );
+			glDisableVertexAttribArrayARB( 1 );
+			flipflop = !flipflop;
+		}
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+		glViewport( 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top );
+		CGparameter CgFSTextureA = cgGetNamedParameter( Inst->DefaultMedia->Shaders[4]->FragmentProgram, "txDiffuse1" );
+		cgGLSetTextureParameter( CgFSTextureA, PrimaryTex);
+		cgGLEnableTextureParameter( CgFSTextureA );
+
+		CGparameter CgFSTextureB = cgGetNamedParameter( Inst->DefaultMedia->Shaders[4]->FragmentProgram, "txDiffuse2" );
+		cgGLSetTextureParameter( CgFSTextureB, PrimaryBloomTex );
+		cgGLEnableTextureParameter( CgFSTextureB );
+
+		// Set vertex attributes
+		glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Ovgl::Vertex), ((char *)NULL + (0)) );
+		glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Ovgl::Vertex), ((char *)NULL + (12)) );
+
+		// Enable vertex attributes
+		glEnableVertexAttribArrayARB( 0 );
+		glEnableVertexAttribArrayARB( 1 );
+
+		// Bind vertex and fragment programs
+		cgGLBindProgram( Inst->DefaultMedia->Shaders[4]->FragmentProgram );
+
+		cgGLEnableProfile( Inst->CgFragmentProfile );
+
+		glBegin(GL_QUADS);
+			glTexCoord2f( 0.0f, 0.0f );
+			glVertex3f(-1.0f,-1.0f, -1.0f);
+			glTexCoord2f( 1.0f, 0.0f );
+			glVertex3f(1.0f,-1.0f, -1.0f);
+			glTexCoord2f( 1.0f, 1.0f );
+			glVertex3f(1.0f, 1.0f, -1.0f);
+			glTexCoord2f( 0.0f, 1.0f );
+			glVertex3f(-1.0f, 1.0f, -1.0f);
+		glEnd();
+
+		cgGLDisableProfile( Inst->CgFragmentProfile );
+
+		// Disable vertex attributes
+		glDisableVertexAttribArrayARB( 0 );
+		glDisableVertexAttribArrayARB( 1 );
+
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	if(motionBlur)
+	{
+		static Ovgl::Vector2 LastCamVec;
+		Ovgl::Matrix44 CamMat = view->getPose();
+		Ovgl::Vector2 CamVec = Ovgl::Vector2Set(sin(CamMat._11*(float)OvglPi) * abs(CamMat._22), sin(CamMat._22*(float)OvglPi) );
+		Ovgl::Vector2 CurCamVec = (CamVec - LastCamVec)/30;
+		if( CurCamVec.x > 0.001f || CurCamVec.x < -0.001f || CurCamVec.y > 0.001f || CurCamVec.y < -0.001f )
+		{
+			// Render motion blur
+			glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, SecondaryTex, 0);
+
+			CGparameter CgFSTexture2 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "txDiffuse" );
+			cgGLSetTextureParameter( CgFSTexture2, PrimaryTex );
+			cgGLEnableTextureParameter( CgFSTexture2 );
+
+			CGparameter CgDirection2 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "direction" );
+
+			// Set vertex attributes
+			glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Ovgl::Vertex), ((char *)NULL + (0)) );
+			glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Ovgl::Vertex), ((char *)NULL + (12)) );
+
+			// Enable vertex attributes
+			glEnableVertexAttribArrayARB( 0 );
+			glEnableVertexAttribArrayARB( 1 );
+
+			// Bind vertex and fragment programs
+			cgGLBindProgram( Inst->DefaultMedia->Shaders[2]->FragmentProgram );
+
+			cgGLEnableProfile( Inst->CgFragmentProfile );
+
+			cgGLSetParameter2f( CgDirection2, CurCamVec.x, CurCamVec.y );
+			glBegin(GL_QUADS);
+				glTexCoord2f( 0.0f, 0.0f );
+				glVertex3f(-1.0f,-1.0f, -1.0f);
+				glTexCoord2f( 1.0f, 0.0f );
+				glVertex3f(1.0f,-1.0f, -1.0f);
+				glTexCoord2f( 1.0f, 1.0f );
+				glVertex3f(1.0f, 1.0f, -1.0f);
+				glTexCoord2f( 0.0f, 1.0f );
+				glVertex3f(-1.0f, 1.0f, -1.0f);
+			glEnd();
+
+			cgGLDisableProfile( Inst->CgFragmentProfile );
+
+			// Disable vertex attributes
+			glDisableVertexAttribArrayARB( 0 );
+			glDisableVertexAttribArrayARB( 1 );
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+			glBindTexture(GL_TEXTURE_2D, SecondaryTex);
+			glBegin(GL_QUADS);
+				glTexCoord2f( 0.0f, 0.0f );
+				glVertex3f(-1.0f,-1.0f, -1.0f);
+				glTexCoord2f( 1.0f, 0.0f );
+				glVertex3f(1.0f,-1.0f, -1.0f);
+				glTexCoord2f( 1.0f, 1.0f );
+				glVertex3f(1.0f, 1.0f, -1.0f);
+				glTexCoord2f( 0.0f, 1.0f );
+				glVertex3f(-1.0f, 1.0f, -1.0f);
+			glEnd();
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+		LastCamVec = CamVec;
+	}
+
+	// Render to screen
+	glBindTexture(GL_TEXTURE_2D, PrimaryTex);
+	glBegin(GL_QUADS);
+		glTexCoord2f( 0.0f, 0.0f );
+		glVertex3f(-1.0f,-1.0f, -1.0f);
+		glTexCoord2f( 1.0f, 0.0f );
+		glVertex3f(1.0f,-1.0f, -1.0f);
+		glTexCoord2f( 1.0f, 1.0f );
+		glVertex3f(1.0f, 1.0f, -1.0f);
+		glTexCoord2f( 0.0f, 1.0f );
+		glVertex3f(-1.0f, 1.0f, -1.0f);
+	glEnd();
+
+	if(debugMode)
+	{
+		glDisable (GL_DEPTH_TEST);
+		glDepthMask (GL_FALSE);
+		glDisable(GL_TEXTURE_2D);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glLoadMatrixf((float*)&(Ovgl::MatrixInverse( &Ovgl::Vector4Set(0.0f, 0.0f, 0.0f, 0.0f), &view->getPose())));
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glLoadMatrixf((float*)&view->projMat);
+		view->scene->DynamicsWorld->debugDrawWorld();
+	}
+
+	glEnable (GL_BLEND);
+	glDisable (GL_DEPTH_TEST);
+	glDepthMask (GL_FALSE);
+	glDisable( GL_LIGHTING );
+	glEnable(GL_TEXTURE_2D);
+	glColor3f(1.0f, 1.0f, 1.0f);
 
 	// Get viewport
 	GLint iViewport[4];
     glGetIntegerv( GL_VIEWPORT, iViewport );
 
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
 	glMatrixMode( GL_PROJECTION );
-	glPushMatrix();
 	glLoadIdentity();
 
 	// Set up the orthographic projection
@@ -458,32 +725,58 @@ void Ovgl::RenderTarget::Render()
 				AdjustedRect.bottom = (LONG)Interfaces[i]->Rect.z;
 			}
 
-			glMatrixMode( GL_MODELVIEW );
-			glPushMatrix();
-			glLoadIdentity();
-
 			glBindTexture( GL_TEXTURE_2D, Interfaces[i]->Texture->Image );
 
 			// Draw Interface
 			glBegin( GL_QUADS );
-				glTexCoord2i( 0, 1 );
-				glVertex2i( AdjustedRect.left, AdjustedRect.top );
 				glTexCoord2i( 1, 1 );
 				glVertex2i( AdjustedRect.right, AdjustedRect.top );
-				glTexCoord2i( 1, 0 );
-				glVertex2i( AdjustedRect.right, AdjustedRect.bottom );
+				glTexCoord2i( 0, 1 );
+				glVertex2i( AdjustedRect.left, AdjustedRect.top );
 				glTexCoord2i( 0, 0 );
 				glVertex2i( AdjustedRect.left, AdjustedRect.bottom );
+				glTexCoord2i( 1, 0 );
+				glVertex2i( AdjustedRect.right, AdjustedRect.bottom );
 			glEnd();
 		}
 	}
-
 	SwapBuffers(hDC);
+}
+
+void Ovgl::RenderTarget::SetVSync( bool state )
+{
+	wglSwapIntervalEXT(state);
 }
 
 void Ovgl::RenderTarget::SetFullscreen( bool state )
 {
-	//SwapChain->SetFullscreenState( state, NULL);
+	if(state)
+	{
+		SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
+		RECT Rect;
+		GetWindowRect(hWnd, &Rect);
+		DEVMODE dmScreenSettings = {0};
+		dmScreenSettings.dmSize			= sizeof(dmScreenSettings);
+		dmScreenSettings.dmPelsWidth	= Rect.right;
+		dmScreenSettings.dmPelsHeight	= Rect.bottom;
+		dmScreenSettings.dmBitsPerPel	= 24;
+		dmScreenSettings.dmFields		= DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+		ChangeDisplaySettings( &dmScreenSettings, CDS_FULLSCREEN );
+		ShowWindow( hWnd, SW_SHOW );
+		SetFocus(hWnd);
+	}
+	else
+	{
+		RECT Rect;
+		GetWindowRect(hWnd, &Rect);
+		DEVMODE dmScreenSettings = {0};
+		dmScreenSettings.dmSize			= sizeof(dmScreenSettings);
+		dmScreenSettings.dmPelsWidth	= Rect.right;
+		dmScreenSettings.dmPelsHeight	= Rect.bottom;
+		dmScreenSettings.dmBitsPerPel	= 32;
+		dmScreenSettings.dmFields		= DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+		ChangeDisplaySettings( &dmScreenSettings, 0 );
+	}
 }
 
 bool Ovgl::RenderTarget::GetFullscreen()

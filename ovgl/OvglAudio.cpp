@@ -29,6 +29,26 @@ Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emit
 	Ovgl::AudioInstance* instance = new Ovgl::AudioInstance;
 	instance->paused = false;
 	instance->emitter = emitter;
+	Ovgl::AudioVoice* voice = new Ovgl::AudioVoice;
+	voice->instance = instance;
+	alGenSources(1, &voice->source);
+	if( !emitter && format == AL_FORMAT_STEREO16 )
+	{
+		alSourcei( voice->source, AL_BUFFER, stereo );
+	}
+	else
+	{
+		alSourcei( voice->source, AL_BUFFER, mono );
+	}
+	if( !emitter )
+	{
+		alSourcei( voice->source, AL_SOURCE_RELATIVE, AL_TRUE );
+	}
+	alSourcef( voice->source, AL_PITCH,	1.0f );
+	alSourcef( voice->source, AL_GAIN, 1.0f );
+	alSourcei( voice->source, AL_LOOPING, loop );
+	alSourcePlay( voice->source );
+	instance->voices.push_back(voice);
 	if( emitter )
 	{
 		for( UINT r = 0; r < this->Inst->RenderTargets.size(); r++ )
@@ -37,26 +57,6 @@ Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emit
 			{
 				if( Inst->RenderTargets[r]->view == emitter->scene->cameras[c] )
 				{
-					Ovgl::AudioVoice* voice = new Ovgl::AudioVoice;
-					voice->instance = instance;
-					alGenSources(1, &voice->source);
-					if( !emitter && format == AL_FORMAT_STEREO16 )
-					{
-						alSourcei( voice->source, AL_BUFFER, stereo );
-					}
-					else
-					{
-						alSourcei( voice->source, AL_BUFFER, mono );
-					}
-					if( !emitter )
-					{
-						alSourcei( voice->source, AL_SOURCE_RELATIVE, AL_TRUE );
-					}
-					alSourcef( voice->source, AL_PITCH,	1.0f );
-					alSourcef( voice->source, AL_GAIN, 1.0f );
-					alSourcei( voice->source, AL_LOOPING, loop );
-					alSourcePlay( voice->source );
-					instance->voices.push_back(voice);
 					emitter->scene->cameras[c]->voices.push_back(voice);
 				}
 			}
@@ -67,22 +67,20 @@ Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emit
 
 void Ovgl::AudioInstance::Play( bool loop )
 {
-	//for( UINT v = 0; v < voices.size(); v++ )
-	//{
-	//	voices[v]->voice->Start( 0 );
-	//}
-	//paused = false;
+	for( unsigned int i = 0; i < voices.size(); i++ )
+	{
+		alSourcePlay( voices[i]->source );
+	}
+	paused = false;
 }
 
 
 void Ovgl::AudioInstance::Stop()
 {
-	//for( UINT v = 0; v < voices.size(); v++ )
-	//{
-	//	voices[v]->voice->Stop( 0 );
-	//	voices[v]->voice->FlushSourceBuffers();
-	//	voices[v]->voice->DestroyVoice();
-	//}
+	for( unsigned int i = 0; i < voices.size(); i++ )
+	{
+		alSourceStop(voices[i]->source);
+	}
 }
 
 void Ovgl::AudioInstance::Pause()
@@ -103,4 +101,26 @@ void Ovgl::AudioInstance::Pause()
 	//	}
 	//	paused = true;
 	//}
+}
+
+void Ovgl::AudioVoice::Release()
+{
+	alDeleteSources( 1, &source );
+	delete this;
+}
+
+void Ovgl::AudioInstance::Release()
+{
+	for( unsigned int i = 0; i < 0; i++)
+	{
+		this->voices[i]->Release();
+	}
+	this->voices.clear();
+	delete this;
+}
+
+void Ovgl::AudioBuffer::Release()
+{
+	data.clear();
+	delete this;
 }
