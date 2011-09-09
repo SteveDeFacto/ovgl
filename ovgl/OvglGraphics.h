@@ -44,18 +44,24 @@ namespace Ovgl
 			HDC hDC;
 			HGLRC hRC;
 			Ovgl::Vector4 Rect;
-			std::vector<Ovgl::Interface*> Interfaces;
+			std::vector< Ovgl::Interface* > Interfaces;
 			Ovgl::Interface* CreateSprite( Ovgl::Texture* Texture, Ovgl::Vector4* rect );
 			Ovgl::Interface* CreateText( const std::string& text, Ovgl::Vector4* rect );
+			float eye_luminance;
 			bool debugMode;
 			int bloom;
+			bool autoLuminance;
 			bool multiSample;
 			bool motionBlur;
+			void AutoLuminance();
+			void Bloom();
+			void MotionBlur( float x, float y );
 			void SetVSync( bool state );
 			bool GetFullscreen();
 			void SetFullscreen( bool state );
 			void Release();
 			void Render();
+			void RenderMesh( Ovgl::Mesh* mesh, Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender );
 		};
 
 		class Interface

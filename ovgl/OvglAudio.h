@@ -36,7 +36,7 @@ namespace Ovgl
 			int									frequency;
 			unsigned int						stereo;
 			unsigned int						mono;
-			std::vector<signed short>			data;
+			std::vector< signed short >			data;
 			AudioInstance* CreateAudioInstance( Emitter* emitter, bool loop );
 			void Release();
 		};
@@ -45,7 +45,7 @@ namespace Ovgl
 		{
 		public:
 			Emitter*							emitter;
-			std::vector<AudioVoice*>			voices;
+			std::vector< AudioVoice* >			voices;
 			bool								paused;
 			void Play( bool loop );
 			void Stop();

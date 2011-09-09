@@ -35,12 +35,14 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 	Ovgl::Shader* BlurEffect = new Ovgl::Shader;
 	Ovgl::Shader* BloomEffect = new Ovgl::Shader;
 	Ovgl::Shader* AddEffect = new Ovgl::Shader;
+	Ovgl::Shader* BrightnessEffect = new Ovgl::Shader;
 
 	DefaultEffect->MLibrary = inst->DefaultMedia;
 	SkyboxEffect->MLibrary = inst->DefaultMedia;
 	BlurEffect->MLibrary = inst->DefaultMedia;
 	BloomEffect->MLibrary = inst->DefaultMedia;
 	AddEffect->MLibrary = inst->DefaultMedia;
+	BrightnessEffect->MLibrary = inst->DefaultMedia;
 
 	std::string shader;
 
@@ -85,18 +87,18 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 	"{"
 	"	FS_INPUT Out;"
 	"	float4x4 skinTransform = 0;"
-	"	float3x3 normTransform = 0;"
+	"	float4x4 normTransform = 0;"
 	"	skinTransform += Bones[In.bi.x] * In.bw.x;"
 	"	skinTransform += Bones[In.bi.y] * In.bw.y;"
 	"	skinTransform += Bones[In.bi.z] * In.bw.z;"
 	"	skinTransform += Bones[In.bi.w] * In.bw.w;"
-	"	normTransform += (float3x3)(Bones[In.bi.x] * In.bw.x);"
-	"	normTransform += (float3x3)(Bones[In.bi.y] * In.bw.y);"
-	"	normTransform += (float3x3)(Bones[In.bi.z] * In.bw.z);"
-	"	normTransform += (float3x3)(Bones[In.bi.w] * In.bw.w);"
+	"	normTransform = skinTransform;"
+	"	normTransform[3].x = 0;"
+	"	normTransform[3].y = 0;"
+	"	normTransform[3].z = 0;"
 	"	Out.posVS = mul(float4(In.pos, 1), skinTransform);"
 	"	Out.posWS = Out.posVS;"
-	"	Out.norm = float4(In.norm, 1);"
+	"	Out.norm = mul(float4(In.norm, 1), normTransform);"
 	"	Out.tex = In.tex;"
 	"	Out.posVS = mul(Out.posVS, ViewProj);"
 	"	return Out;"
@@ -110,7 +112,7 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 	"	{"
 	"		float4 lightDir = Lights[i] - In.posWS;"
 	"		float4 NdotL = saturate(dot(In.norm, normalize(lightDir)));"
-	"		float4 attenuation = 1/length(lightDir);"
+	"		float4 attenuation = 1 / length(lightDir);"
 	"		light += LightColors[i] * NdotL * attenuation * 10;"
 	"	}"
 	"	float4 envColor = texCUBE( txEnvironment, reflect( normalize( In.posWS.xyz - ViewPos.xyz ), In.norm.xyz ) ) * EMI;"
@@ -380,42 +382,85 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 
 	AddEffect->GeometryProgram = NULL;
 
+	shader =
+	"struct FS_INPUT"
+	"{"
+	"  float4 pos				: POSITION;"
+	"  float2 tex				: TEXCOORD0;"
+	"};"
+
+	"struct FS_OUTPUT"
+	"{"
+	"  float4 color				: COLOR;"
+	"};"
+
+	"uniform sampler2D txDiffuse;"
+	"float Brightness;"
+
+	"FS_OUTPUT FS( FS_INPUT In)"
+	"{"
+	"	FS_OUTPUT Out;"
+    "	Out.color = tex2D(txDiffuse, In.tex);"
+	"	Out.color = Out.color * Brightness;"
+	"	Out.color.w = 1.0;"
+    "	return Out;"
+	"}";
+
+	BrightnessEffect->VertexProgram = NULL;
+
+	BrightnessEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
+	cgGLLoadProgram( BrightnessEffect->FragmentProgram );
+	string = cgGetLastErrorString(&error);
+	if (error != CG_NO_ERROR)
+	{
+		OutputDebugStringA( string );
+	}
+
+	BrightnessEffect->GeometryProgram = NULL;
+
 	inst->DefaultMedia->Shaders.push_back( DefaultEffect );
 	inst->DefaultMedia->Shaders.push_back( SkyboxEffect );
 	inst->DefaultMedia->Shaders.push_back( BlurEffect );
 	inst->DefaultMedia->Shaders.push_back( BloomEffect );
 	inst->DefaultMedia->Shaders.push_back( AddEffect );
+	inst->DefaultMedia->Shaders.push_back( BrightnessEffect );
 
 	// Create Default Material
 	Ovgl::Material* DefaultMaterial = new Ovgl::Material;
 	
 	DefaultMaterial->ShaderProgram = DefaultEffect;
 	DefaultMaterial->MLibrary = inst->DefaultMedia;
-	DefaultMaterial->set_texture("txDiffuse", DefaultMaterial->MLibrary->CreateTexture( 256, 256) );
+	DefaultMaterial->setFSTexture("txDiffuse", DefaultMaterial->MLibrary->CreateTexture( 256, 256) );
+	DefaultMaterial->setFSTexture("txEnvironment", DefaultMaterial->MLibrary->CreateCubemap( 256, 256) );
 	DefaultMaterial->NoZBuffer = false;
 	DefaultMaterial->NoZWrite = false;
 	DefaultMaterial->PostRender = false;
 	inst->DefaultMedia->Materials.push_back(DefaultMaterial);
 
 	// Create Sky Box
-	std::vector<Ovgl::Vertex> vertices(8);
-	std::vector<Ovgl::Face> faces(12);
-	std::vector<DWORD> attributes(12);
-	vertices[0].position = Ovgl::Vector3Set( -0.5f, -0.5f, -0.5f );
+	std::vector< Ovgl::Vertex > vertices(8);
+	std::vector< Ovgl::Face > faces(12);
+	std::vector< DWORD > attributes(12);
+	vertices[0].position = Ovgl::Vector3( -0.5f, -0.5f, -0.5f );
 	vertices[0].weight[0] = 1.0f;
-	vertices[1].position = Ovgl::Vector3Set( 0.5f, -0.5f, -0.5f );
+	vertices[1].position = Ovgl::Vector3( 0.5f, -0.5f, -0.5f );
 	vertices[1].weight[0] = 1.0f;
-	vertices[2].position = Ovgl::Vector3Set( -0.5f, 0.5f, -0.5f);
+	vertices[2].position = Ovgl::Vector3( -0.5f, 0.5f, -0.5f);
 	vertices[2].weight[0] = 1.0f;
-	vertices[3].position = Ovgl::Vector3Set( 0.5f, 0.5f, -0.5f );
+	vertices[3].position = Ovgl::Vector3( 0.5f, 0.5f, -0.5f );
 	vertices[3].weight[0] = 1.0f;
-	vertices[4].position = Ovgl::Vector3Set( -0.5f, -0.5f, 0.5f );
+	vertices[4].position = Ovgl::Vector3( -0.5f, -0.5f, 0.5f );
 	vertices[4].weight[0] = 1.0f;
-	vertices[5].position = Ovgl::Vector3Set( 0.5f, -0.5f, 0.5f );
+	vertices[5].position = Ovgl::Vector3( 0.5f, -0.5f, 0.5f );
 	vertices[5].weight[0] = 1.0f;
-	vertices[6].position = Ovgl::Vector3Set( -0.5f, 0.5f, 0.5f );
+	vertices[6].position = Ovgl::Vector3( -0.5f, 0.5f, 0.5f );
 	vertices[6].weight[0] = 1.0f;
-	vertices[7].position = Ovgl::Vector3Set( 0.5f, 0.5f, 0.5f );
+	vertices[7].position = Ovgl::Vector3( 0.5f, 0.5f, 0.5f );
 	vertices[7].weight[0] = 1.0f;
 	faces[0].indices[1] = 0;
 	faces[0].indices[1] = 1;
@@ -494,6 +539,7 @@ Ovgl::RenderTarget* Ovgl::Instance::CreateRenderTarget( HWND hWnd, RECT* rect, D
 	rendertarget->hDC = GetDC(hWnd);
 	rendertarget->view = NULL;
 	rendertarget->debugMode = false;
+	rendertarget->autoLuminance = true;
 	rendertarget->bloom = 4;
 	rendertarget->motionBlur = true;
 	rendertarget->multiSample = true;
@@ -529,7 +575,7 @@ Ovgl::RenderTarget* Ovgl::Instance::CreateRenderTarget( HWND hWnd, RECT* rect, D
 	// Multi sample depthbuffer
 	glGenRenderbuffers(1, &rendertarget->DepthBuffer);
 	glBindRenderbuffer(GL_RENDERBUFFER, rendertarget->DepthBuffer);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT24, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT32, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rendertarget->DepthBuffer);
 
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -545,6 +591,7 @@ Ovgl::RenderTarget* Ovgl::Instance::CreateRenderTarget( HWND hWnd, RECT* rect, D
 	// Create and bind texture
 	glGenTextures(1, &rendertarget->PrimaryTex);
 	glBindTexture(GL_TEXTURE_2D, rendertarget->PrimaryTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 10);
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -717,12 +764,14 @@ void Ovgl::Instance::Release()
 	CoUninitialize();
 };
 
-void Ovgl::Material::set_variable(const std::string& variable, const std::vector<float>& data )
+void Ovgl::Material::setVSVariable(const std::string& variable, const std::vector< float >& data )
 {
+	CGparameter CgVariable = cgGetNamedParameter( this->ShaderProgram->VertexProgram, variable.c_str() );
 	bool Found = false;
 	for( unsigned int i = 0; i < Variables.size(); i++ )
 	{
-		if(Variables[i].first.compare(variable) == 0)
+		
+		if(Variables[i].first == CgVariable)
 		{
 			Variables[i].second = data;
 			Found = true;
@@ -730,16 +779,36 @@ void Ovgl::Material::set_variable(const std::string& variable, const std::vector
 	}
 	if(!Found)
 	{
-		Variables.push_back( make_pair( variable, data ) );
+		Variables.push_back( std::make_pair( CgVariable, data ) );
 	}
 }
 
-void Ovgl::Material::set_texture(const std::string& variable, Texture* texture)
+void Ovgl::Material::setFSVariable(const std::string& variable, const std::vector< float >& data )
 {
+	CGparameter CgVariable = cgGetNamedParameter( this->ShaderProgram->FragmentProgram, variable.c_str() );
+	bool Found = false;
+	for( unsigned int i = 0; i < Variables.size(); i++ )
+	{
+		
+		if(Variables[i].first == CgVariable)
+		{
+			Variables[i].second = data;
+			Found = true;
+		}
+	}
+	if(!Found)
+	{
+		Variables.push_back( std::make_pair( CgVariable, data ) );
+	}
+}
+
+void Ovgl::Material::setVSTexture(const std::string& variable, Ovgl::Texture* texture)
+{
+	CGparameter CgVariable = cgGetNamedParameter( this->ShaderProgram->VertexProgram, variable.c_str() );
 	bool Found = false;
 	for( unsigned int i = 0; i < Textures.size(); i++ )
 	{
-		if(Textures[i].first.compare(variable) == 0)
+		if(Textures[i].first == CgVariable )
 		{
 			Textures[i].second = texture;
 			Found = true;
@@ -747,7 +816,25 @@ void Ovgl::Material::set_texture(const std::string& variable, Texture* texture)
 	}
 	if(!Found)
 	{
-		Textures.push_back( make_pair( variable, texture ) );
+		Textures.push_back( std::make_pair( CgVariable, texture ) );
+	}
+}
+
+void Ovgl::Material::setFSTexture(const std::string& variable, Ovgl::Texture* texture)
+{
+	CGparameter CgVariable = cgGetNamedParameter( this->ShaderProgram->FragmentProgram, variable.c_str() );
+	bool Found = false;
+	for( unsigned int i = 0; i < Textures.size(); i++ )
+	{
+		if(Textures[i].first == CgVariable )
+		{
+			Textures[i].second = texture;
+			Found = true;
+		}
+	}
+	if(!Found)
+	{
+		Textures.push_back( std::make_pair( CgVariable, texture ) );
 	}
 }
 

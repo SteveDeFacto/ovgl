@@ -162,7 +162,7 @@ void Ovgl::MediaLibrary::Save( const std::string& file )
 					}
 				}
 				fwrite( &mesh_index, 4, 1, output );
-				DWORD bodyflags = Scenes[s]->objects[o]->cmesh->GetFlags();
+				DWORD bodyflags = Scenes[s]->objects[o]->CollisionMesh->GetFlags();
 				fwrite( &bodyflags, 4, 1, output );
 			}
 			DWORD light_count = Scenes[s]->lights.size();
@@ -187,7 +187,7 @@ void Ovgl::MediaLibrary::Save( const std::string& file )
 			//	//Scenes[s]->joints[j]->obj[1];
 
 			//	NxVec3 nxAnchor = Scenes[s]->joints[j]->joint->getGlobalAnchor();
-			//	Ovgl::Vector3 anchor = Ovgl::Vector3Set(nxAnchor.x, nxAnchor.y, nxAnchor.z);
+			//	Ovgl::Vector3 anchor = Ovgl::Vector3(nxAnchor.x, nxAnchor.y, nxAnchor.z);
 			//	fwrite( &anchor, sizeof(Ovgl::Vector3), 1, output );
 			//}
 		}
@@ -235,8 +235,8 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 			DWORD child_count;
 			DWORD frame_count;
 			DWORD key_count;
-			std::vector<Ovgl::Vector3> bone_vertices;
-			std::vector<Ovgl::Face> bone_faces;
+			std::vector< Ovgl::Vector3 > bone_vertices;
+			std::vector< Ovgl::Face > bone_faces;
 	
 			// Get number of vertices, faces, and bones.
 			fread( &vertex_count, 4, 1, input ); 
@@ -341,7 +341,7 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 				Ovgl::Object* object = scene->CreateObject( Meshes[mesh_index + mesh_offset], &matrix );
 				DWORD bone_flags;
 				fread( &bone_flags, 4, 1, input );
-				object->cmesh->SetFlags(bone_flags);
+				object->CollisionMesh->SetFlags(bone_flags);
 			}
 
 			DWORD light_count;
@@ -351,7 +351,7 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 				// Get the pose of this light.
 				Ovgl::Matrix44 matrix;
 				fread( &matrix, sizeof(Ovgl::Matrix44), 1, input );
-				scene->CreateLight( &matrix, &Ovgl::Vector4Set( 1.0f, 1.0f, 1.0f, 1.0f ) );
+				scene->CreateLight( &matrix, &Ovgl::Vector4( 1.0f, 1.0f, 1.0f, 1.0f ) );
 			}
 
 			DWORD camera_count;
@@ -369,7 +369,7 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 	}
 }
 
-Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
+Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, bool GenerateBoneShapes, bool GeneratePVS )
 {
 	if(!file.empty())
 	{
@@ -381,7 +381,12 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 		FBXScene = KFbxScene::Create( (KFbxSdkManager*)Inst->FBXManager, "" );
 		FBXImporter->Initialize( file.c_str(), -1, ((KFbxSdkManager*)Inst->FBXManager)->GetIOSettings() );
 		FBXImporter->Import( FBXScene );
-		KFbxAnimLayer* lCurrentAnimationLayer = KFbxGetSrc<KFbxAnimStack>( FBXScene, 0 )->GetMember(FBX_TYPE(KFbxAnimLayer), 0);
+		KFbxAnimStack* AnimationStack = KFbxGetSrc<KFbxAnimStack>( FBXScene, 0 );
+		KFbxAnimLayer* lCurrentAnimationLayer;
+		if(AnimationStack)
+		{
+			lCurrentAnimationLayer = KFbxGetSrc<KFbxAnimStack>( FBXScene, 0 )->GetMember(FBX_TYPE(KFbxAnimLayer), 0);
+		}
 		for(int n = 1; n < FBXScene->GetNodeCount(); n++)
 		{
 			KFbxNodeAttribute::EAttributeType AttributeType = FBXScene->GetNode(n)->GetNodeAttribute()->GetAttributeType();
@@ -391,12 +396,11 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 				DWORD AttributeOffset = 0;
 				for( DWORD i = 0; i < mesh->faces.size(); i++ )
 				{
-					if( (mesh->attributes[i]+1) > AttributeOffset )
+					if( mesh->attributes[i] > AttributeOffset )
 					{
-						AttributeOffset++;
+						AttributeOffset = mesh->attributes[i];
 					}
 				}
-
 				KFbxNode* FBXNode = FBXScene->GetNode(n);
 				Ovgl::Matrix44 matrix;
 				KFbxVector4 localT, localR, localS;
@@ -410,12 +414,12 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 				KFbxVector4* ControlPoints = FBXMesh->GetControlPoints();
 				KFbxLayerElementUV* FBXLayerUVs = FBXMesh->GetLayer(0)->GetUVs();
 				KFbxLayerElementMaterial* FBXLayerMats = FBXMesh->GetLayer(0)->GetMaterials();
-				Ovgl::Vertex ZeroVertex = {0};
-				std::vector<std::vector<float>> weights(ControlPointCount);
-				std::vector<std::vector<float>> indices(ControlPointCount);
-				std::vector<Ovgl::Face> faces;
-				std::vector<DWORD> attributes;
-				std::vector<KFbxNode*> BoneNodes;
+				Ovgl::Vertex ZeroVertex;
+				std::vector< std::vector< float > > weights(ControlPointCount);
+				std::vector< std::vector< float > > indices(ControlPointCount);
+				std::vector< Ovgl::Face > faces;
+				std::vector< DWORD > attributes;
+				std::vector< KFbxNode* > BoneNodes;
 				mesh->vertices.resize( VertexOffset + ControlPointCount);
 
 				// Get textures
@@ -448,12 +452,18 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 									}
 									if( texFound != NULL )
 									{
-										material->set_texture("txDiffuse", texFound);
+										material->setFSTexture("txDiffuse", texFound);
 									}
 									else
 									{
-										Ovgl::Texture* texture = ImportTexture(filename.c_str());
-										material->set_texture("txDiffuse", texture);
+										texFound = ImportTexture(filename.c_str());
+										material->setFSTexture("txDiffuse", texFound);
+									}
+
+									if(texFound->HasAlpha)
+									{
+										material->PostRender = true;
+										material->NoZWrite = true;
 									}
 								}
 							}
@@ -521,7 +531,7 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 					for( int i = 0; i < FBXMesh->GetPolygonSize(p); i++ )
 					{
 						int vi = FBXMesh->GetPolygonVertex( p, i );
-						Ovgl::Vertex vertex = {0};
+						Ovgl::Vertex vertex;
 						KFbxVector4 normal;
 						KFbxVector2 uv;
 						FBXMesh->GetPolygonVertexNormal( p, i, normal );
@@ -532,7 +542,9 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 						vertex.normal.x = (float)normal[0];
 						vertex.normal.y = (float)normal[1];
 						vertex.normal.z = (float)normal[2];
-						vertex.normal = Vector3Transform(&vertex.normal, &(Ovgl::MatrixRotationX(1.57f) * matrix.to3x3().to4x4()));
+						Ovgl::Matrix44 rotMat = matrix;
+						rotMat._41 = 0; rotMat._42 = 0; rotMat._43 = 0;
+						vertex.normal = Vector3Transform(&vertex.normal, &(Ovgl::MatrixRotationX(1.57f) * rotMat));
 						if( FBXLayerUVs )
 						{
 							int MappingMode = FBXLayerUVs->GetMappingMode();
@@ -593,7 +605,7 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 						mesh->faces.push_back( face );
 						if(FBXLayerMats)
 						{
-							mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p) + AttributeOffset );
+							mesh->attributes.push_back( FBXLayerMats->GetIndexArray().GetAt(p) + AttributeOffset + 1 );
 						}
 						else
 						{
@@ -607,7 +619,7 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 					mesh->faces.push_back( face );
 					if(FBXLayerMats)
 					{
-						mesh->attributes.push_back(FBXLayerMats->GetIndexArray().GetAt(p) + AttributeOffset);
+						mesh->attributes.push_back( FBXLayerMats->GetIndexArray().GetAt(p) + AttributeOffset + 1 );
 					}
 					else
 					{
@@ -616,67 +628,72 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 				}
 				
 				// Get animation frames for this mesh.
-				for(DWORD bn = 0; bn < BoneNodes.size(); bn++ )
-				{	
-					KFbxAnimCurve* lAnimCurve[3];
-					lAnimCurve[0] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_X);
-					lAnimCurve[1] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Y);
-					lAnimCurve[2] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Z);
-					for( DWORD c = 0; c < 3; c++ )
-					{
-						for( DWORD k = 0; k < (DWORD)lAnimCurve[c]->KeyGetCount(); k++ )
+				if(AnimationStack)
+				{
+					for(DWORD bn = 0; bn < BoneNodes.size(); bn++ )
+					{	
+						KFbxAnimCurve* lAnimCurve[3];
+						lAnimCurve[0] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_X);
+						lAnimCurve[1] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Y);
+						lAnimCurve[2] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Z);
+						for( DWORD c = 0; c < 3; c++ )
 						{
-							KFbxAnimCurveKey lKey = lAnimCurve[c]->KeyGet(k);
-							DWORD lKeyTime = (DWORD)lKey.GetTime().GetMilliSeconds();
-							float lKeyValue = lKey.GetValue();
-							bool found_frame = false;
-							for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
+							if(lAnimCurve[c])
+							for( int k = 0; k < lAnimCurve[c]->KeyGetCount(); k++ )
 							{
-								if( lKeyTime == mesh->keyframes[f]->time )
+								KFbxAnimCurveKey lKey = lAnimCurve[c]->KeyGet(k);
+								DWORD lKeyTime = (DWORD)lKey.GetTime().GetMilliSeconds();
+								float lKeyValue = lKey.GetValue();
+								bool found_frame = false;
+								for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
 								{
-									found_frame = true;
-									bool found_key = false;
-									for( DWORD k2 = 0; k2 < mesh->keyframes[f]->keys.size(); k2++ )
+									if( lKeyTime == mesh->keyframes[f]->time )
 									{
-										if( mesh->keyframes[f]->keys[k2].index == bn )
+										found_frame = true;
+										bool found_key = false;
+										for( DWORD k2 = 0; k2 < mesh->keyframes[f]->keys.size(); k2++ )
 										{
-											found_key = true;
-											mesh->keyframes[f]->keys[k2].rotation[c] = lKeyValue;
+											if( mesh->keyframes[f]->keys[k2].index == bn )
+											{
+												found_key = true;
+												mesh->keyframes[f]->keys[k2].rotation[c] = lKeyValue;
+											}
+										}
+										if( !found_key )
+										{
+											Ovgl::Key key;
+											key.index = bn;
+											ZeroMemory( &key.rotation, sizeof( Ovgl::Vector4 ) );
+											key.rotation[c] = lKeyValue;
+											mesh->keyframes[f]->keys.push_back(key);
 										}
 									}
-									if( !found_key )
-									{
-										Ovgl::Key key;
-										key.index = bn;
-										ZeroMemory( &key.rotation, sizeof( Ovgl::Vector4 ) );
-										key.rotation[c] = lKeyValue;
-										mesh->keyframes[f]->keys.push_back(key);
-									}
 								}
-							}
-							if( !found_frame )
-							{
-								Ovgl::Frame* frame = new Ovgl::Frame;
-								frame->time = lKeyTime;
-								frame->keys.clear();
-								mesh->keyframes.push_back(frame);
+								if( !found_frame )
+								{
+									Ovgl::Frame* frame = new Ovgl::Frame;
+									frame->time = lKeyTime;
+									frame->keys.clear();
+									mesh->keyframes.push_back(frame);
+								}
 							}
 						}
 					}
-				}
 				
-				// Convert euler angles to quaternions.
-				for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
-				{
-					for( DWORD k = 0; k < mesh->keyframes[f]->keys.size(); k++ )
-					{
-						Ovgl::Vector4 KeyEuler = mesh->keyframes[f]->keys[k].rotation;
-						mesh->keyframes[f]->keys[k].rotation = Ovgl::QuaternionRotationEuler( (KeyEuler.x / 180.0f) * (float)OvglPi, (KeyEuler.y / 180.0f) * (float)OvglPi, (KeyEuler.z / 180.0f) * (float)OvglPi );
-					}
+					//// Convert euler angles to quaternions.
+					//for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
+					//{
+					//	for( DWORD k = 0; k < mesh->keyframes[f]->keys.size(); k++ )
+					//	{
+					//		Ovgl::Vector4 KeyEuler = mesh->keyframes[f]->keys[k].rotation;
+					//		mesh->keyframes[f]->keys[k].rotation = Ovgl::QuaternionRotationEuler( Ovgl::DegToRad(KeyEuler.x), Ovgl::DegToRad(KeyEuler.y), Ovgl::DegToRad(KeyEuler.z) );
+					//	}
+					//}
+
+					// Sort frame times.
+					std::sort(mesh->keyframes.begin(), mesh->keyframes.begin() + mesh->keyframes.size(), FrameCompare );
 				}
 
-				// Sort frame times.
-				std::sort(mesh->keyframes.begin(), mesh->keyframes.begin() + mesh->keyframes.size(), FrameCompare );
 			}
 		}
 		if(mesh->bones.size() == 0 )
@@ -688,9 +705,24 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file )
 			bone->convex = NULL;
 			mesh->bones.push_back(bone);
 		}
-		else
+		if(GenerateBoneShapes)
 		{
-			mesh->GenerateBoneMeshes();
+			for( DWORD i = 0; i < mesh->bones.size(); i++ )
+			{
+				for( DWORD v = 0; v < mesh->vertices.size(); v++ )
+				{
+					for( DWORD j = 0; j < 4; j++)
+					{
+						if(mesh->vertices[v].indices[j] == i && mesh->vertices[v].weight[j] > 0.1f)
+						{
+							Ovgl::Vertex Vertex;
+							Vertex.position = Ovgl::Vector3Transform( &mesh->vertices[v].position, &Ovgl::MatrixInverse( &Ovgl::Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), &mesh->bones[i]->matrix));
+							Vertex.weight[0] = 1.0f;
+							mesh->bones[i]->mesh->vertices.push_back( Vertex );
+						}
+					}
+				}
+			}
 		}
 		mesh->VertexBuffer = 0;
 		mesh->IndexBuffers = 0;
@@ -718,7 +750,7 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportBSP( const std::string& file )
 		}
 		fseek(f, 0, SEEK_END);
 		DWORD filesize = ftell(f);
-		std::vector<char> buffer(filesize);
+		std::vector< char > buffer(filesize);
 		fread(&buffer[0], 1, filesize, f);
 
 		return mesh;
@@ -761,7 +793,7 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& front, cons
 
 		// Load texture
 		FIBITMAP* dib = FreeImage_Load( fif, CubeFaces[i].c_str() );
-
+		
 		// Convert to RGB format
 		dib = FreeImage_ConvertTo32Bits( dib );
 
@@ -779,13 +811,19 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& front, cons
 			textura[j*4+3] = pixeles[j*4+3];
 		}
 
+		// Create texture.
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura);
+
+		// Release FreeImage's copy of the image
+		FreeImage_Unload( dib );
+
+		// delete our converted copy of the texture pixels
+		delete [] textura;
 	}
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
 
@@ -839,8 +877,20 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
 			return NULL;
 		}
 
+		// Create new texture
+		Ovgl::Texture* texture = new Ovgl::Texture;
+
+		// Set the texture's media library handle to this media library
+		texture->MLibrary = this;
+
+		// Set the texture's file name.
+		texture->File = file;
+
+		texture->HasAlpha = !!FreeImage_IsTransparent( dib );
+
 		// Convert to RGB format
 		dib = FreeImage_ConvertTo32Bits( dib );
+
 		BYTE* pixeles = FreeImage_GetBits( dib );
 		GLubyte* textura = new GLubyte[4*w*h];
 
@@ -851,15 +901,6 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
 			textura[j*4+2] = pixeles[j*4+0];
 			textura[j*4+3] = pixeles[j*4+3];
 		}
-
-		// Create new texture
-		Ovgl::Texture* texture = new Ovgl::Texture;
-
-		// Set the texture's media library handle to this media library
-		texture->MLibrary = this;
-
-		// Set the texture's file name.
-		texture->File = file;
 		
 		// Create OpenGL texture
 		glGenTextures( 1, &texture->Image );
@@ -872,6 +913,9 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
 
 		// Release FreeImage's copy of the image
 		FreeImage_Unload( dib );
+
+		// delete our converted copy of the texture pixels
+		delete [] textura;
 
 		// Add texture to media library
 		Textures.push_back( texture );
@@ -936,12 +980,12 @@ Ovgl::Shader* Ovgl::MediaLibrary::ImportCG( const std::string& file )
 	return shader;
 }
 
-Ovgl::Scene* Ovgl::MediaLibrary::CreateScene( )
+Ovgl::Scene* Ovgl::MediaLibrary::CreateScene()
 {
 	Ovgl::Scene* scene = new Ovgl::Scene;
 	scene->Inst = Inst;
 	scene->DynamicsWorld = new btDiscreteDynamicsWorld(Inst->PhysicsDispatcher,Inst->PhysicsBroadphase,Inst->PhysicsSolver,Inst->PhysicsConfiguration);
-	scene->DynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.0001f;
+	scene->DynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.00001f;
 	scene->DynamicsWorld->setGravity(btVector3( 0.0f, -9.8f, 0.0f ));
 	GLDebugDrawer* Drawer = new GLDebugDrawer;
 	Drawer->setDebugMode( btIDebugDraw::DBG_DrawWireframe );
@@ -960,17 +1004,8 @@ Ovgl::Material* Ovgl::MediaLibrary::CreateMaterial( )
 	material->NoZBuffer = false;
 	material->NoZWrite = false;
 	material->PostRender = false;
-	std::vector<float> EMI(1);
-	std::vector<float> Diffuse(4);
-	EMI[0] = 0.1f;
-	Diffuse[0] = 1.0f;
-	Diffuse[1] = 1.0f;
-	Diffuse[2] = 1.0f;
-	Diffuse[3] = 1.0f;
-	material->set_texture("txDiffuse", Inst->DefaultMedia->Textures[0] );
-	material->set_texture("txEnvironment", Inst->DefaultMedia->Textures[0] );
-	material->set_variable( "Diffuse", Diffuse );
-	material->set_variable( "EMI", EMI );
+	material->setFSTexture("txDiffuse", Inst->DefaultMedia->Textures[0] );
+	material->setFSTexture("txEnvironment", Inst->DefaultMedia->Textures[1] );
 	Materials.push_back(material);
 	return material;
 };
@@ -1001,6 +1036,45 @@ Ovgl::Texture* Ovgl::MediaLibrary::CreateTexture( unsigned int width, unsigned i
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture( GL_TEXTURE_2D, NULL );
+
+	// Add texture to media library
+	Textures.push_back( texture );
+
+	return texture;
+};
+
+Ovgl::Texture* Ovgl::MediaLibrary::CreateCubemap( unsigned int width, unsigned int height )
+{
+	// Create new texture
+	Ovgl::Texture* texture = new Ovgl::Texture;
+
+	// Set the texture's media library handle to this media library
+	texture->MLibrary = this;
+
+	GLubyte* textura = new GLubyte[4*width*height];
+
+	for( DWORD j = 0; j < width * height; j++ )
+	{
+		textura[j*4+0] = 255;
+		textura[j*4+1] = 255;
+		textura[j*4+2] = 255;
+		textura[j*4+3] = 255;
+	}
+
+	// Create OpenGL texture
+	glGenTextures( 1, &texture->Image );
+	glBindTexture( GL_TEXTURE_CUBE_MAP, texture->Image );
+;
+	for (int i = 0; i < 6; i++)
+	{
+		glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
 
 	// Add texture to media library
 	Textures.push_back( texture );
@@ -1057,7 +1131,7 @@ Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportOGG( const std::string& file )
 	{
 		alGenBuffers( 1, &buffer->stereo );
 		alBufferData( buffer->stereo, AL_FORMAT_STEREO16, (ALvoid*)&buffer->data[0], buffer->data.size()*2, buffer->frequency );
-		std::vector<signed short> mono(buffer->data.size() / 2);
+		std::vector< signed short > mono(buffer->data.size() / 2);
 		for (UINT i = 0; i < mono.size(); i++)
 		{
 			mono[i] = (buffer->data[2*i] + buffer->data[2*i+1]) / 2;

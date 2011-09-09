@@ -33,6 +33,7 @@ Ovgl::Mesh*					ChairMesh;
 Ovgl::Object*				Pavilion;
 Ovgl::Prop*					Chair;
 Ovgl::Actor*				Actor;
+Ovgl::Actor*				Actor2;
 Ovgl::Light*				Light;
 Ovgl::Camera*				Camera;
 Ovgl::Emitter*				Emitter;
@@ -56,9 +57,11 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
             if( wParam == VK_ESCAPE )
                 PostQuitMessage( 0 );
 			if( wParam == VK_SPACE && (lParam >> 30 & 1) == 0 )
-				Actor->Jump(7.5f);
+				Actor->Jump(5.0f);
 			if( wParam == VK_CONTROL && (lParam >> 30 & 1) == 0 )
+			{
 				Actor->crouch = true;
+			}
             break;
 		}
 
@@ -128,7 +131,6 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 
 int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
-
     WNDCLASSEX wcex;
 	ZeroMemory( &wcex, sizeof( wcex ) );
     wcex.cbSize = sizeof( WNDCLASSEX );
@@ -150,34 +152,27 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	RenderTarget->multiSample = true;
 	RenderTarget->SetFullscreen( true );
 	RenderTarget->SetVSync( true );
+	RenderTarget->debugMode = false;
 
 	MediaLibrary = Inst->CreateMediaLibrary("");
 	Music = MediaLibrary->ImportOGG( "..\\media\\audio\\Fireproof Babies - Swim below as Leviathans.ogg" );
 	FootStep = MediaLibrary->ImportOGG( "..\\media\\audio\\foot_step.ogg" );
-	Texture1 = MediaLibrary->ImportCubeMap( "..\\media\\textures\\NightSky\\front.png", "..\\media\\textures\\NightSky\\back.png", "..\\media\\textures\\NightSky\\top.png",
-											"..\\media\\textures\\NightSky\\bottom.png", "..\\media\\textures\\NightSky\\left.png", "..\\media\\textures\\NightSky\\right.png");
-	Texture2 = MediaLibrary->ImportTexture( "..\\media\\textures\\white marble.png" );
-	Texture3 = MediaLibrary->ImportTexture( "..\\media\\textures\\test.jpg" );
-	PavilionMesh = MediaLibrary->ImportFBX( "..\\media\\meshes\\test.fbx" );
-	//ChairMesh = MediaLibrary->ImportFBX( "..\\media\\meshes\\teapot.fbx" );
-
-
+	Texture1 = MediaLibrary->ImportCubeMap( "..\\media\\textures\\skybox\\front.png", "..\\media\\textures\\skybox\\back.png", "..\\media\\textures\\skybox\\top.png",
+											"..\\media\\textures\\skybox\\bottom.png", "..\\media\\textures\\skybox\\left.png", "..\\media\\textures\\skybox\\right.png");
+	PavilionMesh = MediaLibrary->ImportFBX( "..\\media\\meshes\\test.fbx", false, true );
+	ChairMesh = MediaLibrary->ImportFBX( "..\\media\\meshes\\woman.fbx", true, false );
 	Scene = MediaLibrary->CreateScene();
 	Scene->skybox = Texture1;
 	Pavilion = Scene->CreateObject(PavilionMesh, &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
-	//Chair = Scene->CreateProp(ChairMesh, &(Ovgl::MatrixTranslation( 1.0f, 1.0f, 0.0f ) * Ovgl::MatrixRotationX(1.57f)));
-	Light = Scene->CreateLight(&Ovgl::MatrixTranslation( 0.5f, 2.2f, 0.0f ), &Ovgl::Vector4Set( 10.0f, 10.0f, 10.0f, 10.0f ));
-	Scene->CreateLight(&Ovgl::MatrixTranslation( 6.5f, 2.2f, 0.0f ), &Ovgl::Vector4Set( 10.0f, 10.0f, 10.0f, 10.0f ));
-	Scene->CreateLight(&Ovgl::MatrixTranslation( 1.0f, 2.2f, -7.0f ), &Ovgl::Vector4Set( 10.0f, 10.0f, 10.0f, 10.0f ));
-	Scene->CreateLight(&Ovgl::MatrixTranslation( 12.3f, 1.2f, 1.5f ), &Ovgl::Vector4Set( 10.0f, 10.0f, 10.0f, 10.0f ));
-	Scene->CreateLight(&Ovgl::MatrixTranslation( 14.3f, 1.2f, 5.0f ), &Ovgl::Vector4Set( 10.0f, 10.0f, 10.0f, 10.0f ));
-	Actor = Scene->CreateActor( NULL, 0.2f, 0.5f, &Ovgl::MatrixTranslation( 0.0f, 2.5f, 0.0f ) );
-//	Camera = Scene->CreateCamera(&Ovgl::MatrixTranslation( 0.0f, 3.0f, 0.0f ));
+	Light = Scene->CreateLight(&Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), &Ovgl::Vector4( 1.0f, 1.0f, 1.0f, 1.0f ));
+	Actor = Scene->CreateActor( NULL, 0.25f, 1.13f, &Ovgl::MatrixTranslation( 0.0f, 5.0f, 0.0f ), &Ovgl::MatrixTranslation( 0.0f, -0.27f, -0.3f ) );
+	Actor->CameraOffset = Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f );
+	Actor2 = Scene->CreateActor( ChairMesh, 0.25f, 1.13f, &Ovgl::MatrixTranslation( 7.0f, 5.0f, 0.0f ), &Ovgl::MatrixTranslation( 0.0f, -0.27f, -0.3f ) );
 	RenderTarget->view = Actor->camera;
 	Emitter = Scene->CreateEmitter( &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ) );
-	Music->CreateAudioInstance( NULL, true );
-
-	RenderTarget->CreateText( "Hello World!", &Ovgl::Vector4Set( 50.0f, 100.0f, 250.0f, 200.0f ) );
+//	Music->CreateAudioInstance( NULL, true );
+	
+	RenderTarget->CreateText( "Hello World!", &Ovgl::Vector4( 50.0f, 100.0f, 250.0f, 200.0f ) );
 	DWORD previousTime = timeGetTime();
 	// Main message loop
     MSG msg = {0};
@@ -214,17 +209,17 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 					Actor->lookDirection.y = Ovgl::DegToRad(90.0f);
 				}
 				SetCursorPos( (WindowRect.left + WindowRect.right) / 2, (WindowRect.top +  WindowRect.bottom) / 2 );
-				Actor->walkDirection = Ovgl::Vector3Set(0.0f, 0.0f, 0.0f);
+				Actor->walkDirection = Ovgl::Vector3(0.0f, 0.0f, 0.0f);
 				if( GetKeyState(0x57) & WM_KEYDOWN )
-					Actor->walkDirection = Actor->walkDirection + Ovgl::Vector3Set(0.0f, 0.0f, 1.0f);
+					Actor->walkDirection = Actor->walkDirection + Ovgl::Vector3(0.0f, 0.0f, 1.0f);
 				if( GetKeyState(0x53) & WM_KEYDOWN )
-					Actor->walkDirection = Actor->walkDirection + Ovgl::Vector3Set(0.0f, 0.0f, -1.0f);
+					Actor->walkDirection = Actor->walkDirection + Ovgl::Vector3(0.0f, 0.0f, -1.0f);
 				if( GetKeyState(0x44) & WM_KEYDOWN )
-					Actor->walkDirection = Actor->walkDirection + Ovgl::Vector3Set(-1.0f, 0.0f, 0.0f);
+					Actor->walkDirection = Actor->walkDirection + Ovgl::Vector3(-1.0f, 0.0f, 0.0f);
 				if( GetKeyState(0x41) & WM_KEYDOWN )
-					Actor->walkDirection = Actor->walkDirection + Ovgl::Vector3Set(1.0f, 0.0f, 0.0f);
-				if( Actor->walkDirection != Ovgl::Vector3Set(0.0f, 0.0f, 0.0f) )
-					Actor->walkDirection = Ovgl::Vector3Normalize(&Actor->walkDirection) * 0.05f;
+					Actor->walkDirection = Actor->walkDirection + Ovgl::Vector3(1.0f, 0.0f, 0.0f);
+				if( Actor->walkDirection != Ovgl::Vector3(0.0f, 0.0f, 0.0f) )
+					Actor->walkDirection = Ovgl::Vector3Normalize(&Actor->walkDirection) * 0.1f;
 			}
 			previousTime = currentTime;
         }

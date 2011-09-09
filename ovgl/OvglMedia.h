@@ -32,17 +32,13 @@ namespace Ovgl
 		{
 		public:
 			Instance* Inst;
-			std::vector<Scene*> Scenes;
-			std::vector<Shader*> Shaders;
-			std::vector<Material*> Materials;
-			std::vector<Mesh*> Meshes;
-			std::vector<Texture*> Textures;
-			std::vector<AudioBuffer*> AudioBuffers;
-			/**
-			* This is a list of bullet collision shapes in the media library.
-			*/
-			std::vector<btCollisionShape*> collisionShapes;
-			Mesh* ImportFBX( const std::string& file );
+			std::vector< Scene* > Scenes;
+			std::vector< Shader* > Shaders;
+			std::vector< Material* > Materials;
+			std::vector< Mesh* > Meshes;
+			std::vector< Texture* > Textures;
+			std::vector< AudioBuffer* > AudioBuffers;
+			Mesh* ImportFBX( const std::string& file, bool GenerateBoneShapes, bool GeneratePVS );
 			Mesh* ImportBSP( const std::string& file );
 			Shader* ImportCG( const std::string& file );
 			Texture* ImportTexture( const std::string& file );
@@ -53,6 +49,7 @@ namespace Ovgl
 			Mesh* CreateMesh();
 			Material* CreateMaterial();
 			Texture* CreateTexture( unsigned int width, unsigned int height );
+			Texture* CreateCubemap( unsigned int width, unsigned int height );
 			AudioBuffer* CreateAudioBuffer();
 			void Save( const std::string& file );
 			void Load( const std::string& file );

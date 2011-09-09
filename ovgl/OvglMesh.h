@@ -21,7 +21,7 @@ class btRigidBody;
 
 namespace Ovgl
 {
-	enum Clean { CLEAN_ALL, STRAY_VERTICES, CLOSE_VERTICES, BROKEN_FACES };
+	enum Clean { CLEAN_ALL, CLEAN_STRAY_VERTICES, CLEAN_CLOSE_VERTICES, CLEAN_BROKEN_FACES };
 
 	class Vertex;
 	class Face;
@@ -35,6 +35,7 @@ namespace Ovgl
 	class Instance;
 	class Scene;
 	class Matrix44;
+	class PVS;
 
 	extern "C"
 	{
@@ -75,13 +76,13 @@ namespace Ovgl
 		{
 		public:
 			DWORD time;
-			std::vector<Key> keys;
+			std::vector< Key > keys;
 		};
 
 		class __declspec(dllexport) Animation
 		{
 		public:
-			std::vector<Joint*>					joints;
+			std::vector< Joint* >				joints;
 			DWORD								animationState;
 			float								currentTime;
 			float								startTime;
@@ -100,10 +101,18 @@ namespace Ovgl
 			Mesh*								mesh;
 			Matrix44							matrix;
 			float								length;
+			float								volume;
 			Ovgl::Vector3						min;
 			Ovgl::Vector3						max;
 			DWORD								parent;
-			std::vector<DWORD>					childen;
+			std::vector< DWORD >				childen;
+		};
+
+		class __declspec(dllexport) PVS
+		{
+		public:
+			Mesh*								Mesh;
+			std::vector< PVS* >					PVSets;
 		};
 
 		class __declspec(dllexport) CMesh
@@ -122,26 +131,26 @@ namespace Ovgl
 		{
 		public:
 			MediaLibrary*						ml;
-			std::vector<Vertex>					vertices;
-			std::vector<Face>					faces;
-			std::vector<DWORD>					attributes;
-			std::vector<Bone*>					bones;
-			std::vector<Frame*>					keyframes;
-			std::vector<Material*>				materials;
+			std::vector< Vertex >				vertices;
+			std::vector< Face >					faces;
+			std::vector< DWORD >				attributes;
+			std::vector< Bone* >				bones;
+			std::vector< Frame* >				keyframes;
+			std::vector< Material* >			materials;
 			DWORD								subset_count;
 			DWORD								root_bone;
 			unsigned int						VertexBuffer;
 			unsigned int*						IndexBuffers;
 			btBvhTriangleMeshShape*				TriangleMesh;
+			std::vector< PVS* >					PVSCache;
 			void Save( const std::string& file );
-			void GenerateBoneMeshes();
 			void GenerateVertexNormals();
 			void CubeCloud( float sx, float sy, float sz, int count );
-			void QuickHull();
+			float QuickHull();
 			void Simplify( DWORD max_faces, DWORD max_vertices );
 			void Clean( float min, DWORD flags  );
-			void ConnectVertex( std::vector<DWORD>& faceList, DWORD vertex );
-			void MergeVerices( std::vector<DWORD>& vertexList, DWORD flag );
+			void ConnectVertex( std::vector< DWORD >& faceList, DWORD vertex );
+			void MergeVerices( std::vector< DWORD >& vertexList, DWORD flag );
 			Ovgl::Vector3 ComputeFaceNormal( DWORD face );
 			void Update();
 			void Release();

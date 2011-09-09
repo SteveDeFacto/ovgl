@@ -25,18 +25,12 @@
 
 bool Ovgl::Vertex::operator == ( const Ovgl::Vertex& in ) const
 {
-	if( memcmp(this, &in, sizeof(Ovgl::Vertex)) == 0 )
-		return true;
-	else
-		return false;
+	return memcmp(this, &in, sizeof(Ovgl::Vertex)) == 0;
 }
 
 bool Ovgl::Vertex::operator != ( const Ovgl::Vertex& in ) const
 {
-	if( memcmp(this, &in, sizeof(Ovgl::Vertex)) != 0 )
-		return true;
-	else
-		return false;
+	return memcmp(this, &in, sizeof(Ovgl::Vertex)) != 0;
 }
 
 Ovgl::Face Ovgl::Face::Flip()
@@ -52,7 +46,7 @@ void Ovgl::Mesh::GenerateVertexNormals()
 {
 	for(DWORD v = 0; v < vertices.size(); v++)
 	{
-		std::vector<Ovgl::Vector3> adjFaceNormals;
+		std::vector< Ovgl::Vector3 > adjFaceNormals;
 		for( DWORD f = 0; f < faces.size(); f++)
 		{
 			for(DWORD i = 0; i < 3; i++)
@@ -64,32 +58,6 @@ void Ovgl::Mesh::GenerateVertexNormals()
 			}
 		}
 		vertices[v].normal = Vector3Normalize( &Vector3Center( adjFaceNormals ) );
-	}
-}
-
-void Ovgl::Mesh::GenerateBoneMeshes()
-{
-	DWORD bs = bones.size();
-	for( DWORD b = 0; b < bones.size(); b++ )
-	{
-		bones[b]->mesh->vertices.clear();
-		DWORD vs = vertices.size();
-		for( DWORD v = 0; v < vertices.size(); v++ )
-		{
-			for( DWORD i = 0; i < 4; i++)
-			{
-				if(vertices[v].indices[i] == b && vertices[v].weight[i] > 0.1f)
-				{
-					Ovgl::Vertex Vertex = {0};
-					Vertex.position = Ovgl::Vector3Transform( &vertices[v].position, &Ovgl::MatrixInverse( &Ovgl::Vector4Set( 0.0f, 0.0f, 0.0f, 0.0f ), &bones[b]->matrix));
-					Vertex.weight[0] = 1.0f;
-					bones[b]->mesh->vertices.push_back( Vertex );
-				}
-			}
-		}
-		bones[b]->mesh->Clean( 0.001f, CLOSE_VERTICES );
-		bones[b]->mesh->QuickHull();
-		bones[b]->mesh->Simplify( 100, 0 );
 	}
 }
 
@@ -108,7 +76,7 @@ void Ovgl::Mesh::Update()
 	{
 		if(bones[i]->convex)
 		{
-			//Inst->PhysX->releaseConvexMesh( *bones[i]->convex );
+			delete bones[i]->convex;
 		}
 	}
 	glGenBuffersARB( 1, &VertexBuffer );
@@ -116,13 +84,23 @@ void Ovgl::Mesh::Update()
 	glBufferDataARB( GL_ARRAY_BUFFER, vertices.size()*sizeof(Ovgl::Vertex), &vertices[0], GL_STATIC_DRAW );
 
 	// Create Index buffers.
-	std::vector<std::vector<Ovgl::Face>> index_subsets;
-	for( DWORD i = 0; i < this->faces.size(); i++ )
+	std::set<DWORD> usedAttributes(attributes.begin(), attributes.end());
+	std::vector< std::vector< Ovgl::Face > > index_subsets;
+	index_subsets.resize(usedAttributes.size());
+	for( unsigned int i = 0; i < attributes.size(); i++ )
 	{
-		if( (attributes[i]+1) > index_subsets.size() )
-			index_subsets.resize(attributes[i]+1);
-		index_subsets[attributes[i]].push_back(faces[i]);
+		unsigned int s = 0; 
+		for( std::set<DWORD>::iterator j = usedAttributes.begin(); j != usedAttributes.end(); ++j)
+		{
+			if( attributes[i] == *j )
+			{
+				index_subsets[s].push_back(faces[i]);
+			}
+			s++;
+		}
 	}
+
+	// Get subset count.
 	subset_count = index_subsets.size();
 
 	IndexBuffers = new unsigned int[subset_count];
@@ -152,6 +130,7 @@ void Ovgl::Mesh::Update()
 			root_bone = b1;
 		}
 	}
+
 	// Create triangle mesh.
 	btTriangleMesh* trimesh = new btTriangleMesh();
 	for( UINT t = 0; t < faces.size(); t++ )
@@ -162,82 +141,17 @@ void Ovgl::Mesh::Update()
 		trimesh->addTriangle( *v0, *v1, *v2 );
 	}
 	TriangleMesh = new btBvhTriangleMeshShape(trimesh, false);
-	TriangleMesh->setMargin(0.0f);
+	TriangleMesh->setMargin(0.1f);
 
-	// Create bone meshes.
+	// Create bone shapes.
 	for( DWORD i = 0; i < bones.size(); i++ )
 	{
-		if( (bones[i]->mesh->vertices.size() > 0) && (bones[i]->mesh->faces.size() > 0) )
+		if(bones[i]->mesh->vertices.size() > 0)
 		{
+			bones[i]->mesh->Clean( 0.001f, CLEAN_CLOSE_VERTICES );
+			bones[i]->volume = bones[i]->mesh->QuickHull();
+			bones[i]->mesh->Simplify(100, 0);
 			bones[i]->convex = new btConvexHullShape((float*)&bones[i]->mesh->vertices[0], bones[i]->mesh->vertices.size(), sizeof(Ovgl::Vertex));
-		}
-		else
-		{
-			std::vector<Ovgl::Vertex> vertices;
-			std::vector<Ovgl::Face> faces;
-			vertices.resize(8);
-			faces.resize(12);
-			vertices[0].position.x = -0.125f * bones[i]->length;
-			vertices[0].position.y = 0.0f;
-			vertices[0].position.z = -0.125f * bones[i]->length;
-			vertices[1].position.x = 0.125f * bones[i]->length;
-			vertices[1].position.y = 0.0f;
-			vertices[1].position.z = -0.125f * bones[i]->length;
-			vertices[2].position.x = -0.125f * bones[i]->length;
-			vertices[2].position.y = 0.5f * bones[i]->length;
-			vertices[2].position.z = -0.125f * bones[i]->length;
-			vertices[3].position.x = 0.125f * bones[i]->length;
-			vertices[3].position.y = 1.0f * bones[i]->length;
-			vertices[3].position.z = -0.125f * bones[i]->length;
-			vertices[4].position.x = -0.125f * bones[i]->length;
-			vertices[4].position.y = 0.0f;
-			vertices[4].position.z = 0.125f * bones[i]->length;
-			vertices[5].position.x = 0.125f * bones[i]->length;
-			vertices[5].position.y = 0.0f;
-			vertices[5].position.z = 0.125f * bones[i]->length;
-			vertices[6].position.x = -0.125f * bones[i]->length;
-			vertices[6].position.y = 1.0f * bones[i]->length;
-			vertices[6].position.z = 0.125f * bones[i]->length;
-			vertices[7].position.x = 0.125f * bones[i]->length;
-			vertices[7].position.y = 1.0f * bones[i]->length;
-			vertices[7].position.z = 0.125f * bones[i]->length;
-			faces[0].indices[0] = 2;
-			faces[0].indices[1] = 1;
-			faces[0].indices[2] = 0;
-			faces[1].indices[0] = 3;
-			faces[1].indices[1] = 1;
-			faces[1].indices[2] = 2;
-			faces[2].indices[0] = 4;
-			faces[2].indices[1] = 5;
-			faces[2].indices[2] = 6;
-			faces[3].indices[0] = 6;
-			faces[3].indices[1] = 5;
-			faces[3].indices[2] = 7;
-			faces[4].indices[0] = 0;
-			faces[4].indices[1] = 1;
-			faces[4].indices[2] = 4;
-			faces[5].indices[0] = 4;
-			faces[5].indices[1] = 1;
-			faces[5].indices[2] = 5;
-			faces[6].indices[0] = 6;
-			faces[6].indices[1] = 3;
-			faces[6].indices[2] = 2;
-			faces[7].indices[0] = 7;
-			faces[7].indices[1] = 3;
-			faces[7].indices[2] = 6;
-			faces[8].indices[0] = 2;
-			faces[8].indices[1] = 0;
-			faces[8].indices[2] = 4;
-			faces[9].indices[0] = 2;
-			faces[9].indices[1] = 4;
-			faces[9].indices[2] = 6;
-			faces[10].indices[0] = 1;
-			faces[10].indices[1] = 3;
-			faces[10].indices[2] = 5;
-			faces[11].indices[0] = 5;
-			faces[11].indices[1] = 3;
-			faces[11].indices[2] = 7;
-			bones[i]->convex = new btConvexHullShape((float*)&vertices[0], vertices.size(), sizeof(Ovgl::Vertex));
 		}
 	}
 }
@@ -277,115 +191,12 @@ Ovgl::Matrix44 Ovgl::CMesh::getPose()
 
 void Ovgl::CMesh::SetFlags( DWORD flags )
 {
-//	actor->clearActorFlag(NX_AF_DISABLE_COLLISION);
-//	actor->clearBodyFlag(NX_BF_DISABLE_GRAVITY);
-//	actor->clearBodyFlag(NX_BF_KINEMATIC);
-//	actor->clearBodyFlag(NX_BF_FROZEN);
-//	actor->clearBodyFlag(NX_BF_FROZEN_POS);
-//	actor->clearBodyFlag(NX_BF_FROZEN_POS_X);
-//	actor->clearBodyFlag(NX_BF_FROZEN_POS_Y);
-//	actor->clearBodyFlag(NX_BF_FROZEN_POS_Z);
-//	actor->clearBodyFlag(NX_BF_FROZEN_ROT);
-//	actor->clearBodyFlag(NX_BF_FROZEN_ROT_X);
-//	actor->clearBodyFlag(NX_BF_FROZEN_ROT_Y);
-//	actor->clearBodyFlag(NX_BF_FROZEN_ROT_Z);
-//
-//	switch( flags )
-//    {
-//        case DISABLE_COLLISION:
-//		{
-//			this->actor->raiseActorFlag(NX_AF_DISABLE_COLLISION);
-//            break;
-//		}
-//
-//        case DISABLE_GRAVITY:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_DISABLE_GRAVITY);
-//            break;
-//		}
-//
-//		case KINEMATIC:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_KINEMATIC);
-//            break;
-//		}
-//
-//        case FROZEN:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_FROZEN);
-//            break;
-//		}
-//
-//        case FROZEN_POS:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_FROZEN_POS);
-//            break;
-//		}
-//
-//		case FROZEN_POS_X:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_FROZEN_POS_X);
-//            break;
-//		}
-//
-//		case FROZEN_POS_Y:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_FROZEN_POS_Y);
-//            break;
-//		}
-//
-//		case FROZEN_POS_Z:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_FROZEN_POS_Z);
-//            break;
-//		}
-//        case FROZEN_ROT:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_FROZEN_ROT);
-//            break;
-//		}
-//
-//		case FROZEN_ROT_X:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_FROZEN_ROT_X);
-//            break;
-//		}
-//
-//		case FROZEN_ROT_Y:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_FROZEN_ROT_Y);
-//            break;
-//		}
-//
-//		case FROZEN_ROT_Z:
-//		{
-//			this->actor->raiseBodyFlag(NX_BF_FROZEN_ROT_Z);
-//            break;
-//		}
-//    }
+
 }
 
 DWORD Ovgl::CMesh::GetFlags()
 {
 	DWORD flags = 0;
-//	if(actor->readActorFlag(NX_AF_DISABLE_COLLISION))
-//		flags = flags | Ovgl::DISABLE_COLLISION;
-//	if(actor->readBodyFlag(NX_BF_DISABLE_GRAVITY))
-//		flags = flags | Ovgl::DISABLE_GRAVITY;
-//	if(actor->readBodyFlag(NX_BF_KINEMATIC))
-//		flags = flags | Ovgl::KINEMATIC;
-//	if(actor->readBodyFlag(NX_BF_FROZEN_POS_X))
-//		flags = flags | Ovgl::FROZEN_POS_X;
-//	if(actor->readBodyFlag(NX_BF_FROZEN_POS_Y))
-//		flags = flags | Ovgl::FROZEN_POS_Y;
-//	if(actor->readBodyFlag(NX_BF_FROZEN_POS_Z))
-//		flags = flags | Ovgl::FROZEN_POS_Z;
-//	if(actor->readBodyFlag(NX_BF_FROZEN_ROT_X))
-//		flags = flags | Ovgl::FROZEN_ROT_X;
-//	if(actor->readBodyFlag(NX_BF_FROZEN_ROT_Y))
-//		flags = flags | Ovgl::FROZEN_ROT_Y;
-//	if(actor->readBodyFlag(NX_BF_FROZEN_ROT_Z))
-//		flags = flags | Ovgl::FROZEN_ROT_Z;
 	return flags;
 }
 
@@ -405,7 +216,7 @@ void Ovgl::Mesh::CubeCloud( float sx, float sy, float sz, int count )
 {
 	for( int i = 0; i < count; i++)
 	{
-		Ovgl::Vertex TempVertex = {0};
+		Ovgl::Vertex TempVertex;
 		TempVertex.position.x = ((((float)rand() / RAND_MAX) * sx) * 2) - sx;
 		TempVertex.position.y = ((((float)rand() / RAND_MAX) * sy) * 2) - sy;
 		TempVertex.position.z = ((((float)rand() / RAND_MAX) * sz) * 2) - sz;
@@ -414,8 +225,10 @@ void Ovgl::Mesh::CubeCloud( float sx, float sy, float sz, int count )
 	}
 }
 
-void Ovgl::Mesh::QuickHull()
+float Ovgl::Mesh::QuickHull()
 {
+	float volume = 0;
+
 	// Generate a starting face that is at the farthest points. ( Right now it is just adding the first three points. )
 	Ovgl::Face FirstFace = {0};
 	FirstFace.indices[0] = 0;
@@ -451,7 +264,7 @@ void Ovgl::Mesh::QuickHull()
 		{
 
 			// If we do find a vertex then we need to find all faces that this vertex lands on.
-			std::vector<DWORD> TaggedFaces;
+			std::vector< DWORD > TaggedFaces;
 			for( DWORD f2 = 0; f2 < faces.size(); f2++ )
 			{
 				Ovgl::Vector3 faceNormal2 = ComputeFaceNormal( f2 );
@@ -459,6 +272,11 @@ void Ovgl::Mesh::QuickHull()
 				{
 					TaggedFaces.push_back( f2 );
 				}
+			}
+
+			for( DWORD f2 = 0; f2 < TaggedFaces.size(); f2++ )
+			{
+				volume = volume + VolumeTetrahedron(&vertices[distantVertex].position, &vertices[faces[TaggedFaces[f2]].indices[0]].position, &vertices[faces[TaggedFaces[f2]].indices[1]].position, &vertices[faces[TaggedFaces[f2]].indices[2]].position);
 			}
 
             // Now that we know which faces this vertex lands on we need to remap the mesh to include the new vertex.
@@ -473,18 +291,19 @@ void Ovgl::Mesh::QuickHull()
 
 	// Clean the mesh from stray vertices.
 	this->Clean( 0.0f, CLEAN_ALL );
+	return volume;
 }
 
-void Ovgl::Mesh::ConnectVertex( std::vector<DWORD>& faceList, DWORD vertex)
+void Ovgl::Mesh::ConnectVertex( std::vector< DWORD >& faceList, DWORD vertex)
 {
-	std::vector<Ovgl::Face> newFaces;
+	std::vector< Ovgl::Face > newFaces;
 
 	// Find which faces share vertices with the faces we want to remap.
 	for( DWORD f2 = 0; f2 < faces.size(); f2++ )
 	{
 		for( DWORD tf = 0; tf < faceList.size(); tf++ )
 		{
-			std::vector<DWORD> SharedVertices;
+			std::vector< DWORD > SharedVertices;
 			for( DWORD i = 0; i < 3; i++ )
 			{
 				for( DWORD i2 = 0; i2 < 3; i2++ )
@@ -549,7 +368,7 @@ void Ovgl::Mesh::ConnectVertex( std::vector<DWORD>& faceList, DWORD vertex)
 }
 
 
-void Ovgl::Mesh::MergeVerices( std::vector<DWORD>& vertexList, DWORD flag )
+void Ovgl::Mesh::MergeVerices( std::vector< DWORD >& vertexList, DWORD flag )
 {
 	// Move all vertices to last vertex;
 	if( flag == 0 )
@@ -565,17 +384,16 @@ void Ovgl::Mesh::MergeVerices( std::vector<DWORD>& vertexList, DWORD flag )
 
 void Ovgl::Mesh::Simplify( DWORD max_faces, DWORD max_vertices )
 {
-//	this->Clean( 0.0f, CLEAN_ALL );
 	while(  (faces.size() > max_faces && max_faces != 0) || (vertices.size() > max_vertices && max_vertices != 0) )
 	{
 		// Compute vertex weights.
 		DWORD LeastAngleVertexIndex = 0;
 		float LeastAngleVertexWeight = FLT_MAX;
-		std::vector<std::vector<DWORD>> adjVertexFaces(vertices.size());
+		std::vector< std::vector< DWORD > > adjVertexFaces(vertices.size());
 		for( DWORD v = 0; v < vertices.size(); v++)
 		{
 			// Get list of adjacent faces
-			std::vector<Ovgl::Vector3> adjFaceNormals;
+			std::vector< Ovgl::Vector3 > adjFaceNormals;
 			for( DWORD f = 0; f < faces.size(); f++)
 			{
 				for(DWORD i = 0; i < 3; i++)
@@ -620,7 +438,7 @@ void Ovgl::Mesh::Simplify( DWORD max_faces, DWORD max_vertices )
 				}
 			}
 		}
-		std::vector<DWORD> VerticesToMerge;
+		std::vector< DWORD > VerticesToMerge;
 		VerticesToMerge.push_back( LeastAngleVertexIndex );
 		VerticesToMerge.push_back( LeastDistantVertex );
 		this->MergeVerices( VerticesToMerge, 0 );
@@ -632,7 +450,7 @@ void Ovgl::Mesh::Clean( float min, DWORD flags )
 {
 	switch( flags )
 	{
-		case STRAY_VERTICES:
+		case CLEAN_STRAY_VERTICES:
 		{
 			DWORD v = 0;
 			while( v < vertices.size() )
@@ -669,7 +487,7 @@ void Ovgl::Mesh::Clean( float min, DWORD flags )
 			}
 		}
 		break;
-		case CLOSE_VERTICES:
+		case CLEAN_CLOSE_VERTICES:
 		{
 			for( DWORD v1 = 0; v1 < vertices.size(); v1++ )
 			{
@@ -701,7 +519,7 @@ void Ovgl::Mesh::Clean( float min, DWORD flags )
 			}
 		}
 		break;
-		case BROKEN_FACES:
+		case CLEAN_BROKEN_FACES:
 		{
 			for( DWORD f = 0; f < faces.size(); f++ )
 			{
@@ -789,7 +607,7 @@ void Ovgl::Mesh::Clean( float min, DWORD flags )
 	
 Ovgl::Vector3 Ovgl::Mesh::ComputeFaceNormal( DWORD face )
 {
-	Ovgl::Vector3 out = {0};
+	Ovgl::Vector3 out;
 	DWORD test = faces[face].indices[2];
 	Ovgl::Vector3 v1 = vertices[faces[face].indices[2]].position - vertices[faces[face].indices[1]].position;
 	Ovgl::Vector3 v2 = vertices[faces[face].indices[0]].position - vertices[faces[face].indices[1]].position;

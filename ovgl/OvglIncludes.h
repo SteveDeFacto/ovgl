@@ -34,6 +34,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <set>
 
 // OpenAl Headers
 #include <al.h>
@@ -55,6 +56,7 @@
 #include <btBulletDynamicsCommon.h>
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include <..\\OpenGL\\GLDebugDrawer.h>
 
 // FBX Headers

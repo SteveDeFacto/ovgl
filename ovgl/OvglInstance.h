@@ -68,6 +68,7 @@ namespace Ovgl
 			MediaLibrary*							MLibrary;
 			UINT									Image;
 			std::string								File;
+			bool									HasAlpha;
 
 			void Release();
 		};
@@ -90,10 +91,12 @@ namespace Ovgl
 			bool									PostRender;
 			bool									NoZBuffer;
 			bool									NoZWrite;
-			std::vector< std::pair<std::string, std::vector<float>> > Variables;
-			std::vector< std::pair<std::string, Texture*> > Textures;
-			void set_variable(const std::string& variable, const std::vector<float>& data);
-			void set_texture(const std::string& variable, Texture* texture);
+			std::vector< std::pair< CGparameter, std::vector< float > > > Variables;
+			std::vector< std::pair< CGparameter, Ovgl::Texture* > > Textures;
+			void setVSVariable(const std::string& variable, const std::vector< float >& data);
+			void setFSVariable(const std::string& variable, const std::vector< float >& data);
+			void setVSTexture(const std::string& variable, Texture* texture);
+			void setFSTexture(const std::string& variable, Texture* texture);
 			void Release();
 		};
 
@@ -113,8 +116,8 @@ namespace Ovgl
 			btSequentialImpulseConstraintSolver*	PhysicsSolver;
 			void*									FBXManager;
 			MediaLibrary*							DefaultMedia;
-			std::vector<RenderTarget*>				RenderTargets;
-			std::vector<MediaLibrary*>				MediaLibraries;
+			std::vector< RenderTarget* >			RenderTargets;
+			std::vector< MediaLibrary* >			MediaLibraries;
 
 			RenderTarget*							CreateRenderTarget( HWND window, RECT* rect, DWORD flags );
 			MediaLibrary*							CreateMediaLibrary( const std::string& file );

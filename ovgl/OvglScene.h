@@ -25,18 +25,9 @@ namespace Ovgl
 {
 	enum ObjectFlags
 	{
-		DISABLE_COLLISION = 1,
-		DISABLE_GRAVITY = 2,
-		KINEMATIC = 4,
-		FROZEN_POS_X = 8,
-		FROZEN_POS_Y = 16,
-		FROZEN_POS_Z = 32,
-		FROZEN_ROT_X = 64,
-		FROZEN_ROT_Y = 128,
-		FROZEN_ROT_Z = 256,
-		FROZEN_POS = FROZEN_POS_X | FROZEN_POS_Y | FROZEN_POS_Z,
-        FROZEN_ROT = FROZEN_ROT_X | FROZEN_ROT_Y | FROZEN_ROT_Z,
-        FROZEN = FROZEN_POS | FROZEN_ROT
+		OBJECT_DISABLE_COLLISION = 1,
+		OBJECT_DISABLE_GRAVITY = 2,
+		OBJECT_KINEMATIC = 4,
 	};
 
 	extern "C"
@@ -63,7 +54,7 @@ namespace Ovgl
 		{
 		public:
 			DWORD type;
-			Ovgl::CMesh* cmesh;
+			Ovgl::CMesh* CollisionMesh;
 			Ovgl::Prop* prop;
 			Ovgl::Actor* actor;
 			Ovgl::Vector3 loc_point;
@@ -97,7 +88,7 @@ namespace Ovgl
 			/**
 			* This is a pointer to the physics scene object that represents the camera within the scene.
 			*/
-			CMesh* cmesh;
+			CMesh* CollisionMesh;
 			/**
 			* This matrix defines the perspective of the camera.
 			*/
@@ -105,7 +96,7 @@ namespace Ovgl
 			/**
 			* This is an array of all audio voices that the camera can hear.
 			*/
-			std::vector<AudioVoice*> voices;
+			std::vector< AudioVoice* > voices;
 			/**
 			* Sets the pose of this camera.
 			* @param matrix The matrix which defines the new pose for this camera.
@@ -134,7 +125,7 @@ namespace Ovgl
 			/**
 			* This is a pointer to the physics scene object that represents the light with in the scene.
 			*/
-			CMesh* cmesh;
+			CMesh* CollisionMesh;
 			/**
 			* This is the color of the light that will be cast on objects.
 			*/
@@ -176,23 +167,23 @@ namespace Ovgl
 			/**
 			* List of bones that are used to distort the mesh that is displayed for the prop.
 			*/
-			std::vector<CMesh*>						bones;
+			std::vector< CMesh* >					bones;
 			/**
-			* List of Shaders that are used for each subset of the mesh.
+			* List of materials that are used for each subset of the mesh.
 			*/
-			std::vector<Material*>					subsets;
+			std::vector< Material* >				materials;
 			/**
 			* List of matrices that are taken from the bones and can be passed directly to the shaders to be rendered.
 			*/
-			std::vector<Matrix44>					matrices;
+			std::vector< Matrix44 >					matrices;
 			/**
 			* List of joints that are holding together the bones of this prop.
 			*/
-			std::vector<Joint*>						joints;
+			std::vector< Joint* >					joints;
 			/**
 			* List of animations affecting this prop.
 			*/
-			std::vector<Animation*>					animations;
+			std::vector< Animation* >				animations;
 			/**
 			* Used by Ovgl::Scene to update the bone orientations that are displayed to the Ovgl::RenderTarget. This function will recursivly apply the offset of a parent bone to all child bones and their children until it has gone through the entire tree.
 			* @param bone Index of the first bone to update. Generally the meshes root_bone.
@@ -236,19 +227,19 @@ namespace Ovgl
 			/**
 			* This is a pointer to the scene that this object resides in.
 			*/
-			Scene* scene;
+			Scene* Scene;
 			/**
 			* This is a pointer to the physics object that represents this object within the scene.
 			*/
-			CMesh* cmesh;
+			CMesh* CollisionMesh;
 			/**
 			* The mesh that is displayed for this object.
 			*/
 			Mesh* mesh;
 			/**
-			* List of shaders that are used for each subset of the mesh.
+			* List of materials that are used for each subset of the mesh.
 			*/
-			std::vector<Material*> subsets;
+			std::vector< Material* > materials;
 			/**
 			* Sets the pose of this object.
 			* @param matrix The matrix which defines the new pose for this object.
@@ -274,11 +265,11 @@ namespace Ovgl
 			/**
 			* This is a pointer to the scene that this emitter was created by and resides in.
 			*/
-			Scene*									scene;
+			Scene* scene;
 			/**
 			* This is a pointer to the physics scene object that represents the emitter with in the scene.
 			*/
-			CMesh*									cmesh;
+			CMesh* CollisionMesh;
 			/**
 			* Sets the pose of this emitter.
 			* @param matrix The matrix which defines the new pose for this emitter.
@@ -302,11 +293,11 @@ namespace Ovgl
 			*/
 			Scene* scene;
 			/**
-			*
+			* Bullet character controller.
 			*/
 			btKinematicCharacterController* controller;
 			/**
-			*
+			* Bullet ghost object.
 			*/
 			btPairCachingGhostObject* ghostObject;
 			/**
@@ -314,9 +305,25 @@ namespace Ovgl
 			*/
 			Camera* camera;
 			/**
+			* This offsets the actor's view and can be used for third person view.
+			*/
+			Matrix44 CameraOffset;
+			/**
+			* Mesh offset
+			*/		
+			Matrix44 offset;
+			/**
 			* This is what defines the appearance of the actor.
 			*/			
 			Mesh* mesh;
+			/**
+			* List of materials that are used for each subset of the character's mesh.
+			*/
+			std::vector< Material* > materials;
+			/**
+			* List of matrices that are taken from active animations.
+			*/
+			std::vector< Matrix44 > matrices;
 			/**
 			* Which direction the actor is currently moving.
 			*/
@@ -334,15 +341,15 @@ namespace Ovgl
 			*/
 			Vector3 position;
 			/**
-			*
+			* The maximum slope the actor can climb
 			*/
 			float maxSlope;
 			/**
-			*
+			* The height of the character's collision shape
 			*/
 			float height;
 			/**
-			*
+			* The radius of the character's collision shape
 			*/
 			float radius;
 			/**
@@ -354,7 +361,14 @@ namespace Ovgl
 			*/
 			bool onGround;
 			/**
+			* Returns the current post of this actor.
+			*/
+			Matrix44 getPose();
+
+			void UpdateAnimation( int bone, Ovgl::Matrix44* matrix, float time );
+			/**
 			* Tells the actor where to look.
+			* @param vec The direction to look.
 			*/
 			void SetDirection( Vector3* vec );
 			/**
@@ -362,6 +376,10 @@ namespace Ovgl
 			* @param force This tells the actor how high to jump.
 			*/
 			void Jump( float force );
+			/**
+			* Releases the actor from memory and creates a ragdoll in it's place.
+			*/
+			Prop* Kill();
 			/**
 			* This function will release control of all memory associated with the actor and it will also remove any reference to it from the scene.
 			*/
@@ -390,31 +408,31 @@ namespace Ovgl
 			/**
 			* This array contains all static objects within the scene.
 			*/
-			std::vector<Object*>					objects;
+			std::vector< Object* >					objects;
 			/**
 			* This array contains all lights within the scene.
 			*/
-			std::vector<Light*>						lights;
+			std::vector< Light* >					lights;
 			/**
 			* This array contains all cameras within the scene.
 			*/
-			std::vector<Camera*>					cameras;
+			std::vector< Camera* >					cameras;
 			/**
 			* This array contains all props within the scene.
 			*/
-			std::vector<Prop*>						props;
+			std::vector< Prop* >					props;
 			/**
 			* This array contains all actors within the scene.
 			*/
-			std::vector<Actor*>						actors;
+			std::vector< Actor* >					actors;
 			/**
 			* This array contains all emitters within the scene.
 			*/
-			std::vector<Emitter*>					emitters;
+			std::vector< Emitter* >					emitters;
 			/**
 			* This array contains all joints within the scene.
 			*/
-			std::vector<Joint*>						joints;
+			std::vector< Joint* >					joints;
 			/**
 			* This function adds a Ovgl::Light to the scene.
 			* @param matrix The matrix which defines the the starting pose of the light.
@@ -434,7 +452,7 @@ namespace Ovgl
 			* @param height The hieght of the actor's capsule within the physics scene which is the distance at which a character comes in contact with objects in the character's horizontal plane.
 			* @param matrix The matrix which defines the the starting pose of the actor.
 			*/
-			Actor* CreateActor( Mesh* mesh, float radius, float height, Matrix44* matirx );
+			Actor* CreateActor( Mesh* mesh, float radius, float height, Matrix44* matirx, Matrix44* offset );
 			/**
 			* This function adds a Ovgl::Prop to the scene.
 			* @param mesh The mesh that will be displayed for the prop.
