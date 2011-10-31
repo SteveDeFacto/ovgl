@@ -290,7 +290,7 @@ namespace Ovgl
 
 	Matrix33 Matrix33::operator * ( const Matrix33& in ) const
 	{
-		Matrix33 out = {0};
+		Matrix33 out;
 		out._11 = _11 * in._11 + _12 * in._21 + _13 * in._31;
 		out._12 = _11 * in._12 + _12 * in._22 + _13 * in._32;
 		out._13 = _11 * in._13 + _12 * in._23 + _13 * in._33;
@@ -300,6 +300,23 @@ namespace Ovgl
 		out._31 = _31 * in._11 + _32 * in._21 + _33 * in._31;
 		out._32 = _31 * in._12 + _32 * in._22 + _33 * in._32;
 		out._33 = _31 * in._13 + _32 * in._23 + _33 * in._33;
+		return out;
+	}
+
+	Matrix44 Matrix44::Rotation()
+	{
+		Matrix44 out;
+		out = *this;
+		out._41 = 0.0f;
+		out._42 = 0.0f;
+		out._43 = 0.0f;
+		return out;
+	}
+
+	Matrix44 Matrix44::Translation()
+	{
+		Matrix44 out;
+		out = MatrixTranslation(this->_41, this->_42, this->_43);
 		return out;
 	}
 

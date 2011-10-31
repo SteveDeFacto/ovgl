@@ -56,6 +56,7 @@ namespace Ovgl
 			void AutoLuminance();
 			void Bloom();
 			void MotionBlur( float x, float y );
+			void DrawMarker( Matrix44& matrix );
 			void SetVSync( bool state );
 			bool GetFullscreen();
 			void SetFullscreen( bool state );

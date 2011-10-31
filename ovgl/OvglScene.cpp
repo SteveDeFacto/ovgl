@@ -343,38 +343,73 @@ void Ovgl::Prop::Update( int bone, Ovgl::Matrix44* matrix )
 		for (UINT i = 0; i < this->mesh->bones[bone]->childen.size(); i++)
 		{
 			Ovgl::Matrix44 child;
-			child = Ovgl::MatrixTranslation( mesh->bones[mesh->bones[bone]->childen[i]]->matrix._41, mesh->bones[mesh->bones[bone]->childen[i]]->matrix._42, mesh->bones[mesh->bones[bone]->childen[i]]->matrix._43 );
+			child = mesh->bones[mesh->bones[bone]->childen[i]]->matrix.Translation();
 			child = child * tmatrix * (*matrix);
 			Ovgl::Prop::Update( mesh->bones[bone]->childen[i], &child );	
 		}
 	}
 }
 
-
-
-void Ovgl::Actor::UpdateAnimation( int bone, Ovgl::Matrix44* matrix, float time )
+void Ovgl::Actor::UpdateAnimation( int bone, Ovgl::Matrix44* matrix, DWORD time )
 {
+	// Initialize animation rotation matrix.
 	Ovgl::Matrix44 animRot;
+	Ovgl::Matrix44 animRot2;
 	animRot = Ovgl::MatrixIdentity();
-	for( unsigned int i = 0; i < mesh->keyframes[abs(time)]->keys.size(); i++ )
+	animRot2 = Ovgl::MatrixIdentity();
+
+	// Get animation rotation.
+	float currentRot[3] = {0};
+	for( unsigned int a = 0; a < 3; a++)
 	{
-		if(mesh->keyframes[abs(time)]->keys[i].index == bone)
+		Ovgl::Curve uCurve;
+		Ovgl::Curve lCurve;
+		uCurve.time = ULONG_MAX;
+		uCurve.value = 0;
+		lCurve.time = 0;
+		lCurve.value = 0;
+
+		// Find two frames that are directly before and after the current time.
+		for( unsigned int i = 0; i < mesh->bones[bone]->Rot_Keys[a].size(); i++)
 		{
-			Ovgl::Vector3 temp;
-			temp.x = Ovgl::DegToRad(mesh->keyframes[abs(time)]->keys[i].rotation.x);
-			temp.y = Ovgl::DegToRad(mesh->keyframes[abs(time)]->keys[i].rotation.y);
-			temp.z = Ovgl::DegToRad(mesh->keyframes[abs(time)]->keys[i].rotation.z);
-			animRot = Ovgl::MatrixRotationEuler(temp.x, temp.y, temp.z);
+			Ovgl::Curve nCurve = mesh->bones[bone]->Rot_Keys[a][i];
+			if(nCurve.time > lCurve.time && nCurve.time < time )
+			{
+				lCurve = nCurve;
+			}
+			if(nCurve.time < uCurve.time && nCurve.time > time )
+			{
+				uCurve = nCurve;
+			}
+		}
+
+		// If we can't find an upper curve then just set it to the lower curve.
+		if(uCurve.time == ULONG_MAX)
+		{
+			uCurve = lCurve;
+		}
+
+		// Check if we found any frames then interpolate between the two curves.
+		if(uCurve.time > 0)
+		{
+			currentRot[a] = Ovgl::DegToRad(Ovgl::Lerp(lCurve.value, uCurve.value, (float)(time - lCurve.time) / (float)(uCurve.time - lCurve.time) ));
 		}
 	}
+	animRot = Ovgl::MatrixRotationEuler(currentRot[0], currentRot[1], currentRot[2]);
 
-	animRot = Ovgl::MatrixInverse( &Ovgl::Vector4(), &mesh->bones[bone]->matrix) * animRot * mesh->bones[bone]->matrix;
-	matrices[bone] = animRot * ((*matrix) * Ovgl::MatrixInverse( &Ovgl::Vector4(), &mesh->bones[bone]->matrix));
+	// Offset the center of rotation.
+	animRot2 = Ovgl::MatrixInverse( &Ovgl::Vector4(), &mesh->bones[bone]->matrix.Translation()) * animRot * mesh->bones[bone]->matrix.Translation(); 
 
+	// Get difference from original pose to the animated pose.
+	matrices[bone] = animRot2 * (*matrix) * Ovgl::MatrixInverse( &Ovgl::Vector4(), &mesh->bones[bone]->matrix);
+
+	// Loop through all child bones and update their animations.
 	for( unsigned int i = 0; i < mesh->bones[bone]->childen.size(); i++)
 	{
 		Ovgl::Matrix44 accumulate;
-		accumulate = animRot * (*matrix) * Ovgl::MatrixInverse( &Ovgl::Vector4(), &mesh->bones[bone]->matrix ) * mesh->bones[mesh->bones[bone]->childen[i]]->matrix ;
+		Ovgl::Matrix44 Bone2Parent;
+		Bone2Parent = Ovgl::MatrixInverse( &Ovgl::Vector4(), &mesh->bones[bone]->matrix ) * mesh->bones[mesh->bones[bone]->childen[i]]->matrix;
+		accumulate = animRot2 * (*matrix) * Bone2Parent;
 		Ovgl::Actor::UpdateAnimation( mesh->bones[bone]->childen[i], &accumulate, time );
 	}
 }
@@ -460,14 +495,15 @@ void Ovgl::Scene::Update( DWORD UpdateTime )
 		actors[a]->ghostObject->getWorldTransform().setFromOpenGLMatrix((float*)&new_matrix);
 
 		// Update animations.
+		static float aTime = 0;
 		if(actors[a]->mesh != NULL)
 		{
-			actors[a]->UpdateAnimation( actors[a]->mesh->root_bone, &(Ovgl::MatrixRotationZ(1.57f)), 0 );
+			actors[a]->UpdateAnimation( actors[a]->mesh->root_bone, &Ovgl::MatrixIdentity(), aTime /15);
+			aTime = aTime + UpdateTime;
 		}
-
 		for(unsigned int i = 0; i < actors[a]->matrices.size(); i++)
 		{
-			actors[a]->matrices[i] = actors[a]->matrices[i] * (actors[a]->offset * new_matrix);
+			actors[a]->matrices[i] = actors[a]->matrices[i]* (actors[a]->offset * new_matrix);
 		}
 	}
 

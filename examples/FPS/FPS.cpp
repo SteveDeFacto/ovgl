@@ -21,17 +21,17 @@
 #include <winnt.h>
 #include <Ovgl.h>
 
-HWND						hWnd;
+HWND					hWnd;
 Ovgl::Instance*				Inst;
 Ovgl::RenderTarget*			RenderTarget;
 Ovgl::MediaLibrary*			MediaLibrary;
 Ovgl::Scene*				Scene;
 Ovgl::AudioBuffer*			Music;
 Ovgl::AudioBuffer*			FootStep;
-Ovgl::Mesh*					PavilionMesh;
-Ovgl::Mesh*					ChairMesh;
+Ovgl::Mesh*				PavilionMesh;
+Ovgl::Mesh*				ChairMesh;
 Ovgl::Object*				Pavilion;
-Ovgl::Prop*					Chair;
+Ovgl::Prop*				Chair;
 Ovgl::Actor*				Actor;
 Ovgl::Actor*				Actor2;
 Ovgl::Light*				Light;
@@ -45,8 +45,8 @@ Ovgl::Material*				Material2;
 Ovgl::Material*				Material3;
 Ovgl::Material*				Material4;
 Ovgl::Material*				Material5;
-bool						g_Active;
-bool						g_Sizing;
+bool					g_Active;
+bool					g_Sizing;
 
 LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
@@ -155,7 +155,7 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	RenderTarget->debugMode = false;
 
 	MediaLibrary = Inst->CreateMediaLibrary("");
-	Music = MediaLibrary->ImportOGG( "..\\media\\audio\\Fireproof Babies - Swim below as Leviathans.ogg" );
+//	Music = MediaLibrary->ImportOGG( "..\\media\\audio\\Fireproof Babies - Swim below as Leviathans.ogg" );
 	FootStep = MediaLibrary->ImportOGG( "..\\media\\audio\\foot_step.ogg" );
 	Texture1 = MediaLibrary->ImportCubeMap( "..\\media\\textures\\skybox\\front.png", "..\\media\\textures\\skybox\\back.png", "..\\media\\textures\\skybox\\top.png",
 											"..\\media\\textures\\skybox\\bottom.png", "..\\media\\textures\\skybox\\left.png", "..\\media\\textures\\skybox\\right.png");
@@ -165,9 +165,9 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	Scene->skybox = Texture1;
 	Pavilion = Scene->CreateObject(PavilionMesh, &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
 	Light = Scene->CreateLight(&Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), &Ovgl::Vector4( 1.0f, 1.0f, 1.0f, 1.0f ));
-	Actor = Scene->CreateActor( NULL, 0.25f, 1.13f, &Ovgl::MatrixTranslation( 0.0f, 5.0f, 0.0f ), &Ovgl::MatrixTranslation( 0.0f, -0.27f, -0.3f ) );
+	Actor = Scene->CreateActor( ChairMesh, 0.25f, 1.13f, &Ovgl::MatrixTranslation( 0.0f, 5.0f, 0.0f ), &Ovgl::MatrixTranslation( 0.0f, -0.0f, -0.3f ) );
 	Actor->CameraOffset = Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f );
-	Actor2 = Scene->CreateActor( ChairMesh, 0.25f, 1.13f, &Ovgl::MatrixTranslation( 7.0f, 5.0f, 0.0f ), &Ovgl::MatrixTranslation( 0.0f, -0.27f, -0.3f ) );
+	Actor2 = Scene->CreateActor( ChairMesh, 0.25f, 1.13f, &Ovgl::MatrixTranslation( 7.0f, 5.0f, 0.0f ), &Ovgl::MatrixTranslation( 0.0f, -0.0f, -0.3f ) );
 	RenderTarget->view = Actor->camera;
 	Emitter = Scene->CreateEmitter( &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ) );
 //	Music->CreateAudioInstance( NULL, true );

@@ -98,6 +98,8 @@ namespace Ovgl
 		Vector4& operator[](size_t index);
 		Matrix44 operator * ( const Matrix44& ) const;
 		Matrix33 to3x3();
+		Matrix44 Rotation();
+		Matrix44 Translation();
 		void toDoubles( double* data );
 		void fromDoubles( double* data );
 	};

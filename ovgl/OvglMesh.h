@@ -27,9 +27,8 @@ namespace Ovgl
 	class Face;
 	class Bone;
 	class Joint;
+	class Curve;
 	class Animation;
-	class Frame;
-	class Key;
 	class CMesh;
 	class Mesh;
 	class Instance;
@@ -65,24 +64,16 @@ namespace Ovgl
 			Face Flip();
 		};
 
-		class __declspec(dllexport) Key
-		{
-		public:
-			DWORD index;
-			Vector4 rotation;
-		};
-
-		class __declspec(dllexport) Frame
+		class __declspec(dllexport) Curve
 		{
 		public:
 			DWORD time;
-			std::vector< Key > keys;
+			float value;
 		};
 
 		class __declspec(dllexport) Animation
 		{
 		public:
-			std::vector< Joint* >				joints;
 			DWORD								animationState;
 			float								currentTime;
 			float								startTime;
@@ -105,6 +96,7 @@ namespace Ovgl
 			Ovgl::Vector3						min;
 			Ovgl::Vector3						max;
 			DWORD								parent;
+			std::vector< std::vector< Curve > >	Rot_Keys;
 			std::vector< DWORD >				childen;
 		};
 
@@ -135,7 +127,6 @@ namespace Ovgl
 			std::vector< Face >					faces;
 			std::vector< DWORD >				attributes;
 			std::vector< Bone* >				bones;
-			std::vector< Frame* >				keyframes;
 			std::vector< Material* >			materials;
 			DWORD								subset_count;
 			DWORD								root_bone;

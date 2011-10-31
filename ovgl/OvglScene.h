@@ -365,7 +365,7 @@ namespace Ovgl
 			*/
 			Matrix44 getPose();
 
-			void UpdateAnimation( int bone, Ovgl::Matrix44* matrix, float time );
+			void UpdateAnimation( int bone, Ovgl::Matrix44* matrix, DWORD time );
 			/**
 			* Tells the actor where to look.
 			* @param vec The direction to look.
@@ -433,6 +433,10 @@ namespace Ovgl
 			* This array contains all joints within the scene.
 			*/
 			std::vector< Joint* >					joints;
+			/**
+			* This array contains all markers within the scene.
+			*/
+			std::vector< Matrix44* >				markers;
 			/**
 			* This function adds a Ovgl::Light to the scene.
 			* @param matrix The matrix which defines the the starting pose of the light.

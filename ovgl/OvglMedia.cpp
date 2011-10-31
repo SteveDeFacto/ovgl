@@ -24,11 +24,6 @@
 #include "OvglScene.h"
 #include "OvglMesh.h"
 
-bool FrameCompare ( Ovgl::Frame* frame1, Ovgl::Frame* frame2 )
-{
-   return frame1->time < frame2->time;
-}
-
 void Ovgl::MediaLibrary::Release()
 {
 	for( DWORD i = 0; i < AudioBuffers.size(); i++ )
@@ -106,20 +101,6 @@ void Ovgl::MediaLibrary::Save( const std::string& file )
 				DWORD child_count = Meshes[m]->bones[i]->childen.size();
 				fwrite( &child_count, sizeof(DWORD), 1, output );
 				if(child_count) fwrite( &Meshes[m]->bones[i]->childen[0], sizeof(DWORD), child_count, output );
-			}
-
-			// Write animations.
-			DWORD frame_count = Meshes[m]->keyframes.size();
-			fwrite( &frame_count, 4, 1, output );
-			for( DWORD f = 0; f < frame_count; f++ )
-			{
-				fwrite( &Meshes[m]->keyframes[f]->time, sizeof(DWORD), 1, output );
-				DWORD key_count = Meshes[m]->keyframes[f]->keys.size();
-				fwrite( &key_count, sizeof(DWORD), 1, output );
-				if( key_count > 0)
-				{
-					fwrite( &Meshes[m]->keyframes[f]->keys[0], sizeof(Ovgl::Key), key_count, output );
-				}
 			}
 		}
 		DWORD scene_count = Scenes.size();
@@ -233,8 +214,6 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 			DWORD face_count;
 			DWORD bone_count;
 			DWORD child_count;
-			DWORD frame_count;
-			DWORD key_count;
 			std::vector< Ovgl::Vector3 > bone_vertices;
 			std::vector< Ovgl::Face > bone_faces;
 	
@@ -277,21 +256,6 @@ void Ovgl::MediaLibrary::Load( const std::string& file )
 				fread( &child_count, sizeof(DWORD), 1, input );
 				mesh->bones[i]->childen.resize(child_count);
 				if(child_count) fread( &mesh->bones[i]->childen[0], sizeof(DWORD), child_count, input );
-			}
-	
-			// Get animations.
-			fread( &frame_count, 4, 1, input ); 
-			mesh->keyframes.resize( frame_count );
-			for( DWORD f = 0; f < frame_count; f++ )
-			{
-				mesh->keyframes[f] = new Frame;
-				fread( &mesh->keyframes[f]->time, sizeof(DWORD), 1, input );
-				fread( &key_count, sizeof(DWORD), 1, input );
-				if( key_count > 0)
-				{
-					mesh->keyframes[f]->keys.resize(key_count);
-					fread( &mesh->keyframes[f]->keys[0], sizeof(Ovgl::Key), key_count, input );
-				}
 			}
 	
 			// Nullify buffer addresses.
@@ -627,11 +591,12 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, bool Generat
 					}
 				}
 				
-				// Get animation frames for this mesh.
+				// Get animation curves for this mesh.
 				if(AnimationStack)
 				{
 					for(DWORD bn = 0; bn < BoneNodes.size(); bn++ )
 					{	
+						mesh->bones[bn]->Rot_Keys.resize(3);
 						KFbxAnimCurve* lAnimCurve[3];
 						lAnimCurve[0] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_X);
 						lAnimCurve[1] = BoneNodes[bn]->LclRotation.GetCurve<KFbxAnimCurve>(lCurrentAnimationLayer, KFCURVENODE_R_Y);
@@ -639,61 +604,34 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, bool Generat
 						for( DWORD c = 0; c < 3; c++ )
 						{
 							if(lAnimCurve[c])
-							for( int k = 0; k < lAnimCurve[c]->KeyGetCount(); k++ )
 							{
-								KFbxAnimCurveKey lKey = lAnimCurve[c]->KeyGet(k);
-								DWORD lKeyTime = (DWORD)lKey.GetTime().GetMilliSeconds();
-								float lKeyValue = lKey.GetValue();
-								bool found_frame = false;
-								for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
+
+								for( int k = 0; k < lAnimCurve[c]->KeyGetCount(); k++ )
 								{
-									if( lKeyTime == mesh->keyframes[f]->time )
-									{
-										found_frame = true;
-										bool found_key = false;
-										for( DWORD k2 = 0; k2 < mesh->keyframes[f]->keys.size(); k2++ )
-										{
-											if( mesh->keyframes[f]->keys[k2].index == bn )
-											{
-												found_key = true;
-												mesh->keyframes[f]->keys[k2].rotation[c] = lKeyValue;
-											}
-										}
-										if( !found_key )
-										{
-											Ovgl::Key key;
-											key.index = bn;
-											ZeroMemory( &key.rotation, sizeof( Ovgl::Vector4 ) );
-											key.rotation[c] = lKeyValue;
-											mesh->keyframes[f]->keys.push_back(key);
-										}
-									}
-								}
-								if( !found_frame )
-								{
-									Ovgl::Frame* frame = new Ovgl::Frame;
-									frame->time = lKeyTime;
-									frame->keys.clear();
-									mesh->keyframes.push_back(frame);
+									KFbxAnimCurveKey lKey = lAnimCurve[c]->KeyGet(k);
+									Ovgl::Curve lCurve;
+									lCurve.time = (DWORD)lKey.GetTime().GetMilliSeconds();
+									lCurve.value = lKey.GetValue();
+									mesh->bones[bn]->Rot_Keys[c].push_back(lCurve);
 								}
 							}
 						}
 					}
-				
-					//// Convert euler angles to quaternions.
-					//for( DWORD f = 0; f < mesh->keyframes.size(); f++ )
-					//{
-					//	for( DWORD k = 0; k < mesh->keyframes[f]->keys.size(); k++ )
-					//	{
-					//		Ovgl::Vector4 KeyEuler = mesh->keyframes[f]->keys[k].rotation;
-					//		mesh->keyframes[f]->keys[k].rotation = Ovgl::QuaternionRotationEuler( Ovgl::DegToRad(KeyEuler.x), Ovgl::DegToRad(KeyEuler.y), Ovgl::DegToRad(KeyEuler.z) );
-					//	}
-					//}
-
-					// Sort frame times.
-					std::sort(mesh->keyframes.begin(), mesh->keyframes.begin() + mesh->keyframes.size(), FrameCompare );
 				}
-
+				else
+				{
+					for(DWORD bn = 0; bn < BoneNodes.size(); bn++ )
+					{	
+						mesh->bones[bn]->Rot_Keys.resize(3);
+						for( DWORD c = 0; c < 3; c++ )
+						{
+							Ovgl::Curve lCurve;
+							lCurve.time = 0;
+							lCurve.value = 0.0f;
+							mesh->bones[bn]->Rot_Keys[c].push_back(lCurve);
+						}
+					}
+				}
 			}
 		}
 		if(mesh->bones.size() == 0 )

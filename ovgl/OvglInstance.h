@@ -42,7 +42,6 @@ namespace Ovgl
 		class Bone;
 		class Joint;
 		class Animation;
-		class Frame;
 		class Key;
 		class CMesh;
 		class Mesh;

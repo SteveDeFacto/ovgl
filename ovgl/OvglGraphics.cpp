@@ -437,6 +437,34 @@ void Ovgl::RenderTarget::MotionBlur( float x, float y )
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void Ovgl::RenderTarget::DrawMarker( Matrix44& matrix )
+{
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glLoadMatrixf((float*)&(matrix * Ovgl::MatrixInverse( &Ovgl::Vector4(0.0f, 0.0f, 0.0f, 0.0f), &view->getPose())));
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glLoadMatrixf((float*)&view->projMat);
+	glDisable( GL_LIGHTING );
+	glDisable( GL_TEXTURE_2D );
+	glLineWidth( 1.0f );
+	glColor3f( 1.0f, 0.0f, 0.0f );
+	glBegin(GL_LINES);
+		glVertex3f( 0.0f, 0.0f, 0.0f ); 
+		glVertex3f( 1.0f, 0.0f, 0.0f );
+	glEnd();
+	glColor3f( 0.0f, 1.0f, 0.0f );
+	glBegin(GL_LINES); 
+		glVertex3f( 0.0f, 0.0f, 0.0f ); 
+		glVertex3f( 0.0f, 1.0f, 0.0f );
+	glEnd();
+	glColor3f( 0.0f, 0.0f, 1.0f );
+	glBegin(GL_LINES); 
+		glVertex3f( 0.0f, 0.0f, 0.0f ); 
+		glVertex3f( 0.0f, 0.0f, 1.0f );
+	glEnd();
+}
+
 void Ovgl::RenderTarget::Render()
 {
 	// Set render target's window to current 
@@ -579,74 +607,96 @@ void Ovgl::RenderTarget::Render()
 			}
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-	glDisable(GL_MULTISAMPLE_ARB);
-	glDisable (GL_DEPTH_TEST);
-	glDepthMask (GL_FALSE);
-	glDisable( GL_LIGHTING );
-	glEnable(GL_TEXTURE_2D);
-	glDisable (GL_BLEND);
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity();
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity();
 
-	// Blit MultiSampleTexture to BaseTexture to apply effects.
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, MultiSampleFrameBuffer);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, EffectFrameBuffer);
-	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
-	glBlitFramebuffer(0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-	if( autoLuminance )
-	{
-		AutoLuminance();
-	}
-
-	if(bloom)
-	{
-		Bloom();
-	}
-
-	if(motionBlur)
-	{
-		static Ovgl::Vector2 LastCamVec;
-		Ovgl::Matrix44 CamMat = view->getPose();
-		Ovgl::Vector2 CamVec = Ovgl::Vector2(sin(CamMat._11*(float)OvglPi) * abs(CamMat._22), sin(CamMat._22*(float)OvglPi) );
-		Ovgl::Vector2 CurCamVec = (CamVec - LastCamVec)/30;
-		if( CurCamVec.x > 0.001f || CurCamVec.x < -0.001f || CurCamVec.y > 0.001f || CurCamVec.y < -0.001f )
-		{
-			MotionBlur( CurCamVec.x, CurCamVec.y );
-		}
-		LastCamVec = CamVec;
-	}
-
-	// Render to screen
-	glBindTexture(GL_TEXTURE_2D, PrimaryTex);
-	glBegin(GL_QUADS);
-		glTexCoord2f( 0.0f, 0.0f );
-		glVertex3f(-1.0f,-1.0f, -1.0f);
-		glTexCoord2f( 1.0f, 0.0f );
-		glVertex3f(1.0f,-1.0f, -1.0f);
-		glTexCoord2f( 1.0f, 1.0f );
-		glVertex3f(1.0f, 1.0f, -1.0f);
-		glTexCoord2f( 0.0f, 1.0f );
-		glVertex3f(-1.0f, 1.0f, -1.0f);
-	glEnd();
-
-	if(debugMode)
-	{
+		glColor3f(1.0f, 1.0f, 1.0f);
+		glDisable(GL_MULTISAMPLE_ARB);
 		glDisable (GL_DEPTH_TEST);
 		glDepthMask (GL_FALSE);
-		glDisable(GL_TEXTURE_2D);
-		glMatrixMode(GL_MODELVIEW);
+		glDisable( GL_LIGHTING );
+		glEnable(GL_TEXTURE_2D);
+		glDisable (GL_BLEND);
+		glMatrixMode( GL_MODELVIEW );
 		glLoadIdentity();
-		glLoadMatrixf((float*)&(Ovgl::MatrixInverse( &Ovgl::Vector4(0.0f, 0.0f, 0.0f, 0.0f), &view->getPose())));
-		glMatrixMode(GL_PROJECTION);
+		glMatrixMode( GL_PROJECTION );
 		glLoadIdentity();
-		glLoadMatrixf((float*)&view->projMat);
-		view->scene->DynamicsWorld->debugDrawWorld();
+
+		// Blit MultiSampleTexture to BaseTexture to apply effects.
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, MultiSampleFrameBuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, EffectFrameBuffer);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+		glBlitFramebuffer(0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+		if( autoLuminance )
+		{
+			AutoLuminance();
+		}
+
+		if(bloom)
+		{
+			Bloom();
+		}
+
+		if(motionBlur)
+		{
+			static Ovgl::Vector2 LastCamVec;
+			Ovgl::Matrix44 CamMat = view->getPose();
+			Ovgl::Vector2 CamVec = Ovgl::Vector2(sin(CamMat._11*(float)OvglPi) * abs(CamMat._22), sin(CamMat._22*(float)OvglPi) );
+			Ovgl::Vector2 CurCamVec = (CamVec - LastCamVec)/30;
+			if( CurCamVec.x > 0.001f || CurCamVec.x < -0.001f || CurCamVec.y > 0.001f || CurCamVec.y < -0.001f )
+			{
+				MotionBlur( CurCamVec.x, CurCamVec.y );
+			}
+			LastCamVec = CamVec;
+		}
+
+		// Render to screen
+		glBindTexture(GL_TEXTURE_2D, PrimaryTex);
+		glBegin(GL_QUADS);
+			glTexCoord2f( 0.0f, 0.0f );
+			glVertex3f(-1.0f,-1.0f, -1.0f);
+			glTexCoord2f( 1.0f, 0.0f );
+			glVertex3f(1.0f,-1.0f, -1.0f);
+			glTexCoord2f( 1.0f, 1.0f );
+			glVertex3f(1.0f, 1.0f, -1.0f);
+			glTexCoord2f( 0.0f, 1.0f );
+			glVertex3f(-1.0f, 1.0f, -1.0f);
+		glEnd();
+
+		glColor3f(1.0f, 1.0f, 1.0f);
+		glDisable(GL_MULTISAMPLE_ARB);
+		glDisable (GL_DEPTH_TEST);
+		glDepthMask (GL_FALSE);
+		glDisable( GL_LIGHTING );
+		glDisable( GL_TEXTURE_2D );
+		glDisable (GL_BLEND);
+		glMatrixMode( GL_MODELVIEW );
+		glLoadIdentity();
+		glMatrixMode( GL_PROJECTION );
+		glLoadIdentity();
+
+		if(debugMode)
+		{
+			glDisable (GL_DEPTH_TEST);
+			glDepthMask (GL_FALSE);
+			glDisable(GL_TEXTURE_2D);
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+			glLoadMatrixf((float*)&(Ovgl::MatrixInverse( &Ovgl::Vector4(0.0f, 0.0f, 0.0f, 0.0f), &view->getPose())));
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			glLoadMatrixf((float*)&view->projMat);
+			view->scene->DynamicsWorld->debugDrawWorld();
+		}
+
+		for( unsigned int i = 0; i < scene->actors.size(); i++ )
+		{
+			for( unsigned int m = 0; m < scene->actors[i]->matrices.size(); m++ )
+			{
+				DrawMarker( MatrixScaling( 0.1f, 0.1f, 0.1f ) *  scene->actors[i]->mesh->bones[m]->matrix * scene->actors[i]->matrices[m]);
+			}
+		}
 	}
 
 	glEnable (GL_BLEND);
