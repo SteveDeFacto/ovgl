@@ -75,10 +75,11 @@ namespace Ovgl
 		{
 		public:
 			DWORD								animationState;
-			float								currentTime;
-			float								startTime;
-			float								endTime;
-			float								stepTime;
+			DWORD								currentTime;
+			DWORD								startTime;
+			DWORD								endTime;
+			DWORD								stepTime;
+			bool								repeat;
 			void play( float speed, bool repeat );
 			void stop();
 			void pause();

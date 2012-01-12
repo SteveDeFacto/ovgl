@@ -49,19 +49,19 @@ Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emit
 	alSourcei( voice->source, AL_LOOPING, loop );
 	alSourcePlay( voice->source );
 	instance->voices.push_back(voice);
-	if( emitter )
-	{
-		for( UINT r = 0; r < this->Inst->RenderTargets.size(); r++ )
-		{
-			for(UINT c = 0; c < emitter->scene->cameras.size(); c++)
-			{
-				if( Inst->RenderTargets[r]->view == emitter->scene->cameras[c] )
-				{
-					emitter->scene->cameras[c]->voices.push_back(voice);
-				}
-			}
-		}
-	}
+	//if( emitter )
+	//{
+	//	for( UINT r = 0; r < this->Inst->RenderTargets.size(); r++ )
+	//	{
+	//		for(UINT c = 0; c < emitter->scene->cameras.size(); c++)
+	//		{
+	//			if( Inst->RenderTargets[r]->view == emitter->scene->cameras[c] )
+	//			{
+	//				emitter->scene->cameras[c]->voices.push_back(voice);
+	//			}
+	//		}
+	//	}
+	//}
 	return instance;
 }
 

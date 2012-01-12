@@ -24,11 +24,11 @@
 #include "OvglAudio.h"
 #include "OvglMesh.h"
 #include "OvglScene.h"
+#include "OvglWindow.h"
 
 void BuildDefaultMedia( Ovgl::Instance* inst )
 {
-	inst->DefaultMedia = new Ovgl::MediaLibrary;
-	inst->DefaultMedia->Inst = inst;
+	inst->DefaultMedia = new Ovgl::MediaLibrary(inst, "");
 
 	Ovgl::Shader* DefaultEffect = new Ovgl::Shader;
 	Ovgl::Shader* SkyboxEffect = new Ovgl::Shader;
@@ -529,114 +529,8 @@ void BuildDefaultMedia( Ovgl::Instance* inst )
 	inst->DefaultMedia->Meshes.push_back(mesh);
 }
 
-Ovgl::RenderTarget* Ovgl::Instance::CreateRenderTarget( HWND hWnd, RECT* rect, DWORD flags )
+Ovgl::Instance::Instance( DWORD flags )
 {
-	RECT WindowRect;
-	GetWindowRect( hWnd, &WindowRect );
-	Ovgl::RenderTarget* rendertarget = new Ovgl::RenderTarget;
-	rendertarget->Inst = this;
-	rendertarget->hWnd = hWnd;
-	rendertarget->hDC = GetDC(hWnd);
-	rendertarget->view = NULL;
-	rendertarget->debugMode = false;
-	rendertarget->autoLuminance = true;
-	rendertarget->bloom = 4;
-	rendertarget->motionBlur = true;
-	rendertarget->multiSample = true;
-
-	int pixelFormat;
-	UINT numFormats;
-	float fAttributes[] = {0,0};
-
-	int iAttributes[] = { WGL_DRAW_TO_WINDOW_ARB,GL_TRUE,
-		WGL_SUPPORT_OPENGL_ARB,GL_TRUE,
-		WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
-		WGL_COLOR_BITS_ARB,24,
-		WGL_ALPHA_BITS_ARB,0,
-		WGL_DEPTH_BITS_ARB,0,
-		WGL_STENCIL_BITS_ARB,0,
-		WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-		0, 0};
-	wglChoosePixelFormatARB( rendertarget->hDC, iAttributes, fAttributes,1, &pixelFormat, &numFormats);
-	SetPixelFormat( rendertarget->hDC, pixelFormat, NULL );
-	wglMakeCurrent( rendertarget->hDC, hRC );
-	SwapBuffers(rendertarget->hDC);
-
-	// Multi sample framebuffer
-	glGenFramebuffers(1, &rendertarget->MultiSampleFrameBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, rendertarget->MultiSampleFrameBuffer);
-
-	// Multi sample colorbuffer
-	glGenRenderbuffers(1, &rendertarget->ColorBuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, rendertarget->ColorBuffer);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA16F, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rendertarget->ColorBuffer);
-
-	// Multi sample depthbuffer
-	glGenRenderbuffers(1, &rendertarget->DepthBuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, rendertarget->DepthBuffer);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT32, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rendertarget->DepthBuffer);
-
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if(status != GL_FRAMEBUFFER_COMPLETE)
-	{
-		OutputDebugString( L"Unable to create multi sample frame buffer" );
-	}
-
-	// Effect framebuffer
-	glGenFramebuffers(1, &rendertarget->EffectFrameBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, rendertarget->EffectFrameBuffer);
-
-	// Create and bind texture
-	glGenTextures(1, &rendertarget->PrimaryTex);
-	glBindTexture(GL_TEXTURE_2D, rendertarget->PrimaryTex);
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 10);
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, 0, GL_RGBA, GL_FLOAT, NULL);
-
-	glGenTextures(1, &rendertarget->SecondaryTex);
-	glBindTexture(GL_TEXTURE_2D, rendertarget->SecondaryTex);
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-	glGenTextures(1, &rendertarget->PrimaryBloomTex);
-	glBindTexture(GL_TEXTURE_2D, rendertarget->PrimaryBloomTex);
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (WindowRect.right - WindowRect.left)/4, (WindowRect.bottom - WindowRect.top)/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-	glGenTextures(1, &rendertarget->SecondaryBloomTex);
-	glBindTexture(GL_TEXTURE_2D, rendertarget->SecondaryBloomTex);
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (WindowRect.right - WindowRect.left)/4, (WindowRect.bottom - WindowRect.top)/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if(status != GL_FRAMEBUFFER_COMPLETE)
-	{
-		OutputDebugString( L"Unable to create effect frame buffer" );
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	RenderTargets.push_back(rendertarget);
-	return rendertarget;
-};
-
-Ovgl::Instance* Ovgl::Create( DWORD flags )
-{
-	// Create new instance
-	Ovgl::Instance* instance = new Ovgl::Instance; 
-
 	// Initialize COM
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
@@ -651,9 +545,9 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
     wcex.lpszClassName = L"OvglWinClass";
     RegisterClassEx( &wcex );
 	HWND temphWindow = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
-	instance->hWnd = temphWindow;
+	hWnd = temphWindow;
 	// Set window pixel format
-	instance->hDC = GetDC( temphWindow );
+	hDC = GetDC( temphWindow );
 	PIXELFORMATDESCRIPTOR pfd;
 	ZeroMemory( &pfd, sizeof( pfd ) );
 	pfd.nSize = sizeof( pfd );
@@ -661,19 +555,19 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cColorBits = 24;
-	int iFormat = ChoosePixelFormat( instance->hDC, &pfd );
-	SetPixelFormat( instance->hDC, iFormat, NULL );
+	int iFormat = ChoosePixelFormat( hDC, &pfd );
+	SetPixelFormat( hDC, iFormat, NULL );
 
 	// Create GL context
-	HGLRC tempContext = wglCreateContext( instance->hDC );
-	wglMakeCurrent( instance->hDC, tempContext );
-	instance->hRC = tempContext;
+	HGLRC tempContext = wglCreateContext( hDC );
+	wglMakeCurrent( hDC, tempContext );
+	hRC = tempContext;
 	glewInit();
 
 	// Create a simple hidden window so we can create a GL context from it
-	instance->hWnd = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
+	hWnd = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
 
-	instance->hDC = GetDC( instance->hWnd );
+	hDC = GetDC( hWnd );
 
 	int pixelFormat;
 	UINT numFormats;
@@ -691,8 +585,8 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 		WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
 		0, 0
 	};
-	wglChoosePixelFormatARB( instance->hDC, iAttributes, fAttributes, 1, &pixelFormat, &numFormats);
-	SetPixelFormat( instance->hDC, pixelFormat, NULL );
+	wglChoosePixelFormatARB( hDC, iAttributes, fAttributes, 1, &pixelFormat, &numFormats);
+	SetPixelFormat( hDC, pixelFormat, NULL );
 
 	if( atof((const char*)glGetString(GL_VERSION)) >= 3.1 )
 	{
@@ -702,11 +596,11 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 			WGL_CONTEXT_MINOR_VERSION_ARB, 1,
 			0
 		};
-		instance->hRC = wglCreateContextAttribsARB( instance->hDC, 0, attribs );
+		hRC = wglCreateContextAttribsARB( hDC, 0, attribs );
 		wglMakeCurrent( NULL, NULL );
 		wglDeleteContext( tempContext );
 		DestroyWindow( temphWindow );
-		wglMakeCurrent( instance->hDC, instance->hRC );
+		wglMakeCurrent( hDC, hRC );
 	}
 	else
 	{
@@ -717,9 +611,9 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 	glEnable (GL_CULL_FACE);
 
 	// Initialize CG
-	instance->CgContext = cgCreateContext();
-	instance->CgVertexProfile = cgGLGetLatestProfile(CG_GL_VERTEX);
-	instance->CgFragmentProfile = cgGLGetLatestProfile(CG_GL_FRAGMENT);
+	CgContext = cgCreateContext();
+	CgVertexProfile = cgGLGetLatestProfile(CG_GL_VERTEX);
+	CgFragmentProfile = cgGLGetLatestProfile(CG_GL_FRAGMENT);
 
 	// Initialize OpenAL
 	ALCdevice *device = alcOpenDevice(NULL);
@@ -727,20 +621,18 @@ Ovgl::Instance* Ovgl::Create( DWORD flags )
 	alcMakeContextCurrent(context);
 
 	// Initialize Bullet
-	instance->PhysicsConfiguration = new btDefaultCollisionConfiguration();
-	instance->PhysicsDispatcher = new	btCollisionDispatcher(instance->PhysicsConfiguration);
+	PhysicsConfiguration = new btDefaultCollisionConfiguration();
+	PhysicsDispatcher = new btCollisionDispatcher(PhysicsConfiguration);
 	btVector3 worldMin(-1000,-1000,-1000);
 	btVector3 worldMax(1000,1000,1000);
-	instance->PhysicsBroadphase = new btAxisSweep3(worldMin,worldMax);
-	instance->PhysicsSolver = new btSequentialImpulseConstraintSolver;
+	PhysicsBroadphase = new btAxisSweep3(worldMin,worldMax);
+	PhysicsSolver = new btSequentialImpulseConstraintSolver;
 
 	// Build the default media.
-	BuildDefaultMedia( instance );
+	BuildDefaultMedia( this );
 
 	// Initialize FbxSdk
-	instance->FBXManager = KFbxSdkManager::Create();
-
-	return instance;
+	FBXManager = KFbxSdkManager::Create();
 }
 
 void Ovgl::Instance::Release()
@@ -749,12 +641,6 @@ void Ovgl::Instance::Release()
 	{
 		MediaLibraries[i]->Release();
 	}
-	for( DWORD r = 0; r < RenderTargets.size(); r++ )
-	{
-		RenderTargets[r]->Release();
-	}
-
-	DefaultMedia->Release();
 
 	delete PhysicsSolver;
 	delete PhysicsBroadphase;
@@ -871,12 +757,4 @@ void Ovgl::Texture::Release()
 	}
 	glDeleteTextures(1, &Image);
 	delete this;
-}
-
-Ovgl::MediaLibrary* Ovgl::Instance::CreateMediaLibrary( const std::string& file )
-{
-	Ovgl::MediaLibrary* MediaLibrary = new Ovgl::MediaLibrary;
-	MediaLibrary->Inst = this;
-	MediaLibraries.push_back(MediaLibrary);
-	return MediaLibrary;
 }

@@ -25,10 +25,13 @@ namespace Ovgl
 	{
 		class Camera;
 		class Interface;
+		class Vector4;
 
 		class __declspec(dllexport) RenderTarget
 		{
 		public:
+			RenderTarget( Ovgl::Instance* Instance, Ovgl::Window* window, Ovgl::Vector4* rect, DWORD flags );
+			RenderTarget( Ovgl::Instance* Instance, Ovgl::Texture* texture, Ovgl::Vector4* rect, DWORD flags );
 			Instance* Inst;
 			Camera* view;
 			GLuint MultiSampleFrameBuffer;
@@ -40,28 +43,29 @@ namespace Ovgl
 			GLuint SecondaryTex;
 			GLuint PrimaryBloomTex;
 			GLuint SecondaryBloomTex;
-			HWND hWnd;
-			HDC hDC;
-			HGLRC hRC;
+			Ovgl::Window* Window;
+			Ovgl::Texture* Texture;
 			Ovgl::Vector4 Rect;
 			std::vector< Ovgl::Interface* > Interfaces;
 			Ovgl::Interface* CreateSprite( Ovgl::Texture* Texture, Ovgl::Vector4* rect );
 			Ovgl::Interface* CreateText( const std::string& text, Ovgl::Vector4* rect );
+			Ovgl::Vector2 LastCamVec;
 			float eye_luminance;
 			bool debugMode;
 			int bloom;
 			bool autoLuminance;
 			bool multiSample;
 			bool motionBlur;
+			HDC hDC;
+			HPBUFFERARB PBuffer;
 			void AutoLuminance();
 			void Bloom();
 			void MotionBlur( float x, float y );
 			void DrawMarker( Matrix44& matrix );
 			void SetVSync( bool state );
-			bool GetFullscreen();
-			void SetFullscreen( bool state );
 			void Release();
 			void Render();
+			void Update();
 			void RenderMesh( Ovgl::Mesh* mesh, Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender );
 		};
 

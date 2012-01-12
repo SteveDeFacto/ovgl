@@ -31,6 +31,7 @@ namespace Ovgl
 		class __declspec(dllexport) MediaLibrary
 		{
 		public:
+			MediaLibrary( Ovgl::Instance* instance, const std::string& file );
 			Instance* Inst;
 			std::vector< Scene* > Scenes;
 			std::vector< Shader* > Shaders;

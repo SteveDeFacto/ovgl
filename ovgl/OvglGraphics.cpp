@@ -24,14 +24,330 @@
 #include "OvglScene.h"
 #include "OvglAudio.h"
 #include "OvglMesh.h"
+#include "OvglWindow.h"
+
+unsigned int MaxLevel( unsigned int width, unsigned int height)
+{
+	unsigned int max = 0;
+	unsigned int highest = 0;
+	if( width > height)
+	{
+		highest = width;
+	}
+	else
+	{
+		highest = height;
+	}
+	while( highest > 1)
+	{
+		highest = highest / 2;
+		max = max + 1;
+	}
+	return max;
+}
+
+RECT WindowAdjustedRect( Ovgl::Window* window, Ovgl::Vector4* rect)
+{
+	// Get the window's rect
+	RECT WindowRect;
+	GetWindowRect( window->hWnd, &WindowRect );
+
+	RECT adjustedrect;
+
+	// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
+	if( rect->x > 0 && rect->x < 1 )
+	{
+		adjustedrect.left = (LONG)((WindowRect.right - WindowRect.left) * rect->x);
+	}
+	else
+	{
+		adjustedrect.left = (LONG)rect->x;
+	}
+
+	// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
+	if( rect->y > 0 && rect->y < 1 )
+	{
+		adjustedrect.top = (LONG)((WindowRect.bottom - WindowRect.top) * rect->y);
+	}
+	else
+	{
+		adjustedrect.top = (LONG)rect->y;
+	}
+
+	// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
+	if( rect->z > 0 && rect->z < 1 )
+	{
+		adjustedrect.right = (LONG)((WindowRect.right - WindowRect.left) * rect->z);
+	}
+	else
+	{
+		adjustedrect.right = (LONG)rect->z;
+	}
+
+	// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
+	if( rect->w > 0 && rect->w < 1 )
+	{
+		adjustedrect.bottom = (LONG)((WindowRect.bottom - WindowRect.top) * rect->w);
+	}
+	else
+	{
+		adjustedrect.bottom = (LONG)rect->w;
+	}
+
+	return adjustedrect;
+}
+
+RECT TextureAdjustedRect( Ovgl::Texture* texture, Ovgl::Vector4* rect)
+{
+	// Get the window's rect
+	RECT WindowRect;
+
+	glBindTexture(GL_TEXTURE_2D, texture->Image);
+	GLint width, height;
+	glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+	glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+	WindowRect.left =0;
+	WindowRect.top =0;
+	WindowRect.right = width;
+	WindowRect.bottom = height;
+
+	RECT adjustedrect;
+
+	// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
+	if( rect->x > 0 && rect->x < 1 )
+	{
+		adjustedrect.left = (LONG)((WindowRect.right - WindowRect.left) * rect->x);
+	}
+	else
+	{
+		adjustedrect.left = (LONG)rect->x;
+	}
+
+	// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
+	if( rect->y > 0 && rect->y < 1 )
+	{
+		adjustedrect.top = (LONG)((WindowRect.bottom - WindowRect.top) * rect->y);
+	}
+	else
+	{
+		adjustedrect.top = (LONG)rect->y;
+	}
+
+	// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
+	if( rect->z > 0 && rect->z < 1 )
+	{
+		adjustedrect.right = (LONG)((WindowRect.right - WindowRect.left) * rect->z);
+	}
+	else
+	{
+		adjustedrect.right = (LONG)rect->z;
+	}
+
+	// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
+	if( rect->w > 0 && rect->w < 1 )
+	{
+		adjustedrect.bottom = (LONG)((WindowRect.bottom - WindowRect.top) * rect->w);
+	}
+	else
+	{
+		adjustedrect.bottom = (LONG)rect->w;
+	}
+
+	return adjustedrect;
+}
+
+Ovgl::RenderTarget::RenderTarget( Ovgl::Instance* Instance, Ovgl::Window* window, Ovgl::Vector4* rect, DWORD flags )
+{
+	Inst = Instance;
+	Window = window;
+	hDC = Window->hDC;
+	Texture = NULL;
+	view = NULL;
+	debugMode = false;
+	autoLuminance = true;
+	bloom = 4;
+	motionBlur = true;
+	multiSample = true;
+	eye_luminance = 0.0f;
+	Rect = *rect;
+
+	RECT adjustedrect = WindowAdjustedRect( Window, &Rect);
+
+	int width = (int)(adjustedrect.right - adjustedrect.left);
+	int height = (int)(adjustedrect.bottom - adjustedrect.top);
+
+	wglMakeCurrent( hDC, Inst->hRC );
+
+	// Multi sample framebuffer
+	glGenFramebuffers(1, &MultiSampleFrameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, MultiSampleFrameBuffer);
+
+	// Multi sample colorbuffer
+	glGenRenderbuffers(1, &ColorBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, ColorBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA16F, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ColorBuffer);
+
+	// Multi sample depthbuffer
+	glGenRenderbuffers(1, &DepthBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, DepthBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT32, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, DepthBuffer);
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		OutputDebugString( L"Unable to create multi sample frame buffer" );
+	}
+
+	// Effect framebuffer
+	glGenFramebuffers(1, &EffectFrameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
+
+	// Create and bind texture
+	glGenTextures(1, &PrimaryTex);
+	glBindTexture(GL_TEXTURE_2D, PrimaryTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, MaxLevel( width, height));
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+
+	glGenTextures(1, &SecondaryTex);
+	glBindTexture(GL_TEXTURE_2D, SecondaryTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glGenTextures(1, &PrimaryBloomTex);
+	glBindTexture(GL_TEXTURE_2D, PrimaryBloomTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width/4, height/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glGenTextures(1, &SecondaryBloomTex);
+	glBindTexture(GL_TEXTURE_2D, SecondaryBloomTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width/4, height/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		OutputDebugString( L"Unable to create effect frame buffer" );
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	Window->RenderTargets.push_back(this);
+};
+
+Ovgl::RenderTarget::RenderTarget( Ovgl::Instance* Instance, Ovgl::Texture* texture, Ovgl::Vector4* rect, DWORD flags )
+{
+	Inst = Instance;
+	Window = NULL;
+	Texture = texture;
+	view = NULL;
+	debugMode = false;
+	autoLuminance = true;
+	bloom = 4;
+	motionBlur = true;
+	multiSample = true;
+	eye_luminance = 0.0f;
+	hDC = Inst->hDC;
+
+	Rect = *rect;
+
+	RECT adjustedrect = TextureAdjustedRect( Texture, &Rect);
+
+	int width = (int)(adjustedrect.right - adjustedrect.left);
+	int height = (int)(adjustedrect.bottom - adjustedrect.top);
+
+	wglMakeCurrent( hDC, Inst->hRC );
+
+	// Multi sample framebuffer
+	glGenFramebuffers(1, &MultiSampleFrameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, MultiSampleFrameBuffer);
+
+	// Multi sample colorbuffer
+	glGenRenderbuffers(1, &ColorBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, ColorBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA16F, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ColorBuffer);
+
+	// Multi sample depthbuffer
+	glGenRenderbuffers(1, &DepthBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, DepthBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT32, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, DepthBuffer);
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		OutputDebugString( L"Unable to create multi sample frame buffer" );
+	}
+
+	// Effect framebuffer
+	glGenFramebuffers(1, &EffectFrameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
+
+	// Create and bind texture
+	glGenTextures(1, &PrimaryTex);
+	glBindTexture(GL_TEXTURE_2D, PrimaryTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, MaxLevel( width, height));
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+
+	glGenTextures(1, &SecondaryTex);
+	glBindTexture(GL_TEXTURE_2D, SecondaryTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glGenTextures(1, &PrimaryBloomTex);
+	glBindTexture(GL_TEXTURE_2D, PrimaryBloomTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width/4, height/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glGenTextures(1, &SecondaryBloomTex);
+	glBindTexture(GL_TEXTURE_2D, SecondaryBloomTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width/4, height/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		OutputDebugString( L"Unable to create effect frame buffer" );
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+};
 
 void Ovgl::RenderTarget::Release()
 {
-	for( UINT r = 0; r < Inst->RenderTargets.size(); r++)
+	for( UINT r = 0; r < Window->RenderTargets.size(); r++)
 	{
-		if(Inst->RenderTargets[r] == this)
+		if(Window->RenderTargets[r] == this)
 		{
-			Inst->RenderTargets.erase( Inst->RenderTargets.begin() + r );
+			Window->RenderTargets.erase( Window->RenderTargets.begin() + r );
 		}
 	}
 	delete this;
@@ -176,10 +492,16 @@ void Ovgl::RenderTarget::AutoLuminance()
 	glBindTexture(GL_TEXTURE_2D, PrimaryTex);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	float luminance;
-	glGetTexImage(GL_TEXTURE_2D, 10, GL_LUMINANCE, GL_FLOAT, &luminance);
-	eye_luminance = std::max( 0.5f, std::min( 1.0f, eye_luminance) ) + (( (luminance + 0.5f) - eye_luminance ) * 0.01f);
 
-	// Render bloom effect
+	GLint width, height;
+	glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+	glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+	glGetTexImage(GL_TEXTURE_2D, MaxLevel( width, height), GL_LUMINANCE, GL_FLOAT, &luminance);
+	eye_luminance = eye_luminance + ((( luminance + 0.5f ) - eye_luminance ) * 0.01f);
+	eye_luminance = std::max( 0.5f, std::min( 1.0f, eye_luminance) );
+
+	// Auto luminance effect
 	glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
 
@@ -221,6 +543,8 @@ void Ovgl::RenderTarget::AutoLuminance()
 	// Disable vertex attributes
 	glDisableVertexAttribArrayARB( 0 );
 	glDisableVertexAttribArrayARB( 1 );
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Ovgl::RenderTarget::Bloom()
@@ -467,19 +791,40 @@ void Ovgl::RenderTarget::DrawMarker( Matrix44& matrix )
 
 void Ovgl::RenderTarget::Render()
 {
-	// Set render target's window to current 
-	wglMakeCurrent( hDC, Inst->hRC );
-
 	// Get the window's rect
 	RECT WindowRect;
-	GetWindowRect( hWnd, &WindowRect );
+	RECT adjustedrect;
 
-	// Set the viewport to fit the window
+	if(Window)
+	{
+		wglMakeCurrent( hDC, Inst->hRC );
+		GetWindowRect( Window->hWnd, &WindowRect );
+		adjustedrect = WindowAdjustedRect( Window, &Rect);
+	}
+	else
+	{
+		wglMakeCurrent( Inst->hDC, Inst->hRC );
+		WindowRect.left = 0;
+		WindowRect.top = 0;
+		glBindTexture(GL_TEXTURE_2D, Texture->Image);
+		GLint glwidth, glheight;
+		glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &glwidth);
+		glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &glheight);
+		WindowRect.right = glwidth;
+		WindowRect.bottom = glheight;
+		adjustedrect = TextureAdjustedRect( Texture, &Rect);
+	}
+
+	int width = (int)(adjustedrect.right - adjustedrect.left);
+	int height = (int)(adjustedrect.bottom - adjustedrect.top);
 
 	if( view != NULL )
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, MultiSampleFrameBuffer);
-		glViewport( 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top );
+
+		// Set the viewport to fit the window
+		glViewport( 0, 0, width, height );
+
 		Ovgl::Scene* scene = view->scene;
 		Ovgl::Matrix44 viewProj = (Ovgl::MatrixInverse( &Ovgl::Vector4(0,0,0,0), &view->getPose() ) * view->projMat);
 
@@ -624,9 +969,11 @@ void Ovgl::RenderTarget::Render()
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, MultiSampleFrameBuffer);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, EffectFrameBuffer);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
-		glBlitFramebuffer(0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+
 
 		if( autoLuminance )
 		{
@@ -640,7 +987,6 @@ void Ovgl::RenderTarget::Render()
 
 		if(motionBlur)
 		{
-			static Ovgl::Vector2 LastCamVec;
 			Ovgl::Matrix44 CamMat = view->getPose();
 			Ovgl::Vector2 CamVec = Ovgl::Vector2(sin(CamMat._11*(float)OvglPi) * abs(CamMat._22), sin(CamMat._22*(float)OvglPi) );
 			Ovgl::Vector2 CurCamVec = (CamVec - LastCamVec)/30;
@@ -651,18 +997,46 @@ void Ovgl::RenderTarget::Render()
 			LastCamVec = CamVec;
 		}
 
+		glViewport( 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top );
+
+		// Get viewport
+		GLint iViewport[4];
+		glGetIntegerv( GL_VIEWPORT, iViewport );
+
+		glMatrixMode( GL_MODELVIEW );
+		glLoadIdentity();
+		glMatrixMode( GL_PROJECTION );
+		glLoadIdentity();
+
+		// Set up the orthographic projection
+		glOrtho( iViewport[0], iViewport[0] + iViewport[2], iViewport[1] + iViewport[3], iViewport[1], -1, 1 );
+
+		if(Texture)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, Texture->Image, 0);
+		}
+
 		// Render to screen
 		glBindTexture(GL_TEXTURE_2D, PrimaryTex);
-		glBegin(GL_QUADS);
-			glTexCoord2f( 0.0f, 0.0f );
-			glVertex3f(-1.0f,-1.0f, -1.0f);
-			glTexCoord2f( 1.0f, 0.0f );
-			glVertex3f(1.0f,-1.0f, -1.0f);
-			glTexCoord2f( 1.0f, 1.0f );
-			glVertex3f(1.0f, 1.0f, -1.0f);
-			glTexCoord2f( 0.0f, 1.0f );
-			glVertex3f(-1.0f, 1.0f, -1.0f);
-		glEnd();
+			glBegin( GL_QUADS );
+				glTexCoord2i( 1, 1 );
+				glVertex2i( adjustedrect.right, adjustedrect.top );
+				glTexCoord2i( 0, 1 );
+				glVertex2i( adjustedrect.left, adjustedrect.top );
+				glTexCoord2i( 0, 0 );
+				glVertex2i( adjustedrect.left, adjustedrect.bottom );
+				glTexCoord2i( 1, 0 );
+				glVertex2i( adjustedrect.right, adjustedrect.bottom );
+			glEnd();
+
+		if(Texture)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glBindTexture(GL_TEXTURE_2D, Texture->Image);
+			glGenerateMipmap(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
 
 		glColor3f(1.0f, 1.0f, 1.0f);
 		glDisable(GL_MULTISAMPLE_ARB);
@@ -708,7 +1082,7 @@ void Ovgl::RenderTarget::Render()
 
 	// Get viewport
 	GLint iViewport[4];
-    glGetIntegerv( GL_VIEWPORT, iViewport );
+	glGetIntegerv( GL_VIEWPORT, iViewport );
 
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
@@ -779,7 +1153,6 @@ void Ovgl::RenderTarget::Render()
 			glEnd();
 		}
 	}
-	SwapBuffers(hDC);
 }
 
 void Ovgl::RenderTarget::SetVSync( bool state )
@@ -787,42 +1160,88 @@ void Ovgl::RenderTarget::SetVSync( bool state )
 	wglSwapIntervalEXT(state);
 }
 
-void Ovgl::RenderTarget::SetFullscreen( bool state )
+void Ovgl::RenderTarget::Update()
 {
-	RECT Rect;
-	GetWindowRect(hWnd, &Rect);
-	DEVMODE dmScreenSettings				= {0};
-	dmScreenSettings.dmSize					= sizeof(dmScreenSettings);
-	dmScreenSettings.dmPelsWidth			= Rect.right;
-	dmScreenSettings.dmPelsHeight			= Rect.bottom;
-	dmScreenSettings.dmFields				= DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-	dmScreenSettings.dmBitsPerPel			= 24;
+	RECT adjustedrect = WindowAdjustedRect( Window, &Rect);
 
-	if(state)
+	int width = (int)(adjustedrect.right - adjustedrect.left);
+	int height = (int)(adjustedrect.bottom - adjustedrect.top);
+
+	wglMakeCurrent( Window->hDC, Inst->hRC );
+
+	// Multi sample framebuffer
+	glGenFramebuffers(1, &MultiSampleFrameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, MultiSampleFrameBuffer);
+
+	// Multi sample colorbuffer
+	glGenRenderbuffers(1, &ColorBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, ColorBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA16F, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ColorBuffer);
+
+	// Multi sample depthbuffer
+	glGenRenderbuffers(1, &DepthBuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, DepthBuffer);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT32, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, DepthBuffer);
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
 	{
-		SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
-		ChangeDisplaySettings( &dmScreenSettings, CDS_FULLSCREEN );
-		ShowWindow( hWnd, SW_SHOW );
-		SetFocus(hWnd);
+		OutputDebugString( L"Unable to create multi sample frame buffer" );
 	}
-	else
+
+	// Effect framebuffer
+	glGenFramebuffers(1, &EffectFrameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
+
+	// Create and bind texture
+	glGenTextures(1, &PrimaryTex);
+	glBindTexture(GL_TEXTURE_2D, PrimaryTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, MaxLevel( width, height));
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+
+	glGenTextures(1, &SecondaryTex);
+	glBindTexture(GL_TEXTURE_2D, SecondaryTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glGenTextures(1, &PrimaryBloomTex);
+	glBindTexture(GL_TEXTURE_2D, PrimaryBloomTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width/4, height/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glGenTextures(1, &SecondaryBloomTex);
+	glBindTexture(GL_TEXTURE_2D, SecondaryBloomTex);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width/4, height/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(status != GL_FRAMEBUFFER_COMPLETE)
 	{
-		ChangeDisplaySettings( &dmScreenSettings, 0 );
+		OutputDebugString( L"Unable to create effect frame buffer" );
 	}
-}
-
-
-bool Ovgl::RenderTarget::GetFullscreen()
-{
-	BOOL state = false;
-	//SwapChain->GetFullscreenState( &state, NULL);
-	return !!state;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Ovgl::Interface::UpdateText()
 {
 	RECT WindowRect;
-	GetWindowRect( RenderTarget->hWnd, &WindowRect );
+	GetWindowRect( RenderTarget->Window->hWnd, &WindowRect );
 
 	RECT AdjustedRect;
 

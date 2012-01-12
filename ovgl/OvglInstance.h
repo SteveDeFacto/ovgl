@@ -60,6 +60,7 @@ namespace Ovgl
 		class RenderTarget;
 		class Effect;
 		class MediaLibrary;
+		class Window;
 
 		class __declspec(dllexport) Texture
 		{
@@ -103,6 +104,7 @@ namespace Ovgl
 		class __declspec(dllexport) Instance
 		{
 		public:
+			Instance( DWORD flags );
 			HWND									hWnd;
 			HDC										hDC;
 			HGLRC									hRC;
@@ -115,10 +117,10 @@ namespace Ovgl
 			btSequentialImpulseConstraintSolver*	PhysicsSolver;
 			void*									FBXManager;
 			MediaLibrary*							DefaultMedia;
-			std::vector< RenderTarget* >			RenderTargets;
 			std::vector< MediaLibrary* >			MediaLibraries;
-
-			RenderTarget*							CreateRenderTarget( HWND window, RECT* rect, DWORD flags );
+			std::vector< Window* >					Windows;
+			Window*									CreateOWindow( const std::string& name );
+			RenderTarget*							CreateRenderTarget( Ovgl::Window* window, Ovgl::Vector4* rect, DWORD flags );
 			MediaLibrary*							CreateMediaLibrary( const std::string& file );
 			void									Release();
 		};

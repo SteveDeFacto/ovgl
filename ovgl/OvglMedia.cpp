@@ -24,6 +24,12 @@
 #include "OvglScene.h"
 #include "OvglMesh.h"
 
+Ovgl::MediaLibrary::MediaLibrary( Ovgl::Instance* instance, const std::string& file )
+{
+	Inst = instance;
+	instance->MediaLibraries.push_back(this);
+}
+
 void Ovgl::MediaLibrary::Release()
 {
 	for( DWORD i = 0; i < AudioBuffers.size(); i++ )
@@ -452,7 +458,7 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, bool Generat
 						KFbxXMatrix FBXLinkMatrix;
 						FBXCluster->GetTransformLinkMatrix(FBXLinkMatrix);
 						bone->matrix.fromDoubles( (double*)FBXLinkMatrix.Double44() );
-						bone->matrix = (Ovgl::MatrixRotationZ(1.57f) * bone->matrix * Ovgl::MatrixRotationX(1.57f))* matrix;
+						bone->matrix = (Ovgl::MatrixRotationZ(1.57f) * bone->matrix * Ovgl::MatrixRotationX(1.57f)) * matrix;
 						bone->length = 1.0f;
 						bone->mesh = new Ovgl::Mesh;
 						bone->convex = NULL;
@@ -506,9 +512,7 @@ Ovgl::Mesh* Ovgl::MediaLibrary::ImportFBX( const std::string& file, bool Generat
 						vertex.normal.x = (float)normal[0];
 						vertex.normal.y = (float)normal[1];
 						vertex.normal.z = (float)normal[2];
-						Ovgl::Matrix44 rotMat = matrix;
-						rotMat._41 = 0; rotMat._42 = 0; rotMat._43 = 0;
-						vertex.normal = Vector3Transform(&vertex.normal, &(Ovgl::MatrixRotationX(1.57f) * rotMat));
+						vertex.normal = Vector3Transform(&vertex.normal, &(Ovgl::MatrixRotationX(1.57f) * matrix.Rotation()));
 						if( FBXLayerUVs )
 						{
 							int MappingMode = FBXLayerUVs->GetMappingMode();
@@ -845,7 +849,7 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
 		glBindTexture( GL_TEXTURE_2D, texture->Image );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
 		glGenerateMipmap(GL_TEXTURE_2D);
 		glBindTexture( GL_TEXTURE_2D, NULL );
 
@@ -922,6 +926,7 @@ Ovgl::Scene* Ovgl::MediaLibrary::CreateScene()
 {
 	Ovgl::Scene* scene = new Ovgl::Scene;
 	scene->Inst = Inst;
+	scene->skybox = NULL;
 	scene->DynamicsWorld = new btDiscreteDynamicsWorld(Inst->PhysicsDispatcher,Inst->PhysicsBroadphase,Inst->PhysicsSolver,Inst->PhysicsConfiguration);
 	scene->DynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.00001f;
 	scene->DynamicsWorld->setGravity(btVector3( 0.0f, -9.8f, 0.0f ));

@@ -167,7 +167,7 @@ namespace Ovgl
 		z = 0.0f;
 	}
 
-	Vector4::Vector4(  float new_w, float new_x, float new_y, float new_z )
+	Vector4::Vector4( float new_x, float new_y, float new_z, float new_w )
 	{
 		w = new_w;
 		x = new_x;

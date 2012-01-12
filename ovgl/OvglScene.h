@@ -201,7 +201,7 @@ namespace Ovgl
 			* @param start The time in which the clip begins.
 			* @param start The time in which the clip ends.
 			*/
-			Animation* CreateAnimation( float current, float start, float end );
+			Animation* CreateAnimation( DWORD current, DWORD start, DWORD end );
 			/**
 			* Sets the pose of this prop.
 			* @param matrix The matrix which defines the new pose for this prop.
@@ -288,6 +288,7 @@ namespace Ovgl
 		class __declspec(dllexport) Actor
 		{
 		public:
+			std::vector< Ovgl::Animation* > animations;
 			/**
 			* This is a pointer to the scene that this actor was created by and resides in.
 			*/
@@ -366,6 +367,8 @@ namespace Ovgl
 			Matrix44 getPose();
 
 			void UpdateAnimation( int bone, Ovgl::Matrix44* matrix, DWORD time );
+
+			Ovgl::Animation* CreateAnimation( DWORD start, DWORD end, bool repeat );
 			/**
 			* Tells the actor where to look.
 			* @param vec The direction to look.

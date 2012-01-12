@@ -24,6 +24,7 @@
 #include "OvglAudio.h"
 #include "OvglScene.h"
 #include "OvglMesh.h"
+#include "OvglWindow.h"
 
 struct DisablePairCollision : public btCollisionWorld::ContactResultCallback
 {
@@ -395,8 +396,11 @@ void Ovgl::Actor::UpdateAnimation( int bone, Ovgl::Matrix44* matrix, DWORD time 
 			currentRot[a] = Ovgl::DegToRad(Ovgl::Lerp(lCurve.value, uCurve.value, (float)(time - lCurve.time) / (float)(uCurve.time - lCurve.time) ));
 		}
 	}
-	animRot = Ovgl::MatrixRotationEuler(currentRot[0], currentRot[1], currentRot[2]);
-
+	if( (currentRot[0] != 0.0f) || (currentRot[1] != 0.0f) || (currentRot[2] != 0.0f) )
+	{
+		if(bone != 0)
+		animRot =  Ovgl::MatrixRotationEuler(currentRot[0], currentRot[1], currentRot[2]);
+	}
 	// Offset the center of rotation.
 	animRot2 = Ovgl::MatrixInverse( &Ovgl::Vector4(), &mesh->bones[bone]->matrix.Translation()) * animRot * mesh->bones[bone]->matrix.Translation(); 
 
@@ -412,6 +416,18 @@ void Ovgl::Actor::UpdateAnimation( int bone, Ovgl::Matrix44* matrix, DWORD time 
 		accumulate = animRot2 * (*matrix) * Bone2Parent;
 		Ovgl::Actor::UpdateAnimation( mesh->bones[bone]->childen[i], &accumulate, time );
 	}
+}
+
+Ovgl::Animation* Ovgl::Actor::CreateAnimation( DWORD start, DWORD end, bool repeat )
+{
+	Ovgl::Animation* animation = new Ovgl::Animation;
+	animation->startTime = start;
+	animation->endTime = end;
+	animation->currentTime = start;
+	animation->repeat = repeat;
+	animation->animationState = 1;
+	this->animations.push_back(animation);
+	return animation;
 }
 
 void Ovgl::Prop::CreateJoints( DWORD bone )
@@ -441,7 +457,7 @@ void Ovgl::Prop::CreateJoints( DWORD bone )
 	}
 }
 
-Ovgl::Animation* Ovgl::Prop::CreateAnimation( float current, float start, float end )
+Ovgl::Animation* Ovgl::Prop::CreateAnimation( DWORD current, DWORD start, DWORD end )
 {
 	Animation* animation = new Ovgl::Animation;
 	animation->animationState = 0;
@@ -495,11 +511,34 @@ void Ovgl::Scene::Update( DWORD UpdateTime )
 		actors[a]->ghostObject->getWorldTransform().setFromOpenGLMatrix((float*)&new_matrix);
 
 		// Update animations.
-		static float aTime = 0;
-		if(actors[a]->mesh != NULL)
+		if(actors[a]->animations.size() > 0)
 		{
-			actors[a]->UpdateAnimation( actors[a]->mesh->root_bone, &Ovgl::MatrixIdentity(), aTime /15);
-			aTime = aTime + UpdateTime;
+			for(unsigned int i = 0; i < actors[a]->animations.size(); i++)
+			{
+				if(actors[a]->animations[i]->currentTime > actors[a]->animations[i]->endTime)
+				{
+					if(actors[a]->animations[i]->repeat)
+					{
+						actors[a]->animations[i]->currentTime = actors[a]->animations[i]->startTime;
+					}
+					else
+					{
+						actors[a]->animations[i]->currentTime = actors[a]->animations[i]->endTime;
+					}
+				}
+				actors[a]->UpdateAnimation( actors[a]->mesh->root_bone, &actors[a]->mesh->bones[actors[a]->mesh->root_bone]->matrix, actors[a]->animations[i]->currentTime );
+				if(actors[a]->animations[i]->animationState == 1)
+				{
+					actors[a]->animations[i]->currentTime = actors[a]->animations[i]->currentTime + UpdateTime/ 15;
+				}
+			}
+		}
+		else
+		{
+			for(unsigned int i = 0; i < actors[a]->matrices.size(); i++)
+			{
+				actors[a]->matrices[i] = Ovgl::MatrixIdentity();
+			}
 		}
 		for(unsigned int i = 0; i < actors[a]->matrices.size(); i++)
 		{
@@ -510,9 +549,10 @@ void Ovgl::Scene::Update( DWORD UpdateTime )
 	// Update camera positions.
 	for( UINT c = 0; c < cameras.size(); c++ )
 	{
-		for( UINT r = 0; r < Inst->RenderTargets.size(); r++ )
+		for( UINT w = 0; w < Inst->Windows.size(); w++ )
+		for( UINT r = 0; r < Inst->Windows[w]->RenderTargets.size(); r++ )
 		{
-			if( Inst->RenderTargets[r]->view == cameras[c] )
+			if( Inst->Windows[w]->RenderTargets[r]->view == cameras[c] )
 			{
 				Ovgl::Matrix44* cmatrix = &cameras[c]->getPose();
 				ALfloat ListenerOri[] = { -cmatrix->_21, cmatrix->_22, -cmatrix->_23, -cmatrix->_31, cmatrix->_32, -cmatrix->_33 };
