@@ -100,7 +100,7 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	Texture1 = MediaLibrary->ImportCubeMap( "..\\media\\textures\\skybox\\front.png", "..\\media\\textures\\skybox\\back.png", "..\\media\\textures\\skybox\\top.png",
 											"..\\media\\textures\\skybox\\bottom.png", "..\\media\\textures\\skybox\\left.png", "..\\media\\textures\\skybox\\right.png");
 	// Create 2D texture
-	Texture2 = MediaLibrary->ImportTexture("..\\media\\textures\\test.jpg");
+	Texture2 = MediaLibrary->ImportTexture("..\\media\\textures\\Grass.png");
 
 	// Import mesh
 	Mesh = MediaLibrary->ImportModel( "..\\media\\meshes\\plane.dae" );
