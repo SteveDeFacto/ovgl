@@ -18,16 +18,17 @@
 
 #pragma once
 
+#pragma warning(disable : 4251) // disable std warnings 
+
 // Windows Headers
 #include <windows.h>
 #include <wchar.h>
 #include <mmsystem.h>
-#include <comdef.h>
 #include <sys/stat.h>
 #include <winnt.h>
-#include <Dbghelp.h>
 
 // C++ Standard Library Headers
+#include <stdint.h>
 #include <stdio.h>
 #include <math.h>
 #include <algorithm>
@@ -59,9 +60,12 @@
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include <..\\OpenGL\\GLDebugDrawer.h>
 
-// FBX Headers
-#include <fbxsdk.h>
+// Assimp Headers
+#include <assimp.h>
+#include <aiPostProcess.h>
+#include <aiScene.h>
 
 // OGG Headers
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
+

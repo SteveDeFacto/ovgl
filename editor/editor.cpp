@@ -24,155 +24,113 @@
 HWND						hWnd;
 Ovgl::Instance*				Inst;
 Ovgl::RenderTarget*			RenderTarget;
-Ovgl::AudioBuffer*			Music;
-Ovgl::AudioBuffer*			FootStep;
+Ovgl::Window*				Window;
+Ovgl::MediaLibrary*			MediaLibrary;
 Ovgl::Scene*				Scene;
 Ovgl::Actor*				Actor;
 Ovgl::Camera*				Camera;
 Ovgl::Emitter*				Emitter;
 Ovgl::Texture*				Texture1;
 Ovgl::Texture*				Texture2;
+Ovgl::Mesh*					Mesh;
+Ovgl::Mesh*					Mesh2;
+Ovgl::Object*				Object;
+Ovgl::Light*				Light;
 bool						g_Active;
 bool						g_Sizing;
+bool						g_Quit = false;
 
-LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam )
+void MouseMove(long x, long y)
 {
-   switch( message )
-    {
-        case WM_KEYDOWN:
-		{
-            if( wParam == VK_ESCAPE )
-                PostQuitMessage( 0 );
-            break;
-		}
-
-		case WM_ENTERSIZEMOVE:
-		{
-			g_Sizing = true;
-			break;
-		}
-
-		case WM_EXITSIZEMOVE:
-		{
-			g_Sizing = false;
-			break;
-		}
-
-        case WM_ACTIVATEAPP:
-		{
-			if( !g_Sizing )
-			{
-				if( wParam )
-				{
-					g_Active = true;
-				}
-				else
-				{
-					g_Active = false;
-				}
-			}
-			break;
-		}
-
-        case WM_ACTIVATE:
-		{
-			if( RenderTarget->GetFullscreen() )
-			{
-				if( LOWORD(wParam) == WA_INACTIVE )
-				{
-					ShowWindow( hWnd, SW_MINIMIZE );
-					RenderTarget->SetFullscreen( false);
-				}
-			}
-            break;
-		}
-
-        case WM_DESTROY:
-        {
-            PostQuitMessage( 0 );
-            break;
-        }
-    }
-
-    return DefWindowProc( hWnd, message, wParam, lParam );
+	Camera->setPose( &((Ovgl::MatrixRotationY(x / 1000.0f ) * Ovgl::MatrixRotationX( -y / 1000.0f)) * Camera->getPose() ) );
 }
 
-int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
+void KeyDown(char key)
 {
-    WNDCLASSEX wcex;
-	ZeroMemory( &wcex, sizeof( wcex ) );
-    wcex.cbSize = sizeof( WNDCLASSEX );
-    wcex.lpfnWndProc = WinProc;
-	wcex.hInstance = GetModuleHandle( NULL );
-	wcex.hIcon = NULL;
-    wcex.hCursor = LoadCursor( NULL, IDC_ARROW );
-    wcex.lpszClassName = L"DefaultWindowClass";
-    RegisterClassEx( &wcex );
-	hWnd = NULL;
-	hWnd = CreateWindow( L"DefaultWindowClass", L"test", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, wcex.hInstance, NULL );
-	ShowWindow( hWnd, SW_SHOW );
-	Inst = Ovgl::Create( 0 );
-	RenderTarget = Inst->CreateRenderTarget(hWnd, NULL, 0);
-	RenderTarget->CreateText("..\\media\\textures\\Grass.dds", &Ovgl::Vector4Set( 0.0f, 0.0f, 512.0f, 512.0f ));
-	Music = Inst->CreateAudioBuffer( "..\\media\\audio\\glacier.ogg" );
-	FootStep = Inst->CreateAudioBuffer( "..\\media\\audio\\foot_step.ogg" );
-	Scene = Inst->CreateScene( "..\\media\\meshes\\HL2.bin", &Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ), NULL );
-	Camera = Scene->CreateCamera(&Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
-	RenderTarget->view = Camera;
-	Music->CreateAudioInstance( NULL );
-	Texture1 = Inst->CreateTexture("..\\media\\textures\\Skybox.dds");
-	Texture2 = Inst->CreateTexture("..\\media\\textures\\Grass.dds");
-	Inst->SkyboxEffect->set_texture( "txEnvironment", Texture1);
-	Inst->DefaultEffect->set_texture( "txEnvironment", Texture1);
-	Inst->DefaultEffect->set_texture( "txDiffuse", Texture2);
-	float data[4] = { 0.25f, 0.25f, 0.25f, 1.0f };
-	Inst->DefaultEffect->set_variable( "Ambient", 4, data);
-	DWORD previousTime = timeGetTime();
-	// Main message loop
-    MSG msg = {0};
-    while( WM_QUIT != msg.message )
-    {
-        if( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
-        {
-            TranslateMessage( &msg );
-            DispatchMessage( &msg );
-        }
-        else
-        {
-            DWORD currentTime = timeGetTime();
-			DWORD elapsedTime = currentTime - previousTime;
-			Scene->Update(elapsedTime);
-			RenderTarget->Render();
-			static POINT LastPoint;
-			if( g_Active )
-			{
-				if ((GetKeyState(VK_RBUTTON) & 0x80) != 0)
-				{
-					POINT Point;
-					GetCursorPos( &Point );
-					long mx = Point.x - LastPoint.x;
-					long my = Point.y - LastPoint.y;
-					Camera->setPose( &((Ovgl::MatrixRotationY(-mx / 1000.0f ) * Ovgl::MatrixRotationX( -my / 1000.0f)) * Camera->getPose() ) );
-					if((GetKeyState(0x57) & 0x80) != 0)
-						Camera->setPose( &(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * Camera->getPose() ) );
-					if((GetKeyState(0x53) & 0x80) != 0)
-						Camera->setPose( &(Ovgl::MatrixTranslation( 0.0f, 0.0f, -0.1f ) * Camera->getPose() ) );
-					if((GetKeyState(0x44) & 0x80) != 0)
-						Camera->setPose( &(Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
-					if((GetKeyState(0x41) & 0x80) != 0)
-						Camera->setPose( &(Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
-					SetCursorPos( LastPoint.x, LastPoint.y );
-				}
-				else
-				{
-					GetCursorPos( &LastPoint );
-				}
-			}
+	if(key == (char)27)
+	{
+		g_Quit = true;
+	}
+	if( key == 'W')
+		Camera->setPose( &(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * Camera->getPose() ) );
+	if( key == 'S')
+		Camera->setPose( &(Ovgl::MatrixTranslation( 0.0f, 0.0f, -0.1f ) * Camera->getPose() ) );
+	if( key == 'A')
+		Camera->setPose( &(Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
+	if( key == 'D')
+		Camera->setPose( &(Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
+}
 
-			previousTime = currentTime;
-        }
+int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int32_t nCmdShow )
+{
+	// Create Main Instance
+	Inst = new Ovgl::Instance( 0 );
+
+	// Create Window
+	Window = new Ovgl::Window( Inst, "Test");
+	Window->LockMouse(true);
+	Window->SetFullscreen( false );
+	Window->SetVSync( false );
+	Window->On_MouseMove = MouseMove;
+	Window->On_KeyDown = KeyDown;
+
+	// Create Render Target
+	RenderTarget = new Ovgl::RenderTarget(Inst, Window, &Ovgl::Vector4(0.0f, 0.0f, 0.999f, 0.999f), NULL);
+	RenderTarget->bloom = 4;
+	RenderTarget->motionBlur = true;
+	RenderTarget->multiSample = true;
+	RenderTarget->debugMode = false;
+
+	// Create Media Library
+	MediaLibrary = new Ovgl::MediaLibrary(Inst, "");
+
+	// Create empty scene
+	Scene = MediaLibrary->CreateScene();
+
+	// Add light to scene.
+	Light = Scene->CreateLight(&Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), &Ovgl::Vector4( 1.0f, 1.0f, 1.0f, 1.0f ));
+	
+	// Add camera to scene
+	Camera = Scene->CreateCamera(&Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
+	
+	// Set camera as view for render target
+	RenderTarget->View = Camera;
+	
+	// Create cubemap texture
+	Texture1 = MediaLibrary->ImportCubeMap( "..\\media\\textures\\skybox\\front.png", "..\\media\\textures\\skybox\\back.png", "..\\media\\textures\\skybox\\top.png",
+											"..\\media\\textures\\skybox\\bottom.png", "..\\media\\textures\\skybox\\left.png", "..\\media\\textures\\skybox\\right.png");
+	// Create 2D texture
+	Texture2 = MediaLibrary->ImportTexture("..\\media\\textures\\test.jpg");
+
+	// Import mesh
+	Mesh = MediaLibrary->ImportModel( "..\\media\\meshes\\plane.dae" );
+	Mesh2 = MediaLibrary->ImportModel( "..\\media\\meshes\\test.dae" );
+
+	// Add object to scene
+	Object = Scene->CreateObject(Mesh, &Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
+	Object->materials[0]->setFSTexture("txDiffuse", Texture2);
+
+	// Add actor to scene
+	Actor = Scene->CreateActor(Mesh2, 0.1f, 1.0f, &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+	Actor->CreateAnimation(0, 11, true);
+
+	// Set scene sky box
+	Scene->SkyBox = Texture1;
+
+	uint32_t previousTime = timeGetTime();
+	
+	// Main message loop
+    while( !g_Quit )
+    {
+		uint32_t currentTime = timeGetTime();
+		uint32_t elapsedTime = currentTime - previousTime;
+		Scene->Update(elapsedTime);
+		RenderTarget->Render();
+		Window->DoEvents();
+		previousTime = currentTime;
     }
-	Inst->Release();
-	UnregisterClass( L"DefaultWindowClass", NULL );
+
+	// Release all
+	delete Inst;
 	return 0;
 }

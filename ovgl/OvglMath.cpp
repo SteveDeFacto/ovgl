@@ -268,9 +268,9 @@ namespace Ovgl
 
 	void Matrix33::toDoubles( double* data )
 	{
-		for( int r = 0; r < 3; r++ )
+		for( int32_t r = 0; r < 3; r++ )
 		{
-			for( int c = 0; c < 3; c++ )
+			for( int32_t c = 0; c < 3; c++ )
 			{
 				data[(4 * r) + c] = (double)(*this)[r][c];
 			}
@@ -279,9 +279,9 @@ namespace Ovgl
 
 	void Matrix33::fromDoubles( double* data )
 	{
-		for( int r = 0; r < 3; r++ )
+		for( int32_t r = 0; r < 3; r++ )
 		{
-			for( int c = 0; c < 3; c++ )
+			for( int32_t c = 0; c < 3; c++ )
 			{
 				(*this)[r][c] = (float)data[(4 * r) + c];
 			}
@@ -329,9 +329,9 @@ namespace Ovgl
 
 	void Matrix44::toDoubles( double* data )
 	{
-		for( int r = 0; r < 4; r++ )
+		for( int32_t r = 0; r < 4; r++ )
 		{
-			for( int c = 0; c < 4; c++ )
+			for( int32_t c = 0; c < 4; c++ )
 			{
 				data[(4 * r) + c] = (double)(*this)[r][c];
 			}
@@ -340,9 +340,9 @@ namespace Ovgl
 
 	void Matrix44::fromDoubles( double* data )
 	{
-		for( int r = 0; r < 4; r++ )
+		for( int32_t r = 0; r < 4; r++ )
 		{
-			for( int c = 0; c < 4; c++ )
+			for( int32_t c = 0; c < 4; c++ )
 			{
 				(*this)[r][c] = (float)data[(4 * r) + c];
 			}
@@ -557,33 +557,26 @@ namespace Ovgl
 	Matrix44 MatrixRotationQuaternion( Vector4* q )
 	{
 		Matrix44 out;
-	    float sqw = q->w * q->w;
-	    float sqx = q->x * q->x;
-	    float sqy = q->y * q->y;
-	    float sqz = q->z * q->z;
-	    float invs = 1 / (sqx + sqy + sqz + sqw);
-	    out._11 = ( sqx - sqy - sqz + sqw) * invs;
-	    out._22 = (-sqx + sqy - sqz + sqw) * invs;
-	    out._33 = (-sqx - sqy + sqz + sqw) * invs;
-	    float tmp1 = q->x * q->y;
-	    float tmp2 = q->z * q->w;
-	    out._21 = 2.0f * (tmp1 + tmp2) * invs;
-	    out._12 = 2.0f * (tmp1 - tmp2) * invs;
-	    tmp1 = q->x * q->z;
-	    tmp2 = q->y * q->w;
-	    out._31 = 2.0f * (tmp1 - tmp2) * invs;
-	    out._13 = 2.0f * (tmp1 + tmp2) * invs;
-	    tmp1 = q->y * q->z;
-	    tmp2 = q->x * q->w;
-	    out._32 = 2.0f * (tmp1 + tmp2) * invs;
-	    out._23 = 2.0f * (tmp1 - tmp2) * invs;
-		out._14 = 0.0f;
-		out._24 = 0.0f;
-		out._34 = 0.0f;
-		out._41 = 0.0f;
-		out._42 = 0.0f;
-		out._43 = 0.0f;
-		out._44 = 1.0f;
+		float xx = q->x * q->x;
+		float xy = q->x * q->y;
+		float xz = q->x * q->z;
+		float xw = q->x * q->w;
+		float yy = q->y * q->y;
+		float yz = q->y * q->z;
+		float yw = q->y * q->w;
+		float zz = q->z * q->z;
+		float zw = q->z * q->w;
+		out._11 = 1 - 2 * ( yy + zz );
+		out._12 = 2 * ( xy - zw );
+		out._13 = 2 * ( xz + yw );
+		out._21 = 2 * ( xy + zw );
+		out._22 = 1 - 2 * ( xx + zz );
+		out._23 = 2 * ( yz - xw );
+		out._31 = 2 * ( xz - yw );
+		out._32 = 2 * ( yz + xw );
+		out._33 = 1 - 2 * ( xx + yy );
+		out._14 = out._24 = out._34 = out._41 = out._42 = out._43 = 0;
+		out._44 = 1;
 		return out;
 	}
 
@@ -765,7 +758,7 @@ namespace Ovgl
 	Vector3 Vector3Center( std::vector< Vector3 >& vertices )
 	{
 		Vector3 out;
-		for( DWORD v = 0; v < vertices.size(); v++ )
+		for( uint32_t v = 0; v < vertices.size(); v++ )
 		{
 			out = out + vertices[v];
 		}
@@ -780,7 +773,7 @@ namespace Ovgl
 		return (vec1 * (1 - u)) + (vec2 * u);
 	}
 
-	float Round( float expression, int numdecimalplaces)
+	float Round( float expression, int32_t numdecimalplaces)
 	{
 		return floorf(expression * pow(10.0f, numdecimalplaces)) / pow(10.0f, numdecimalplaces);
 	}
@@ -788,6 +781,46 @@ namespace Ovgl
 	float Lerp( float val1, float val2, float u)
 	{
 		return (val1 * (1 - u)) + (val2 * u);
+	}
+
+	Vector4 Slerp( Vector4 q1, Vector4 q2, float t )
+	{
+		// Quaternion to return.
+		Vector4 qm;
+		// Calculate angle between them.
+		float cosHalfTheta = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
+
+		if (cosHalfTheta < 0)
+		{
+			q2.w = -q2.w; q2.x = -q2.x; q2.y = -q2.y; q2.z = q2.z;
+			cosHalfTheta = -cosHalfTheta;
+		}
+
+		// if qa=qb or qa=-qb then theta = 0 and we can return qa
+		if (abs(cosHalfTheta) >= 1.0f){
+			qm.w = q1.w;qm.x = q1.x;qm.y = q1.y;qm.z = q1.z;
+			return qm;
+		}
+		// Calculate temporary values.
+		float halfTheta = acos(cosHalfTheta);
+		float sinHalfTheta = sqrt(1.0f - cosHalfTheta*cosHalfTheta);
+		// if theta = 180 degrees then result is not fully defined
+		// we could rotate around any axis normal to qa or qb
+		if (fabs(sinHalfTheta) < 0.001){ // fabs is floating point absolute
+			qm.w = (q1.w * 0.5f + q2.w * 0.5f);
+			qm.x = (q1.x * 0.5f + q2.x * 0.5f);
+			qm.y = (q1.y * 0.5f + q2.y * 0.5f);
+			qm.z = (q1.z * 0.5f + q2.z * 0.5f);
+			return qm;
+		}
+		float ratioA = sinf((1.0f - t) * halfTheta) / sinHalfTheta;
+		float ratioB = sinf(t * halfTheta) / sinHalfTheta; 
+		//calculate Quaternion.
+		qm.w = (q1.w * ratioA + q2.w * ratioB);
+		qm.x = (q1.x * ratioA + q2.x * ratioB);
+		qm.y = (q1.y * ratioA + q2.y * ratioB);
+		qm.z = (q1.z * ratioA + q2.z * ratioB);
+		return qm;
 	}
 
 	float DegToRad( float degree )
@@ -805,7 +838,7 @@ namespace Ovgl
 	
 	void Vector3Box( std::vector< Ovgl::Vector3 >& vertices, Ovgl::Vector3* min, Ovgl::Vector3* max )
 	{
-		for( unsigned int i = 0; i < vertices.size(); i++ )
+		for( uint32_t i = 0; i < vertices.size(); i++ )
 		{
 			if( vertices[i].x < min->x )
 			{

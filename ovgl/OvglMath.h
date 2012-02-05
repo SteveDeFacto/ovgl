@@ -123,12 +123,13 @@ namespace Ovgl
 	__declspec(dllexport) Vector4 QuaternionRotationEuler( float yaw, float pitch, float roll );
 	__declspec(dllexport) Vector3 EulerRotationMatrix( Matrix44* matrix );
 	__declspec(dllexport) Vector4 Vector4Lerp( Vector4& vec1, Vector4& vec2, float u);
+	__declspec(dllexport) Vector4 Slerp( Vector4 q1, Vector4 q2, float t );
 	__declspec(dllexport) Vector3 Vector3Cross( Vector3* vec1, Vector3* vec2 );
 	__declspec(dllexport) Vector3 Vector3Transform( Vector3* vector, Matrix44* matrix );
 	__declspec(dllexport) Vector3 Vector3Normalize( Vector3* vector );
 	__declspec(dllexport) Vector3 Vector3Center( std::vector< Vector3 >& vertices );
 	__declspec(dllexport) float VolumeTetrahedron( Ovgl::Vector3* vector1, Ovgl::Vector3* vector2, Ovgl::Vector3* vector3, Ovgl::Vector3* vector4 );
-	__declspec(dllexport) float Round( float expression, int numdecimalplaces );
+	__declspec(dllexport) float Round( float expression, int32_t numdecimalplaces );
 	__declspec(dllexport) float Distance( Vector3* vector1, Vector3* vector2);
 	__declspec(dllexport) float Vector3Dot( Vector3* vec1, Vector3* vec2 );
 	__declspec(dllexport) float Lerp( float vec1, float vec2, float u);

@@ -9,7 +9,7 @@ set(CMAKE_DEBUG_POSTFIX "d")
 include_directories(${OPENAL_INCLUDE_DIR}
 ${CG_INCLUDE_DIR}
 ${FREEIMAGE_INCLUDE_DIR}
-${FBX_INCLUDE_DIR}
+${ASSIMP_INCLUDE_DIR}
 ${OGG_INCLUDE_DIR}
 ${VORBIS_INCLUDE_DIR}
 ${BULLET_INCLUDE_DIR})
@@ -17,7 +17,7 @@ ${BULLET_INCLUDE_DIR})
 link_directories(${OPENAL_LIBRARY_DIR}
 ${CG_LIBRARY_DIR}
 ${FREEIMAGE_LIBRARY_DIR}
-${FBX_LIBRARY_DIR}
+${ASSIMP_LIBRARY_DIR}
 ${OGG_LIBRARY_DIR}
 ${VORBIS_LIBRARY_DIR}
 ${BULLET_LIBRARY_DIR})
@@ -30,13 +30,15 @@ add_library( Ovgl SHARED "OvglAudio.h"
 "OvglMedia.h"
 "OvglMesh.h"
 "OvglScene.h"
+"OvglWindow.h"
 "OvglAudio.cpp"
 "OvglGraphics.cpp"
 "OvglInstance.cpp"
 "OvglMath.cpp"
 "OvglMedia.cpp"
 "OvglMesh.cpp"
-"OvglScene.cpp")
+"OvglScene.cpp"
+"OvglWindow.cpp")
 
 target_link_libraries( Ovgl "wininet.lib"
 "winmm.lib"
@@ -50,11 +52,11 @@ target_link_libraries( Ovgl "wininet.lib"
 "libvorbis_static.lib"
 "libvorbisfile_static.lib"
 "OpenGLSupport.lib"
-optimized "fbxsdk-2012.1-md.lib"
+optimized "Assimp.lib"
 optimized "BulletDynamics.lib"
 optimized "BulletCollision.lib"
 optimized "LinearMath.lib"
-debug "fbxsdk-2012.1-mdd.lib"
+debug "Assimp.lib"
 debug "BulletDynamicsd.lib"
 debug "BulletCollisiond.lib"
 debug "LinearMathd.lib")

@@ -7,7 +7,7 @@ find_package( OpenAL )
 find_package( CG )
 find_package( FreeImage )
 find_package( Bullet )
-find_package( FBXSDK )
+find_package( Assimp )
 find_package( Ogg )
 
 add_definitions(-DUNICODE -D_UNICODE)

@@ -60,25 +60,25 @@ namespace Ovgl
 		class __declspec(dllexport) Face
 		{
 		public:
-			DWORD indices[3];
+			uint32_t indices[3];
 			Face Flip();
 		};
 
 		class __declspec(dllexport) Curve
 		{
 		public:
-			DWORD time;
-			float value;
+			double time;
+			Vector4 value;
 		};
 
 		class __declspec(dllexport) Animation
 		{
 		public:
-			DWORD								animationState;
-			DWORD								currentTime;
-			DWORD								startTime;
-			DWORD								endTime;
-			DWORD								stepTime;
+			uint32_t							animationState;
+			double								currentTime;
+			double								startTime;
+			double								endTime;
+			double								stepTime;
 			bool								repeat;
 			void play( float speed, bool repeat );
 			void stop();
@@ -96,9 +96,9 @@ namespace Ovgl
 			float								volume;
 			Ovgl::Vector3						min;
 			Ovgl::Vector3						max;
-			DWORD								parent;
-			std::vector< std::vector< Curve > >	Rot_Keys;
-			std::vector< DWORD >				childen;
+			uint32_t							parent;
+			std::vector< Curve >				Rot_Keys;
+			std::vector< uint32_t >				childen;
 		};
 
 		class __declspec(dllexport) PVS
@@ -115,8 +115,8 @@ namespace Ovgl
 			btRigidBody* actor;
 			void setPose( Matrix44* matrix );
 			Matrix44 getPose();
-			void SetFlags( DWORD flags );
-			DWORD GetFlags();
+			void SetFlags( uint32_t flags );
+			uint32_t GetFlags();
 			void Release();
 		};
 
@@ -126,24 +126,23 @@ namespace Ovgl
 			MediaLibrary*						ml;
 			std::vector< Vertex >				vertices;
 			std::vector< Face >					faces;
-			std::vector< DWORD >				attributes;
+			std::vector< uint32_t >				attributes;
 			std::vector< Bone* >				bones;
 			std::vector< Material* >			materials;
-			DWORD								subset_count;
-			DWORD								root_bone;
-			unsigned int						VertexBuffer;
-			unsigned int*						IndexBuffers;
+			uint32_t							subset_count;
+			uint32_t							root_bone;
+			uint32_t						VertexBuffer;
+			uint32_t*						IndexBuffers;
 			btBvhTriangleMeshShape*				TriangleMesh;
 			std::vector< PVS* >					PVSCache;
-			void Save( const std::string& file );
 			void GenerateVertexNormals();
-			void CubeCloud( float sx, float sy, float sz, int count );
+			void CubeCloud( float sx, float sy, float sz, int32_t count );
 			float QuickHull();
-			void Simplify( DWORD max_faces, DWORD max_vertices );
-			void Clean( float min, DWORD flags  );
-			void ConnectVertex( std::vector< DWORD >& faceList, DWORD vertex );
-			void MergeVerices( std::vector< DWORD >& vertexList, DWORD flag );
-			Ovgl::Vector3 ComputeFaceNormal( DWORD face );
+			void Simplify( uint32_t max_faces, uint32_t max_vertices );
+			void Clean( float min, uint32_t flags  );
+			void ConnectVertex( std::vector< uint32_t >& faceList, uint32_t vertex );
+			void MergeVerices( std::vector< uint32_t >& vertexList, uint32_t flag );
+			Ovgl::Vector3 ComputeFaceNormal( uint32_t face );
 			void Update();
 			void Release();
 		};

@@ -39,9 +39,8 @@ namespace Ovgl
 			std::vector< Mesh* > Meshes;
 			std::vector< Texture* > Textures;
 			std::vector< AudioBuffer* > AudioBuffers;
-			Mesh* ImportFBX( const std::string& file, bool GenerateBoneShapes, bool GeneratePVS );
-			Mesh* ImportBSP( const std::string& file );
-			Shader* ImportCG( const std::string& file );
+			Mesh* ImportModel( const std::string& file );
+			Shader* ImportShader( const std::string& file );
 			Texture* ImportTexture( const std::string& file );
 			Texture* ImportCubeMap( const std::string& front, const std::string& back, const std::string& top, const std::string& bottom, const std::string& left, const std::string& right );
 			AudioBuffer* ImportOGG( const std::string& file );
@@ -49,8 +48,8 @@ namespace Ovgl
 			Shader* CreateShader( const std::string& code );
 			Mesh* CreateMesh();
 			Material* CreateMaterial();
-			Texture* CreateTexture( unsigned int width, unsigned int height );
-			Texture* CreateCubemap( unsigned int width, unsigned int height );
+			Texture* CreateTexture( uint32_t width, uint32_t height );
+			Texture* CreateCubemap( uint32_t width, uint32_t height );
 			AudioBuffer* CreateAudioBuffer();
 			void Save( const std::string& file );
 			void Load( const std::string& file );

@@ -23,104 +23,111 @@
 #include "OvglGraphics.h"
 #include "OvglScene.h"
 #include "OvglAudio.h"
+#include "OvglWindow.h"
 
-Ovgl::AudioInstance* Ovgl::AudioBuffer::CreateAudioInstance( Ovgl::Emitter* emitter, bool loop )
+namespace Ovgl
 {
-	Ovgl::AudioInstance* instance = new Ovgl::AudioInstance;
-	instance->paused = false;
-	instance->emitter = emitter;
-	Ovgl::AudioVoice* voice = new Ovgl::AudioVoice;
-	voice->instance = instance;
-	alGenSources(1, &voice->source);
-	if( !emitter && format == AL_FORMAT_STEREO16 )
+	AudioInstance* AudioBuffer::CreateAudioInstance( Emitter* emitter, bool loop )
 	{
-		alSourcei( voice->source, AL_BUFFER, stereo );
+		AudioInstance* instance = new AudioInstance;
+		instance->paused = false;
+		instance->emitter = emitter;
+		AudioVoice* voice = new AudioVoice;
+		voice->instance = instance;
+		alGenSources(1, &voice->source);
+		if( !emitter && format == AL_FORMAT_STEREO16 )
+		{
+			alSourcei( voice->source, AL_BUFFER, stereo );
+		}
+		else
+		{
+			alSourcei( voice->source, AL_BUFFER, mono );
+		}
+		if( !emitter )
+		{
+			alSourcei( voice->source, AL_SOURCE_RELATIVE, AL_TRUE );
+		}	
+		alSourcef( voice->source, AL_PITCH,	1.0f );
+		alSourcef( voice->source, AL_GAIN, 1.0f );
+		alSourcei( voice->source, AL_LOOPING, loop );
+		alSourcePlay( voice->source );
+		instance->voices.push_back(voice);
+		if( emitter )
+		{
+			for( uint32_t w = 0; w < Inst->Windows.size(); w++ )
+			{
+				for( uint32_t r = 0; r < Inst->Windows[w]->RenderTargets.size(); r++ )
+				{
+					for(uint32_t c = 0; c < emitter->scene->cameras.size(); c++)
+					{
+						if( Inst->Windows[w]->RenderTargets[r]->View == emitter->scene->cameras[c] )
+						{
+							emitter->scene->cameras[c]->voices.push_back(voice);
+						}
+					}
+				}
+			}
+		}
+		return instance;
 	}
-	else
+
+	void AudioInstance::Play( bool loop )
 	{
-		alSourcei( voice->source, AL_BUFFER, mono );
+		for( uint32_t i = 0; i < voices.size(); i++ )
+		{
+			alSourcePlay( voices[i]->source );
+		}
+		paused = false;
 	}
-	if( !emitter )
+
+
+	void AudioInstance::Stop()
 	{
-		alSourcei( voice->source, AL_SOURCE_RELATIVE, AL_TRUE );
+		for( uint32_t i = 0; i < voices.size(); i++ )
+		{
+			alSourceStop(voices[i]->source);
+		}
 	}
-	alSourcef( voice->source, AL_PITCH,	1.0f );
-	alSourcef( voice->source, AL_GAIN, 1.0f );
-	alSourcei( voice->source, AL_LOOPING, loop );
-	alSourcePlay( voice->source );
-	instance->voices.push_back(voice);
-	//if( emitter )
-	//{
-	//	for( UINT r = 0; r < this->Inst->RenderTargets.size(); r++ )
-	//	{
-	//		for(UINT c = 0; c < emitter->scene->cameras.size(); c++)
-	//		{
-	//			if( Inst->RenderTargets[r]->view == emitter->scene->cameras[c] )
-	//			{
-	//				emitter->scene->cameras[c]->voices.push_back(voice);
-	//			}
-	//		}
-	//	}
-	//}
-	return instance;
-}
 
-void Ovgl::AudioInstance::Play( bool loop )
-{
-	for( unsigned int i = 0; i < voices.size(); i++ )
+	void AudioInstance::Pause()
 	{
-		alSourcePlay( voices[i]->source );
+		//if( paused )
+		//{
+		//	for( uint32_t v = 0; v < voices.size(); v++ )
+		//	{
+		//		voices[v]->voice->Start( 0 );
+		//	}
+		//	paused = false;
+		//}
+		//else
+		//{
+		//	for( uint32_t v = 0; v < voices.size(); v++ )
+		//	{
+		//		voices[v]->voice->Stop( 0 );
+		//	}
+		//	paused = true;
+		//}
 	}
-	paused = false;
-}
 
-
-void Ovgl::AudioInstance::Stop()
-{
-	for( unsigned int i = 0; i < voices.size(); i++ )
+	void AudioVoice::Release()
 	{
-		alSourceStop(voices[i]->source);
+		alDeleteSources( 1, &source );
+		delete this;
 	}
-}
 
-void Ovgl::AudioInstance::Pause()
-{
-	//if( paused )
-	//{
-	//	for( UINT v = 0; v < voices.size(); v++ )
-	//	{
-	//		voices[v]->voice->Start( 0 );
-	//	}
-	//	paused = false;
-	//}
-	//else
-	//{
-	//	for( UINT v = 0; v < voices.size(); v++ )
-	//	{
-	//		voices[v]->voice->Stop( 0 );
-	//	}
-	//	paused = true;
-	//}
-}
-
-void Ovgl::AudioVoice::Release()
-{
-	alDeleteSources( 1, &source );
-	delete this;
-}
-
-void Ovgl::AudioInstance::Release()
-{
-	for( unsigned int i = 0; i < 0; i++)
+	void AudioInstance::Release()
 	{
-		this->voices[i]->Release();
+		for( uint32_t i = 0; i < 0; i++)
+		{
+			voices[i]->Release();
+		}
+		voices.clear();
+		delete this;
 	}
-	this->voices.clear();
-	delete this;
-}
 
-void Ovgl::AudioBuffer::Release()
-{
-	data.clear();
-	delete this;
+	void AudioBuffer::Release()
+	{
+		data.clear();
+		delete this;
+	}
 }

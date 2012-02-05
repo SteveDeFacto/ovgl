@@ -13,7 +13,7 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* @brief This Header defines each class that makes up the OvglScene class.
+* @brief This Header defines each class that makes up the Ovgl::Scene class.
 */
 
 // Forward declare external classes
@@ -53,7 +53,7 @@ namespace Ovgl
 		class __declspec(dllexport) RayHit
 		{
 		public:
-			DWORD type;
+			uint32_t type;
 			Ovgl::CMesh* CollisionMesh;
 			Ovgl::Prop* prop;
 			Ovgl::Actor* actor;
@@ -133,7 +133,7 @@ namespace Ovgl
 			/**
 			* Specifies what type of light is emitted.
 			*/
-			DWORD type;
+			uint32_t type;
 			/**
 			* Sets the pose of this light.
 			* @param matrix The matrix which defines the new pose for this light.
@@ -189,19 +189,19 @@ namespace Ovgl
 			* @param bone Index of the first bone to update. Generally the meshes root_bone.
 			* @param matrix This matrix is the amount of offset that is to be applied to the bone.
 			*/
-			void Update( int bone, Matrix44* matrix );
+			void Update( int32_t bone, Matrix44* matrix );
 			/**
 			* This function creates the joints that fuse together bones within the prop. This function will recursivly joints together a parent bone to all child bones and their children until it has gone through the entire tree.
 			* @param bone Index of first bone to joint to it's children. This should generally be the meshes root_bone.
 			*/
-			void CreateJoints( DWORD bone );
+			void CreateJoints( uint32_t bone );
 			/**
 			* Creates an animation clip.
 			* @param current The current time.
 			* @param start The time in which the clip begins.
 			* @param start The time in which the clip ends.
 			*/
-			Animation* CreateAnimation( DWORD current, DWORD start, DWORD end );
+			Animation* CreateAnimation( uint32_t current, uint32_t start, uint32_t end );
 			/**
 			* Sets the pose of this prop.
 			* @param matrix The matrix which defines the new pose for this prop.
@@ -366,9 +366,9 @@ namespace Ovgl
 			*/
 			Matrix44 getPose();
 
-			void UpdateAnimation( int bone, Ovgl::Matrix44* matrix, DWORD time );
+			void UpdateAnimation( int32_t bone, Ovgl::Matrix44* matrix, double time );
 
-			Ovgl::Animation* CreateAnimation( DWORD start, DWORD end, bool repeat );
+			Ovgl::Animation* CreateAnimation( double start, double end, bool repeat );
 			/**
 			* Tells the actor where to look.
 			* @param vec The direction to look.
@@ -407,7 +407,7 @@ namespace Ovgl
 			/**
 			* This texture is the cubemap for the skybox.
 			*/
-			Texture*								skybox;
+			Texture*								SkyBox;
 			/**
 			* This array contains all static objects within the scene.
 			*/
@@ -488,7 +488,7 @@ namespace Ovgl
 			* This function updates the animations, audio emition points, and the physics objects of the scene.
 			* @param update_time The amount of time that has passed since the last scene update.
 			*/
-			void Update( DWORD update_time );
+			void Update( uint32_t update_time );
 			/**
 			* This function will release control of all memory associated with the scene and any objects within it. It will also remove any reference to it from the Ovgl::Instance.
 			*/

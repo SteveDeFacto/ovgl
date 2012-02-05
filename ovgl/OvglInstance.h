@@ -62,14 +62,15 @@ namespace Ovgl
 		class MediaLibrary;
 		class Window;
 
+
+
 		class __declspec(dllexport) Texture
 		{
 		public:
 			MediaLibrary*							MLibrary;
-			UINT									Image;
+			uint32_t								Image;
 			std::string								File;
 			bool									HasAlpha;
-
 			void Release();
 		};
 
@@ -104,7 +105,8 @@ namespace Ovgl
 		class __declspec(dllexport) Instance
 		{
 		public:
-			Instance( DWORD flags );
+			Instance( uint32_t flags );
+			~Instance();
 			HWND									hWnd;
 			HDC										hDC;
 			HGLRC									hRC;
@@ -120,11 +122,11 @@ namespace Ovgl
 			std::vector< MediaLibrary* >			MediaLibraries;
 			std::vector< Window* >					Windows;
 			Window*									CreateOWindow( const std::string& name );
-			RenderTarget*							CreateRenderTarget( Ovgl::Window* window, Ovgl::Vector4* rect, DWORD flags );
+			RenderTarget*							CreateRenderTarget( Ovgl::Window* window, Ovgl::Vector4* rect, uint32_t flags );
 			MediaLibrary*							CreateMediaLibrary( const std::string& file );
 			void									Release();
 		};
 	
-		__declspec(dllexport) Instance* Create( DWORD flags );
+		__declspec(dllexport) Instance* Create( uint32_t flags );
 	}
 }

@@ -13,7 +13,7 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* @brief None.
+* @brief  This Header defines each class that makes up the Ovgl::Audio class.
 */
 
 // Forward declare external classes
@@ -34,8 +34,8 @@ namespace Ovgl
 			Instance*							Inst;
 			int									format;
 			int									frequency;
-			unsigned int						stereo;
-			unsigned int						mono;
+			uint32_t						stereo;
+			uint32_t						mono;
 			std::vector< signed short >			data;
 			AudioInstance* CreateAudioInstance( Emitter* emitter, bool loop );
 			void Release();
@@ -58,7 +58,7 @@ namespace Ovgl
 		{
 		public:
 			AudioInstance*						instance;
-			unsigned int						source;
+			uint32_t						source;
 			void Release();
 		};
 	}
