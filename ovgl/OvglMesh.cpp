@@ -59,7 +59,7 @@ namespace Ovgl
 					}
 				}
 			}
-			vertices[v].normal = Vector3Normalize( &Vector3Center( adjFaceNormals ) );
+			vertices[v].normal = Vector3Normalize( Vector3Center( adjFaceNormals ) );
 		}
 	}
 
@@ -254,7 +254,7 @@ namespace Ovgl
 			// Find the most distance vertex from this face.
 			for( uint32_t v = 0; v < vertices.size(); v++ )
 			{
-				if( Vector3Dot( &faceNormal, &(vertices[v].position - facePosition)) > Vector3Dot( &faceNormal, &(vertices[distantVertex].position - facePosition)) && Vector3Dot( &faceNormal, &(vertices[v].position - facePosition)) > 0.001f )
+				if( Vector3Dot( faceNormal, (vertices[v].position - facePosition)) > Vector3Dot( faceNormal, (vertices[distantVertex].position - facePosition)) && Vector3Dot( faceNormal, (vertices[v].position - facePosition)) > 0.001f )
 				{
 					if( faces[f].indices[0] != v && faces[f].indices[1] != v && faces[f].indices[2] != v )
 					{
@@ -271,7 +271,7 @@ namespace Ovgl
 				for( uint32_t f2 = 0; f2 < faces.size(); f2++ )
 				{
 					Vector3 faceNormal2 = ComputeFaceNormal( f2 );
-					if( Vector3Dot( &faceNormal2, &(vertices[distantVertex].position - vertices[faces[f2].indices[0]].position)) > 0.0f )
+					if( Vector3Dot( faceNormal2, (vertices[distantVertex].position - vertices[faces[f2].indices[0]].position)) > 0.0f )
 					{
 						TaggedFaces.push_back( f2 );
 					}
@@ -279,7 +279,7 @@ namespace Ovgl
 
 				for( uint32_t f2 = 0; f2 < TaggedFaces.size(); f2++ )
 				{
-					volume = volume + VolumeTetrahedron(&vertices[distantVertex].position, &vertices[faces[TaggedFaces[f2]].indices[0]].position, &vertices[faces[TaggedFaces[f2]].indices[1]].position, &vertices[faces[TaggedFaces[f2]].indices[2]].position);
+					volume = volume + VolumeTetrahedron(vertices[distantVertex].position, vertices[faces[TaggedFaces[f2]].indices[0]].position, vertices[faces[TaggedFaces[f2]].indices[1]].position, vertices[faces[TaggedFaces[f2]].indices[2]].position);
 				}
 
 			    // Now that we know which faces this vertex lands on we need to remap the mesh to include the new vertex.
@@ -413,7 +413,7 @@ namespace Ovgl
 				{
 					for( uint32_t fn2 = 0; fn2 < adjFaceNormals.size(); fn2++)
 					{
-						float checkDistance = Distance( &adjFaceNormals[fn1], &adjFaceNormals[fn2] );
+						float checkDistance = Distance( adjFaceNormals[fn1], adjFaceNormals[fn2] );
 						if( checkDistance > farthestDistance )
 						{
 							farthestDistance = checkDistance;
@@ -433,11 +433,11 @@ namespace Ovgl
 			{
 				for( uint32_t i = 0; i < 3; i++ )
 				{
-					float CheckDistance = Distance( &vertices[LeastAngleVertexIndex].position, &vertices[faces[adjVertexFaces[LeastAngleVertexIndex][af]].indices[i]].position);
+					float CheckDistance = Distance( vertices[LeastAngleVertexIndex].position, vertices[faces[adjVertexFaces[LeastAngleVertexIndex][af]].indices[i]].position);
 					if( CheckDistance < LeastDistance && faces[adjVertexFaces[LeastAngleVertexIndex][af]].indices[i] != LeastAngleVertexIndex )
 					{
 						LeastDistantVertex = faces[adjVertexFaces[LeastAngleVertexIndex][af]].indices[i];
-						LeastDistance = Distance( &vertices[LeastAngleVertexIndex].position, &vertices[LeastDistantVertex].position);
+						LeastDistance = Distance( vertices[LeastAngleVertexIndex].position, vertices[LeastDistantVertex].position);
 					}
 				}
 			}
@@ -495,7 +495,7 @@ namespace Ovgl
 				{
 					for( uint32_t v2 = 0; v2 < vertices.size(); v2++ )
 					{
-						if( Distance(&vertices[v1].position, &vertices[v2].position) < min && v1 != v2 )
+						if( Distance(vertices[v1].position, vertices[v2].position) < min && v1 != v2 )
 						{
 							vertices.erase( vertices.begin() + v2);
 							if(v1 > v2)
@@ -571,7 +571,7 @@ namespace Ovgl
 				{
 					for( uint32_t v2 = 0; v2 < vertices.size(); v2++ )
 					{
-						if( Distance(&vertices[v1].position, &vertices[v2].position) < min && v1 != v2 )
+						if( Distance(vertices[v1].position, vertices[v2].position) < min && v1 != v2 )
 						{
 							vertices.erase( vertices.begin() + v2);
 							if(v1 > v2)
@@ -613,7 +613,7 @@ namespace Ovgl
 		uint32_t test = faces[face].indices[2];
 		Vector3 v1 = vertices[faces[face].indices[2]].position - vertices[faces[face].indices[1]].position;
 		Vector3 v2 = vertices[faces[face].indices[0]].position - vertices[faces[face].indices[1]].position;
-		out = Vector3Normalize( &Vector3Cross( &v1, &v2 ) );
+		out = Vector3Normalize( Vector3Cross( v1, v2 ) );
 		return out;
 	}
 }

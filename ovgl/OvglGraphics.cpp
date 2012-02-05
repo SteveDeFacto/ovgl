@@ -358,7 +358,7 @@ namespace Ovgl
 
 	void RenderTarget::RenderMesh( Mesh* mesh, Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender )
 	{
-		Matrix44 viewProj = (MatrixInverse( &Vector4(0,0,0,0), &View->getPose() ) * View->projMat);
+		Matrix44 viewProj = (MatrixInverse( Vector4(0,0,0,0), View->getPose() ) * View->projMat);
 		Matrix44 worldMat = (matrix * viewProj );
 		glLoadMatrixf((float*)&worldMat);
 	
@@ -399,9 +399,9 @@ namespace Ovgl
 			}
 
 			CGparameter CgWorldMatrix = cgGetNamedParameter( materials[s]->ShaderProgram->VertexProgram, "World" );
-			cgGLSetMatrixParameterfc( CgWorldMatrix, (float*)&MatrixTranspose(&worldMat) );
+			cgGLSetMatrixParameterfc( CgWorldMatrix, (float*)&MatrixTranspose(worldMat) );
 			CGparameter CgViewProjMatrix = cgGetNamedParameter( materials[s]->ShaderProgram->VertexProgram, "ViewProj" );
-			cgGLSetMatrixParameterfc( CgViewProjMatrix, (float*)&MatrixTranspose(&viewProj) );
+			cgGLSetMatrixParameterfc( CgViewProjMatrix, (float*)&MatrixTranspose(viewProj) );
 			CGparameter CgViewPos= cgGetNamedParameter( materials[s]->ShaderProgram->FragmentProgram, "ViewPos" );
 			cgGLSetParameter4f( CgViewPos, View->getPose()._41, View->getPose()._42, View->getPose()._43, View->getPose()._44 );
 
@@ -409,7 +409,7 @@ namespace Ovgl
 			for( uint32_t v = 0; v < pose.size(); v++)
 			{
 				CGparameter CgBone = cgGetArrayParameter( CgBoneMatrices, v );
-				cgGLSetMatrixParameterfc(CgBone, (float*)&MatrixTranspose(&pose[v]));
+				cgGLSetMatrixParameterfc(CgBone, (float*)&MatrixTranspose(pose[v]));
 			}
 
 			CGparameter CgLightCount = cgGetNamedParameter( materials[s]->ShaderProgram->FragmentProgram, "LightCount" );
@@ -767,7 +767,7 @@ namespace Ovgl
 	{
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
-		glLoadMatrixf((float*)&(matrix * MatrixInverse( &Vector4(0.0f, 0.0f, 0.0f, 0.0f), &View->getPose())));
+		glLoadMatrixf((float*)&(matrix * MatrixInverse( Vector4(0.0f, 0.0f, 0.0f, 0.0f), View->getPose())));
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glLoadMatrixf((float*)&View->projMat);
@@ -828,7 +828,7 @@ namespace Ovgl
 			glViewport( 0, 0, width, height );
 
 			Scene* scene = View->scene;
-			Matrix44 viewProj = (MatrixInverse( &Vector4(0,0,0,0), &View->getPose() ) * View->projMat);
+			Matrix44 viewProj = (MatrixInverse( Vector4(0,0,0,0), View->getPose() ) * View->projMat);
 
 			// Create light arrays
 			float LightCount = (float)scene->lights.size();
@@ -860,11 +860,11 @@ namespace Ovgl
 
 				// Set skybox shader View variable
 				CGparameter CgView = cgGetNamedParameter( Inst->DefaultMedia->Shaders[1]->VertexProgram, "View" );
-				cgGLSetMatrixParameterfc( CgView, (float*)&MatrixTranspose( &MatrixInverse( &Vector4(0,0,0,0), &View->getPose()) ) );
+				cgGLSetMatrixParameterfc( CgView, (float*)&MatrixTranspose( MatrixInverse( Vector4(0,0,0,0), View->getPose()) ) );
 
 				// Set skybox shader Projection variable
 				CGparameter CgProjection = cgGetNamedParameter( Inst->DefaultMedia->Shaders[1]->VertexProgram, "Projection" );
-				cgGLSetMatrixParameterfc( CgProjection, (float*)&MatrixTranspose( &View->projMat) );
+				cgGLSetMatrixParameterfc( CgProjection, (float*)&MatrixTranspose( View->projMat) );
 
 				// Set skybox texture
 				CGparameter CgFSTexture = cgGetNamedParameter( Inst->DefaultMedia->Shaders[1]->FragmentProgram, "txSkybox" );
@@ -1057,7 +1057,7 @@ namespace Ovgl
 				glDisable(GL_TEXTURE_2D);
 				glMatrixMode(GL_MODELVIEW);
 				glLoadIdentity();
-				glLoadMatrixf((float*)&(MatrixInverse( &Vector4(0.0f, 0.0f, 0.0f, 0.0f), &View->getPose())));
+				glLoadMatrixf((float*)&(MatrixInverse( Vector4(0.0f, 0.0f, 0.0f, 0.0f), View->getPose())));
 				glMatrixMode(GL_PROJECTION);
 				glLoadIdentity();
 				glLoadMatrixf((float*)&View->projMat);

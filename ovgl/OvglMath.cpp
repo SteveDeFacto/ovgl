@@ -359,43 +359,43 @@ namespace Ovgl
 		return out;
 	}
 
-	Matrix44 MatrixInverse ( Vector4* in_vec, Matrix44* in_mat)
+	Matrix44 MatrixInverse ( const Vector4& in_vec, const Matrix44& in_mat)
 	{
 		Matrix44 out = {0};
 		float inv[16], det;
-		inv[0] =   in_mat->_22*in_mat->_33*in_mat->_44 - in_mat->_22*in_mat->_34*in_mat->_43 - in_mat->_32*in_mat->_23*in_mat->_44
-		+ in_mat->_32*in_mat->_24*in_mat->_43 + in_mat->_42*in_mat->_23*in_mat->_34 - in_mat->_42*in_mat->_24*in_mat->_33;
-		inv[4] =  -in_mat->_21*in_mat->_33*in_mat->_44 + in_mat->_21*in_mat->_34*in_mat->_43 + in_mat->_31*in_mat->_23*in_mat->_44
-		- in_mat->_31*in_mat->_24*in_mat->_43 - in_mat->_41*in_mat->_23*in_mat->_34 + in_mat->_41*in_mat->_24*in_mat->_33;
-		inv[8] =   in_mat->_21*in_mat->_32*in_mat->_44 - in_mat->_21*in_mat->_34*in_mat->_42 - in_mat->_31*in_mat->_22*in_mat->_44
-		+ in_mat->_31*in_mat->_24*in_mat->_42 + in_mat->_41*in_mat->_22*in_mat->_34 - in_mat->_41*in_mat->_24*in_mat->_32;
-		inv[12] = -in_mat->_21*in_mat->_32*in_mat->_43 + in_mat->_21*in_mat->_33*in_mat->_42 + in_mat->_31*in_mat->_22*in_mat->_43
-		- in_mat->_31*in_mat->_23*in_mat->_42 - in_mat->_41*in_mat->_22*in_mat->_33 + in_mat->_41*in_mat->_23*in_mat->_32;
-		inv[1] =  -in_mat->_12*in_mat->_33*in_mat->_44 + in_mat->_12*in_mat->_34*in_mat->_43 + in_mat->_32*in_mat->_13*in_mat->_44
-		- in_mat->_32*in_mat->_14*in_mat->_43 - in_mat->_42*in_mat->_13*in_mat->_34 + in_mat->_42*in_mat->_14*in_mat->_33;
-		inv[5] =   in_mat->_11*in_mat->_33*in_mat->_44 - in_mat->_11*in_mat->_34*in_mat->_43 - in_mat->_31*in_mat->_13*in_mat->_44
-		+ in_mat->_31*in_mat->_14*in_mat->_43 + in_mat->_41*in_mat->_13*in_mat->_34 - in_mat->_41*in_mat->_14*in_mat->_33;
-		inv[9] =  -in_mat->_11*in_mat->_32*in_mat->_44 + in_mat->_11*in_mat->_34*in_mat->_42 + in_mat->_31*in_mat->_12*in_mat->_44
-		- in_mat->_31*in_mat->_14*in_mat->_42 - in_mat->_41*in_mat->_12*in_mat->_34 + in_mat->_41*in_mat->_14*in_mat->_32;
-		inv[13] =  in_mat->_11*in_mat->_32*in_mat->_43 - in_mat->_11*in_mat->_33*in_mat->_42 - in_mat->_31*in_mat->_12*in_mat->_43
-		+ in_mat->_31*in_mat->_13*in_mat->_42 + in_mat->_41*in_mat->_12*in_mat->_33 - in_mat->_41*in_mat->_13*in_mat->_32;
-		inv[2] =   in_mat->_12*in_mat->_23*in_mat->_44 - in_mat->_12*in_mat->_24*in_mat->_43 - in_mat->_22*in_mat->_13*in_mat->_44
-		+ in_mat->_22*in_mat->_14*in_mat->_43 + in_mat->_42*in_mat->_13*in_mat->_24 - in_mat->_42*in_mat->_14*in_mat->_23;
-		inv[6] =  -in_mat->_11*in_mat->_23*in_mat->_44 + in_mat->_11*in_mat->_24*in_mat->_43 + in_mat->_21*in_mat->_13*in_mat->_44
-		- in_mat->_21*in_mat->_14*in_mat->_43 - in_mat->_41*in_mat->_13*in_mat->_24 + in_mat->_41*in_mat->_14*in_mat->_23;
-		inv[10] =  in_mat->_11*in_mat->_22*in_mat->_44 - in_mat->_11*in_mat->_24*in_mat->_42 - in_mat->_21*in_mat->_12*in_mat->_44
-		+ in_mat->_21*in_mat->_14*in_mat->_42 + in_mat->_41*in_mat->_12*in_mat->_24 - in_mat->_41*in_mat->_14*in_mat->_22;
-		inv[14] = -in_mat->_11*in_mat->_22*in_mat->_43 + in_mat->_11*in_mat->_23*in_mat->_42 + in_mat->_21*in_mat->_12*in_mat->_43
-		- in_mat->_21*in_mat->_13*in_mat->_42 - in_mat->_41*in_mat->_12*in_mat->_23 + in_mat->_41*in_mat->_13*in_mat->_22;
-		inv[3] =  -in_mat->_12*in_mat->_23*in_mat->_34 + in_mat->_12*in_mat->_24*in_mat->_33 + in_mat->_22*in_mat->_13*in_mat->_34
-		- in_mat->_22*in_mat->_14*in_mat->_33 - in_mat->_32*in_mat->_13*in_mat->_24 + in_mat->_32*in_mat->_14*in_mat->_23;
-		inv[7] =   in_mat->_11*in_mat->_23*in_mat->_34 - in_mat->_11*in_mat->_24*in_mat->_33 - in_mat->_21*in_mat->_13*in_mat->_34
-		+ in_mat->_21*in_mat->_14*in_mat->_33 + in_mat->_31*in_mat->_13*in_mat->_24 - in_mat->_31*in_mat->_14*in_mat->_23;
-		inv[11] = -in_mat->_11*in_mat->_22*in_mat->_34 + in_mat->_11*in_mat->_24*in_mat->_32 + in_mat->_21*in_mat->_12*in_mat->_34
-		- in_mat->_21*in_mat->_14*in_mat->_32 - in_mat->_31*in_mat->_12*in_mat->_24 + in_mat->_31*in_mat->_14*in_mat->_22;
-		inv[15] =  in_mat->_11*in_mat->_22*in_mat->_33 - in_mat->_11*in_mat->_23*in_mat->_32 - in_mat->_21*in_mat->_12*in_mat->_33
-		+ in_mat->_21*in_mat->_13*in_mat->_32 + in_mat->_31*in_mat->_12*in_mat->_23 - in_mat->_31*in_mat->_13*in_mat->_22;
-		det = in_mat->_11*inv[0] + in_mat->_12*inv[4] + in_mat->_13*inv[8] + in_mat->_14*inv[12];
+		inv[0] =   in_mat._22*in_mat._33*in_mat._44 - in_mat._22*in_mat._34*in_mat._43 - in_mat._32*in_mat._23*in_mat._44
+		+ in_mat._32*in_mat._24*in_mat._43 + in_mat._42*in_mat._23*in_mat._34 - in_mat._42*in_mat._24*in_mat._33;
+		inv[4] =  -in_mat._21*in_mat._33*in_mat._44 + in_mat._21*in_mat._34*in_mat._43 + in_mat._31*in_mat._23*in_mat._44
+		- in_mat._31*in_mat._24*in_mat._43 - in_mat._41*in_mat._23*in_mat._34 + in_mat._41*in_mat._24*in_mat._33;
+		inv[8] =   in_mat._21*in_mat._32*in_mat._44 - in_mat._21*in_mat._34*in_mat._42 - in_mat._31*in_mat._22*in_mat._44
+		+ in_mat._31*in_mat._24*in_mat._42 + in_mat._41*in_mat._22*in_mat._34 - in_mat._41*in_mat._24*in_mat._32;
+		inv[12] = -in_mat._21*in_mat._32*in_mat._43 + in_mat._21*in_mat._33*in_mat._42 + in_mat._31*in_mat._22*in_mat._43
+		- in_mat._31*in_mat._23*in_mat._42 - in_mat._41*in_mat._22*in_mat._33 + in_mat._41*in_mat._23*in_mat._32;
+		inv[1] =  -in_mat._12*in_mat._33*in_mat._44 + in_mat._12*in_mat._34*in_mat._43 + in_mat._32*in_mat._13*in_mat._44
+		- in_mat._32*in_mat._14*in_mat._43 - in_mat._42*in_mat._13*in_mat._34 + in_mat._42*in_mat._14*in_mat._33;
+		inv[5] =   in_mat._11*in_mat._33*in_mat._44 - in_mat._11*in_mat._34*in_mat._43 - in_mat._31*in_mat._13*in_mat._44
+		+ in_mat._31*in_mat._14*in_mat._43 + in_mat._41*in_mat._13*in_mat._34 - in_mat._41*in_mat._14*in_mat._33;
+		inv[9] =  -in_mat._11*in_mat._32*in_mat._44 + in_mat._11*in_mat._34*in_mat._42 + in_mat._31*in_mat._12*in_mat._44
+		- in_mat._31*in_mat._14*in_mat._42 - in_mat._41*in_mat._12*in_mat._34 + in_mat._41*in_mat._14*in_mat._32;
+		inv[13] =  in_mat._11*in_mat._32*in_mat._43 - in_mat._11*in_mat._33*in_mat._42 - in_mat._31*in_mat._12*in_mat._43
+		+ in_mat._31*in_mat._13*in_mat._42 + in_mat._41*in_mat._12*in_mat._33 - in_mat._41*in_mat._13*in_mat._32;
+		inv[2] =   in_mat._12*in_mat._23*in_mat._44 - in_mat._12*in_mat._24*in_mat._43 - in_mat._22*in_mat._13*in_mat._44
+		+ in_mat._22*in_mat._14*in_mat._43 + in_mat._42*in_mat._13*in_mat._24 - in_mat._42*in_mat._14*in_mat._23;
+		inv[6] =  -in_mat._11*in_mat._23*in_mat._44 + in_mat._11*in_mat._24*in_mat._43 + in_mat._21*in_mat._13*in_mat._44
+		- in_mat._21*in_mat._14*in_mat._43 - in_mat._41*in_mat._13*in_mat._24 + in_mat._41*in_mat._14*in_mat._23;
+		inv[10] =  in_mat._11*in_mat._22*in_mat._44 - in_mat._11*in_mat._24*in_mat._42 - in_mat._21*in_mat._12*in_mat._44
+		+ in_mat._21*in_mat._14*in_mat._42 + in_mat._41*in_mat._12*in_mat._24 - in_mat._41*in_mat._14*in_mat._22;
+		inv[14] = -in_mat._11*in_mat._22*in_mat._43 + in_mat._11*in_mat._23*in_mat._42 + in_mat._21*in_mat._12*in_mat._43
+		- in_mat._21*in_mat._13*in_mat._42 - in_mat._41*in_mat._12*in_mat._23 + in_mat._41*in_mat._13*in_mat._22;
+		inv[3] =  -in_mat._12*in_mat._23*in_mat._34 + in_mat._12*in_mat._24*in_mat._33 + in_mat._22*in_mat._13*in_mat._34
+		- in_mat._22*in_mat._14*in_mat._33 - in_mat._32*in_mat._13*in_mat._24 + in_mat._32*in_mat._14*in_mat._23;
+		inv[7] =   in_mat._11*in_mat._23*in_mat._34 - in_mat._11*in_mat._24*in_mat._33 - in_mat._21*in_mat._13*in_mat._34
+		+ in_mat._21*in_mat._14*in_mat._33 + in_mat._31*in_mat._13*in_mat._24 - in_mat._31*in_mat._14*in_mat._23;
+		inv[11] = -in_mat._11*in_mat._22*in_mat._34 + in_mat._11*in_mat._24*in_mat._32 + in_mat._21*in_mat._12*in_mat._34
+		- in_mat._21*in_mat._14*in_mat._32 - in_mat._31*in_mat._12*in_mat._24 + in_mat._31*in_mat._14*in_mat._22;
+		inv[15] =  in_mat._11*in_mat._22*in_mat._33 - in_mat._11*in_mat._23*in_mat._32 - in_mat._21*in_mat._12*in_mat._33
+		+ in_mat._21*in_mat._13*in_mat._32 + in_mat._31*in_mat._12*in_mat._23 - in_mat._31*in_mat._13*in_mat._22;
+		det = in_mat._11*inv[0] + in_mat._12*inv[4] + in_mat._13*inv[8] + in_mat._14*inv[12];
 		if (det == 0.0f)
 			return out;
 
@@ -431,25 +431,25 @@ namespace Ovgl
 		return out;
 	}
 
-	Matrix44 MatrixTranspose( Matrix44* in_mat )
+	Matrix44 MatrixTranspose( const Matrix44& in_mat )
 	{
 		Matrix44 out = {0};
-		out._11 = in_mat->_11;
-		out._21 = in_mat->_12;
-		out._31 = in_mat->_13;
-		out._41 = in_mat->_14;
-		out._12 = in_mat->_21;
-		out._22 = in_mat->_22;
-		out._32 = in_mat->_23;
-		out._42 = in_mat->_24;
-		out._13 = in_mat->_31;
-		out._23 = in_mat->_32;
-		out._33 = in_mat->_33;
-		out._43 = in_mat->_34;
-		out._14 = in_mat->_41;
-		out._24 = in_mat->_42;
-		out._34 = in_mat->_43;
-		out._44 = in_mat->_44;
+		out._11 = in_mat._11;
+		out._21 = in_mat._12;
+		out._31 = in_mat._13;
+		out._41 = in_mat._14;
+		out._12 = in_mat._21;
+		out._22 = in_mat._22;
+		out._32 = in_mat._23;
+		out._42 = in_mat._24;
+		out._13 = in_mat._31;
+		out._23 = in_mat._32;
+		out._33 = in_mat._33;
+		out._43 = in_mat._34;
+		out._14 = in_mat._41;
+		out._24 = in_mat._42;
+		out._34 = in_mat._43;
+		out._44 = in_mat._44;
 		return out;
 	}
 
@@ -505,23 +505,23 @@ namespace Ovgl
 		return out;
 	}
 
-	Matrix44 MatrixRotationAxis( Vector3* axis, float angle )
+	Matrix44 MatrixRotationAxis( const Vector3& axis, float angle )
 	{
 		Matrix44 out;
 		float s = sinf(angle);
 		float c = cosf(angle);
 		float t = 1.0F - c;
-		out._11 = t * axis->x * axis->x + c;
-		out._21 = t * axis->x * axis->y + s * axis->z;
-		out._31 = t * axis->x * axis->z - s * axis->y;
+		out._11 = t * axis.x * axis.x + c;
+		out._21 = t * axis.x * axis.y + s * axis.z;
+		out._31 = t * axis.x * axis.z - s * axis.y;
 		out._41 = 0.0F;
-		out._12 = t * axis->y * axis->x - s * axis->z;
-		out._22 = t * axis->y * axis->y + c;
-		out._32 = t * axis->y * axis->z + s * axis->x;
+		out._12 = t * axis.y * axis.x - s * axis.z;
+		out._22 = t * axis.y * axis.y + c;
+		out._32 = t * axis.y * axis.z + s * axis.x;
 		out._42 = 0.0F;
-		out._13 = t * axis->z * axis->x + s * axis->y;
-		out._23 = t * axis->z * axis->y - s * axis->x;
-		out._33 = t * axis->z * axis->z + c;
+		out._13 = t * axis.z * axis.x + s * axis.y;
+		out._23 = t * axis.z * axis.y - s * axis.x;
+		out._33 = t * axis.z * axis.z + c;
 		out._43 = 0.0F;
 		out._14 = 0.0F;
 		out._24 = 0.0F;
@@ -554,18 +554,18 @@ namespace Ovgl
 		return out;
 	}
 
-	Matrix44 MatrixRotationQuaternion( Vector4* q )
+	Matrix44 MatrixRotationQuaternion( const Vector4& q )
 	{
 		Matrix44 out;
-		float xx = q->x * q->x;
-		float xy = q->x * q->y;
-		float xz = q->x * q->z;
-		float xw = q->x * q->w;
-		float yy = q->y * q->y;
-		float yz = q->y * q->z;
-		float yw = q->y * q->w;
-		float zz = q->z * q->z;
-		float zw = q->z * q->w;
+		float xx = q.x * q.x;
+		float xy = q.x * q.y;
+		float xz = q.x * q.z;
+		float xw = q.x * q.w;
+		float yy = q.y * q.y;
+		float yz = q.y * q.z;
+		float yw = q.y * q.w;
+		float zz = q.z * q.z;
+		float zw = q.z * q.w;
 		out._11 = 1 - 2 * ( yy + zz );
 		out._12 = 2 * ( xy - zw );
 		out._13 = 2 * ( xz + yw );
@@ -580,68 +580,68 @@ namespace Ovgl
 		return out;
 	}
 
-	Matrix44 MatrixSwapYZ( Matrix44* in_mat )
+	Matrix44 MatrixSwapYZ( const Matrix44& in_mat )
 	{
 		Matrix44 out;
-		out._11 = in_mat->_11;
-		out._12 = in_mat->_13;
-		out._13 = in_mat->_12;
-		out._14 = in_mat->_14;
-		out._21 = in_mat->_21;
-		out._22 = in_mat->_23;
-		out._23 = in_mat->_22;
-		out._24 = in_mat->_24;
-		out._31 = in_mat->_31;
-		out._32 = in_mat->_33;
-		out._33 = in_mat->_32;
-		out._34 = in_mat->_34;
-		out._41 = in_mat->_41;
-		out._42 = in_mat->_43;
-		out._43 = in_mat->_42;
-		out._44 = in_mat->_44;
+		out._11 = in_mat._11;
+		out._12 = in_mat._13;
+		out._13 = in_mat._12;
+		out._14 = in_mat._14;
+		out._21 = in_mat._21;
+		out._22 = in_mat._23;
+		out._23 = in_mat._22;
+		out._24 = in_mat._24;
+		out._31 = in_mat._31;
+		out._32 = in_mat._33;
+		out._33 = in_mat._32;
+		out._34 = in_mat._34;
+		out._41 = in_mat._41;
+		out._42 = in_mat._43;
+		out._43 = in_mat._42;
+		out._44 = in_mat._44;
 		return out;
 	}
 
-	Matrix44 MatrixSwapXZ( Matrix44* in_mat )
+	Matrix44 MatrixSwapXZ( const Matrix44& in_mat )
 	{
 		Matrix44 out;
-		out._11 = in_mat->_13;
-		out._12 = in_mat->_12;
-		out._13 = in_mat->_11;
-		out._14 = in_mat->_14;
-		out._21 = in_mat->_23;
-		out._22 = in_mat->_22;
-		out._23 = in_mat->_21;
-		out._24 = in_mat->_24;
-		out._31 = in_mat->_33;
-		out._32 = in_mat->_32;
-		out._33 = in_mat->_31;
-		out._34 = in_mat->_34;
-		out._41 = in_mat->_43;
-		out._42 = in_mat->_42;
-		out._43 = in_mat->_41;
-		out._44 = in_mat->_44;
+		out._11 = in_mat._13;
+		out._12 = in_mat._12;
+		out._13 = in_mat._11;
+		out._14 = in_mat._14;
+		out._21 = in_mat._23;
+		out._22 = in_mat._22;
+		out._23 = in_mat._21;
+		out._24 = in_mat._24;
+		out._31 = in_mat._33;
+		out._32 = in_mat._32;
+		out._33 = in_mat._31;
+		out._34 = in_mat._34;
+		out._41 = in_mat._43;
+		out._42 = in_mat._42;
+		out._43 = in_mat._41;
+		out._44 = in_mat._44;
 		return out;
 	}
 
-	Vector4 QuaternionRotationMatrix( Matrix44* matrix )
+	Vector4 QuaternionRotationMatrix( const Matrix44& matrix )
 	{
 		Vector4 out;
-		out.w = (float)sqrt(1.0f + matrix->_11 + matrix->_22 + matrix->_33) / 2.0f;
+		out.w = (float)sqrt(1.0f + matrix._11 + matrix._22 + matrix._33) / 2.0f;
 		float w4 = (4.0f * out.w);
-		out.x = (matrix->_32 - matrix->_23) / w4 ;
-		out.y = (matrix->_13 - matrix->_31) / w4 ;
-		out.z = (matrix->_21 - matrix->_12) / w4 ;
+		out.x = (matrix._32 - matrix._23) / w4 ;
+		out.y = (matrix._13 - matrix._31) / w4 ;
+		out.z = (matrix._21 - matrix._12) / w4 ;
 		return out;
 	}
 
-	Vector4 QuaternionRotationAxis( Vector3* axis, float angle )
+	Vector4 QuaternionRotationAxis( Vector3& axis, float angle )
 	{
 		Vector4 out;
 		out.w  = cosf( angle / 2 );
-		out.x = axis->x * sinf( angle / 2 );
-		out.y = axis->y * sinf( angle / 2 );
-		out.z = axis->z * sinf( angle / 2 );
+		out.x = axis.x * sinf( angle / 2 );
+		out.y = axis.y * sinf( angle / 2 );
+		out.z = axis.z * sinf( angle / 2 );
 		return out;
 	}
 
@@ -663,26 +663,26 @@ namespace Ovgl
 		return out;
 	}
 
-	Vector3 EulerRotationMatrix( Matrix44* matrix )
+	Vector3 EulerRotationMatrix( Matrix44& matrix )
 	{
 		Vector3 out;
-		if (matrix->_21 > 0.998)
+		if (matrix._21 > 0.998)
 		{ 
-			out.x = atan2(matrix->_13, matrix->_33);
+			out.x = atan2(matrix._13, matrix._33);
 			out.z = (float)(OvglPi/2);
 			out.y = 0;
 			return out;
 		}
-		if (matrix->_21 < -0.998)
+		if (matrix._21 < -0.998)
 		{
-			out.x = atan2(matrix->_13, matrix->_33);
+			out.x = atan2(matrix._13, matrix._33);
 			out.z = (float)(-OvglPi/2);
 			out.y = 0;
 			return out;
 		}
-		out.x = atan2(-matrix->_31,matrix->_11);
-		out.y = atan2(-matrix->_23,matrix->_22);
-		out.z = asin(matrix->_21);
+		out.x = atan2(-matrix._31,matrix._11);
+		out.y = atan2(-matrix._23,matrix._22);
+		out.z = asin(matrix._21);
 		return out;
 	}
 
@@ -715,43 +715,43 @@ namespace Ovgl
 		z = (float)data[2];
 	}
 
-	float Distance( Vector3* vector1, Vector3* vector2 )
+	float Distance( const Vector3& vector1, const Vector3& vector2 )
 	{
-		Vector3 vector = (*vector1) - (*vector2);
+		Vector3 vector = vector1 - vector2;
 		float out = sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
 		return out;
 	}
 
-	float Vector3Dot( Vector3* vec1, Vector3* vec2 )
+	float Vector3Dot( const Vector3& vec1, const Vector3& vec2 )
 	{
-		return vec1->x * vec2->x + vec1->y * vec2->y + vec1->z * vec2->z;
+		return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z;
 	}
 
-	Vector3 Vector3Cross( Vector3* vec1, Vector3* vec2 )
+	Vector3 Vector3Cross( const Vector3& vec1, const Vector3& vec2 )
 	{
 		Vector3 out;
-		out.x = vec1->y * vec2->z - vec2->y * vec1->z;
-		out.y = vec1->z * vec2->x - vec2->z * vec1->x;
-		out.z = vec1->x * vec2->y - vec2->x * vec1->y;
+		out.x = vec1.y * vec2.z - vec2.y * vec1.z;
+		out.y = vec1.z * vec2.x - vec2.z * vec1.x;
+		out.z = vec1.x * vec2.y - vec2.x * vec1.y;
 		return out;
 	}
 
-	Vector3 Vector3Transform( Vector3* vector, Matrix44* matrix )
+	Vector3 Vector3Transform( const Vector3& vector, const Matrix44& matrix )
 	{
 		Vector3 out;
-		out.x = vector->x * matrix->_11 + vector->y * matrix->_21 + vector->z * matrix->_31 + matrix->_41;
-		out.y = vector->x * matrix->_12 + vector->y * matrix->_22 + vector->z * matrix->_32 + matrix->_42;
-		out.z = vector->x * matrix->_13 + vector->y * matrix->_23 + vector->z * matrix->_33 + matrix->_43;
+		out.x = vector.x * matrix._11 + vector.y * matrix._21 + vector.z * matrix._31 + matrix._41;
+		out.y = vector.x * matrix._12 + vector.y * matrix._22 + vector.z * matrix._32 + matrix._42;
+		out.z = vector.x * matrix._13 + vector.y * matrix._23 + vector.z * matrix._33 + matrix._43;
 		return out;
 	}
 
-	Vector3 Vector3Normalize( Vector3* vector )
+	Vector3 Vector3Normalize( const Vector3& vector )
 	{
 		Vector3 out;
-		float l = sqrt((vector->x * vector->x) + (vector->y * vector->y) + (vector->z * vector->z));
-		out.x = vector->x / l;
-		out.y = vector->y / l;
-		out.z = vector->z / l;
+		float l = sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
+		out.x = vector.x / l;
+		out.y = vector.y / l;
+		out.z = vector.z / l;
 		return out;
 	}
 
@@ -783,16 +783,20 @@ namespace Ovgl
 		return (val1 * (1 - u)) + (val2 * u);
 	}
 
-	Vector4 Slerp( Vector4 q1, Vector4 q2, float t )
+	Vector4 Slerp( const Vector4& q1, const Vector4& q2, float t )
 	{
 		// Quaternion to return.
 		Vector4 qm;
+
+		// Temp quaternion.
+		Vector4 qt = q2;
+
 		// Calculate angle between them.
 		float cosHalfTheta = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 
 		if (cosHalfTheta < 0)
 		{
-			q2.w = -q2.w; q2.x = -q2.x; q2.y = -q2.y; q2.z = q2.z;
+			qt.w = -qt.w; qt.x = -qt.x; qt.y = -qt.y; qt.z = qt.z;
 			cosHalfTheta = -cosHalfTheta;
 		}
 
@@ -807,19 +811,19 @@ namespace Ovgl
 		// if theta = 180 degrees then result is not fully defined
 		// we could rotate around any axis normal to qa or qb
 		if (fabs(sinHalfTheta) < 0.001){ // fabs is floating point absolute
-			qm.w = (q1.w * 0.5f + q2.w * 0.5f);
-			qm.x = (q1.x * 0.5f + q2.x * 0.5f);
-			qm.y = (q1.y * 0.5f + q2.y * 0.5f);
-			qm.z = (q1.z * 0.5f + q2.z * 0.5f);
+			qm.w = (q1.w * 0.5f + qt.w * 0.5f);
+			qm.x = (q1.x * 0.5f + qt.x * 0.5f);
+			qm.y = (q1.y * 0.5f + qt.y * 0.5f);
+			qm.z = (q1.z * 0.5f + qt.z * 0.5f);
 			return qm;
 		}
 		float ratioA = sinf((1.0f - t) * halfTheta) / sinHalfTheta;
 		float ratioB = sinf(t * halfTheta) / sinHalfTheta; 
 		//calculate Quaternion.
-		qm.w = (q1.w * ratioA + q2.w * ratioB);
-		qm.x = (q1.x * ratioA + q2.x * ratioB);
-		qm.y = (q1.y * ratioA + q2.y * ratioB);
-		qm.z = (q1.z * ratioA + q2.z * ratioB);
+		qm.w = (q1.w * ratioA + qt.w * ratioB);
+		qm.x = (q1.x * ratioA + qt.x * ratioB);
+		qm.y = (q1.y * ratioA + qt.y * ratioB);
+		qm.z = (q1.z * ratioA + qt.z * ratioB);
 		return qm;
 	}
 
@@ -828,7 +832,7 @@ namespace Ovgl
 		return degree * ((float)OvglPi) / 180.0f;
 	}
 	
-	float VolumeTetrahedron( Vector3* vector1, Vector3* vector2, Vector3* vector3, Vector3* vector4 )
+	float VolumeTetrahedron( const Vector3& vector1, const Vector3& vector2, const Vector3& vector3, const Vector3& vector4 )
 	{
 		float width = Distance(vector1, vector2);
 		float height = Distance(vector1, vector3);

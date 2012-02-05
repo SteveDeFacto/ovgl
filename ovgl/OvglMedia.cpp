@@ -373,12 +373,12 @@ namespace Ovgl
 					uint32_t m = scene->mRootNode->mChildren[n]->mMeshes[sm];
 					Matrix44 matrix;
 					if(scene->mMeshes[m]->HasBones())
-						matrix = Ovgl::MatrixTranspose((Matrix44*)&scene->mRootNode->FindNode(scene->mMeshes[m]->mBones[0]->mName)->mTransformation).Translation();
+						matrix = Ovgl::MatrixTranspose(*(Matrix44*)&scene->mRootNode->FindNode(scene->mMeshes[m]->mBones[0]->mName)->mTransformation).Translation();
 					else
 						matrix = *(Matrix44*)&scene->mRootNode->mChildren[n]->mTransformation.Transpose();
 					matrix = matrix * MatrixRotationX(1.57f);
 					if(scene->mMeshes[m]->HasBones())
-					matrix = matrix * Ovgl::MatrixTranspose((Matrix44*)&scene->mMeshes[m]->mBones[0]->mOffsetMatrix).Translation();
+					matrix = matrix * Ovgl::MatrixTranspose(*(Matrix44*)&scene->mMeshes[m]->mBones[0]->mOffsetMatrix).Translation();
 					std::vector< std::vector< float > > weights(scene->mMeshes[m]->mNumVertices);
 					std::vector< std::vector< float > > indices(scene->mMeshes[m]->mNumVertices);
 					std::vector< Face > faces;
@@ -403,7 +403,7 @@ namespace Ovgl
 								GlobalTransform = parent->mTransformation * GlobalTransform;
 								parent = parent->mParent;
 							}
-							bone->matrix = MatrixInverse( &Vector4(), &Ovgl::MatrixTranspose((Matrix44*)&scene->mMeshes[m]->mBones[b]->mOffsetMatrix)) * MatrixRotationX(1.57f);
+							bone->matrix = MatrixInverse( Vector4(), Ovgl::MatrixTranspose(*(Matrix44*)&scene->mMeshes[m]->mBones[b]->mOffsetMatrix)) * MatrixRotationX(1.57f);
 
 							// Get bone hierarchy.
 							for( uint32_t cb = 0; cb < bnode->mNumChildren; cb++ )
@@ -470,11 +470,11 @@ namespace Ovgl
 							vertex.position.x = scene->mMeshes[m]->mVertices[vi].x;
 							vertex.position.y = scene->mMeshes[m]->mVertices[vi].y;
 							vertex.position.z = scene->mMeshes[m]->mVertices[vi].z;
-							vertex.position = Vector3Transform(&vertex.position, &matrix);
+							vertex.position = Vector3Transform(vertex.position, matrix);
 							vertex.normal.x = scene->mMeshes[m]->mNormals[vi].x;
 							vertex.normal.y = scene->mMeshes[m]->mNormals[vi].y;
 							vertex.normal.z = scene->mMeshes[m]->mNormals[vi].z;
-							vertex.normal = Vector3Transform(&vertex.normal, &matrix.Rotation());
+							vertex.normal = Vector3Transform(vertex.normal, matrix.Rotation());
 							if(scene->mMeshes[m]->GetNumUVChannels() > 0)
 							{
 								vertex.texture.x = scene->mMeshes[m]->mTextureCoords[0][vi].x;
@@ -537,7 +537,7 @@ namespace Ovgl
 						if(mesh->vertices[v].indices[j] == i && mesh->vertices[v].weight[j] > 0.1f)
 						{
 							Vertex Vertex;
-							Vertex.position = Vector3Transform( &mesh->vertices[v].position, &MatrixInverse( &Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), &mesh->bones[i]->matrix));
+							Vertex.position = Vector3Transform( mesh->vertices[v].position, MatrixInverse( Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), mesh->bones[i]->matrix));
 							Vertex.weight[0] = 1.0f;
 							mesh->bones[i]->mesh->vertices.push_back( Vertex );
 						}

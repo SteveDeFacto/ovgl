@@ -246,7 +246,7 @@ namespace Ovgl
 		bodyMatA = joint->obj[0]->getPose();
 		bodyMatB = joint->obj[1]->getPose();
 		btTransform frameInA, frameInB;
-		frameInA.setFromOpenGLMatrix((float*)&(bodyMatB * MatrixInverse(&Vector4( 0.0f, 0.0f, 0.0f, 0.0f), &bodyMatA)));
+		frameInA.setFromOpenGLMatrix((float*)&(bodyMatB * MatrixInverse(Vector4( 0.0f, 0.0f, 0.0f, 0.0f), bodyMatA)));
 		frameInB.setIdentity();
 		joint->joint = new btGeneric6DofConstraint( *obj1->actor, *obj2->actor, frameInA, frameInB, true );
 		this->DynamicsWorld->addConstraint(joint->joint, true);
@@ -327,9 +327,9 @@ namespace Ovgl
 		matrices[bone] = bones[bone]->getPose();
 		if( this->mesh->bones.size() > 0 )
 		{
-			inv_mesh_bone = MatrixInverse( &Vector4(0,0,0,0), &this->mesh->bones[bone]->matrix );
+			inv_mesh_bone = MatrixInverse( Vector4(0,0,0,0), this->mesh->bones[bone]->matrix );
 			matrices[bone] = ( inv_mesh_bone * matrices[bone]  );
-			inv_matrix = MatrixInverse( &Vector4(0,0,0,0), matrix );
+			inv_matrix = MatrixInverse( Vector4(0,0,0,0), *matrix );
 			tmatrix = matrices[bone] * inv_matrix;
 			for (uint32_t i = 0; i < this->mesh->bones[bone]->childen.size(); i++)
 			{
@@ -382,21 +382,21 @@ namespace Ovgl
 		{
 			Vector4 currentRot;
 			currentRot = Slerp(lCurve.value, uCurve.value, (float)(time - lCurve.time) / (float)(uCurve.time - lCurve.time) );
-			animRot = MatrixRotationQuaternion( &currentRot );
+			animRot = MatrixRotationQuaternion( currentRot );
 		}
 
 		// Offset the center of rotation.
-		animRot2 = MatrixInverse( &Vector4(), &mesh->bones[bone]->matrix) * animRot * mesh->bones[bone]->matrix; 
+		animRot2 = MatrixInverse( Vector4(), mesh->bones[bone]->matrix) * animRot * mesh->bones[bone]->matrix; 
 
 		// Get difference from original pose to the animated pose.
-		matrices[bone] = animRot2 * (*matrix) * MatrixInverse( &Vector4(), &mesh->bones[bone]->matrix);
+		matrices[bone] = animRot2 * (*matrix) * MatrixInverse( Vector4(), mesh->bones[bone]->matrix);
 
 		// Loop through all child bones and update their animations.
 		for( uint32_t i = 0; i < mesh->bones[bone]->childen.size(); i++)
 		{
 			Matrix44 accumulate;
 			Matrix44 Bone2Parent;
-			Bone2Parent = MatrixInverse( &Vector4(), &mesh->bones[bone]->matrix ) * mesh->bones[mesh->bones[bone]->childen[i]]->matrix;
+			Bone2Parent = MatrixInverse( Vector4(), mesh->bones[bone]->matrix ) * mesh->bones[mesh->bones[bone]->childen[i]]->matrix;
 			accumulate = animRot2 * (*matrix) * Bone2Parent;
 			Actor::UpdateAnimation( mesh->bones[bone]->childen[i], &accumulate, time );
 		}
@@ -429,7 +429,7 @@ namespace Ovgl
 				bodyMatA = joint->obj[0]->getPose();
 				bodyMatB = joint->obj[1]->getPose();
 				btTransform frameInA, frameInB;
-				frameInA.setFromOpenGLMatrix((float*)&(bodyMatB * MatrixInverse(&Vector4( 0.0f, 0.0f, 0.0f, 0.0f), &bodyMatA)));
+				frameInA.setFromOpenGLMatrix((float*)&(bodyMatB * MatrixInverse(Vector4( 0.0f, 0.0f, 0.0f, 0.0f), bodyMatA)));
 				frameInB.setIdentity();
 				joint->joint = new btGeneric6DofConstraint( *joint->obj[0]->actor, *joint->obj[1]->actor, frameInA, frameInB, true );
 				joint->joint->setAngularLowerLimit( btVector3(DegToRad(-childBone->max.x), DegToRad(childBone->min.y), DegToRad(-childBone->max.z)) );
@@ -458,7 +458,7 @@ namespace Ovgl
 		for(uint32_t a = 0; a < actors.size(); a++)
 		{
 			Vector3 corrected_trajectory;
-			corrected_trajectory = Vector3Transform( &(actors[a]->walkDirection / (1.0f + (float)actors[a]->crouch) ), &MatrixRotationY( -actors[a]->lookDirection.z) );
+			corrected_trajectory = Vector3Transform( (actors[a]->walkDirection / (1.0f + (float)actors[a]->crouch) ), MatrixRotationY( -actors[a]->lookDirection.z) );
 			actors[a]->controller->setWalkDirection(btVector3(corrected_trajectory.x, corrected_trajectory.y, corrected_trajectory.z));
 		
 			btCollisionShape* shape = actors[a]->ghostObject->getCollisionShape();
