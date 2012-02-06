@@ -67,28 +67,28 @@ namespace Ovgl
 		{
 			// Open file.
 			FILE *output;
-			fopen_s(&output, file.c_str(),"wb");
-	
+			output = fopen(file.c_str(),"wb");
+
 			// Write the number of meshes to the file.
 			uint32_t mesh_count = Meshes.size();
-			fwrite( &mesh_count, 4, 1, output ); 
+			fwrite( &mesh_count, 4, 1, output );
 			for( uint32_t m = 0; m < mesh_count; m++ )
 			{
 				// Get mesh variables.
 				uint32_t vertex_count = Meshes[m]->vertices.size();
 				uint32_t face_count = Meshes[m]->faces.size();
 				uint32_t bone_count = Meshes[m]->bones.size();
-		
+
 				// Write the number of vertices, faces, and bones.
 				fwrite( &vertex_count, 4, 1, output );
 				fwrite( &face_count, 4, 1, output );
 				fwrite( &bone_count, 4, 1, output );
-				
+
 				// Write the vertices, faces, and bones.
 				fwrite( &Meshes[m]->vertices[0], sizeof(Vertex), vertex_count, output);
 				fwrite( &Meshes[m]->faces[0], sizeof(Face), face_count, output);
 				fwrite( &Meshes[m]->attributes[0], sizeof(uint32_t), face_count, output);
-					
+
 				// Write bones.
 				for( uint32_t i = 0; i < bone_count; i++ )
 				{
@@ -96,7 +96,7 @@ namespace Ovgl
 					face_count = Meshes[m]->bones[i]->mesh->faces.size();
 					fwrite( &vertex_count, 4, 1, output );
 					fwrite( &face_count, 4, 1, output );
-					if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it. 
+					if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
 					{
 						fwrite( &Meshes[m]->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, output );
 						fwrite( &Meshes[m]->bones[i]->mesh->faces[0], sizeof(Face), face_count, output );
@@ -112,7 +112,7 @@ namespace Ovgl
 				}
 			}
 			uint32_t scene_count = Scenes.size();
-			fwrite( &scene_count, 4, 1, output ); 
+			fwrite( &scene_count, 4, 1, output );
 			for( uint32_t s = 0; s < scene_count; s++ )
 			{
 				uint32_t prop_count = Scenes[s]->props.size();
@@ -195,11 +195,11 @@ namespace Ovgl
 		{
 			// Get the number of meshes currently in memory so we can offset the indices into the array.
 			uint32_t mesh_offset = Meshes.size();
-		
-			// Open file.	
+
+			// Open file.
 			FILE *input = NULL;
-			fopen_s(&input, file.c_str(),"rb");
-	
+			input = fopen( file.c_str(),"rb" );
+
 			// If file was unable to be opened present error message to debug output and end function
 			if ( input == NULL )
 			{
@@ -224,18 +224,18 @@ namespace Ovgl
 				uint32_t child_count;
 				std::vector< Vector3 > bone_vertices;
 				std::vector< Face > bone_faces;
-		
+
 				// Get number of vertices, faces, and bones.
-				fread( &vertex_count, 4, 1, input ); 
-				fread( &face_count, 4, 1, input ); 
-				fread( &bone_count, 4, 1, input ); 
-		
+				fread( &vertex_count, 4, 1, input );
+				fread( &face_count, 4, 1, input );
+				fread( &bone_count, 4, 1, input );
+
 				// Resize arrays.
 				mesh->vertices.resize(vertex_count);
 				mesh->faces.resize(face_count);
 				mesh->attributes.resize(face_count);
 				mesh->bones.resize(bone_count);
-		
+
 				// Load vertices, indices and attributes.
 				fread(&mesh->vertices[0], sizeof(Vertex), vertex_count, input);
 				fread(&mesh->faces[0], sizeof(Face), face_count, input);
@@ -249,7 +249,7 @@ namespace Ovgl
 					mesh->bones[i]->convex = NULL;
 					fread( &vertex_count, 4, 1, input );
 					fread( &face_count, 4, 1, input );
-					if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it. 
+					if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
 					{
 						mesh->bones[i]->mesh->vertices.resize(vertex_count);
 						mesh->bones[i]->mesh->faces.resize(face_count);
@@ -265,11 +265,11 @@ namespace Ovgl
 					mesh->bones[i]->childen.resize(child_count);
 					if(child_count) fread( &mesh->bones[i]->childen[0], sizeof(uint32_t), child_count, input );
 				}
-		
+
 				// Nullify buffer addresses.
 				mesh->VertexBuffer = 0;
 				mesh->IndexBuffers = 0;
-					
+
 				// Update buffers.
 				mesh->Update();
 
@@ -282,7 +282,7 @@ namespace Ovgl
 			for( uint32_t s = 0; s < scene_count; s++ )
 			{
 				Scene* scene = CreateScene();
-	
+
 				uint32_t prop_count;
 				fread( &prop_count, 4, 1, input );
 				for( uint32_t p = 0; p < prop_count; p++ )
@@ -425,7 +425,7 @@ namespace Ovgl
 								weights[scene->mMeshes[m]->mBones[b]->mWeights[w].mVertexId].push_back((float)scene->mMeshes[m]->mBones[b]->mWeights[w].mWeight);
 								indices[scene->mMeshes[m]->mBones[b]->mWeights[w].mVertexId].push_back((float)b);
 							}
-							
+
 							// Get animation for this bone.
 							for( uint32_t a = 0; a < scene->mNumAnimations; a++ )
 							{
@@ -449,7 +449,7 @@ namespace Ovgl
 							}
 						}
 					}
-					
+
 					// Cap off bone influences to no more than 4.
 					for ( uint32_t w = 0; w < scene->mMeshes[m]->mNumVertices; w++)
 					{
@@ -512,7 +512,7 @@ namespace Ovgl
 						face.indices[2] = findices[2];
 						mesh->faces.push_back( face );
 						mesh->attributes.push_back(scene->mMeshes[m]->mMaterialIndex);
-					}		
+					}
 				}
 			}
 
@@ -563,7 +563,7 @@ namespace Ovgl
 	{
 		// Create new texture
 		Ovgl::Texture* texture = new Ovgl::Texture;
-	
+
 		// Set the texture's media library handle to this media library
 		texture->MLibrary = this;
 
@@ -594,7 +594,7 @@ namespace Ovgl
 
 			// Load texture
 			FIBITMAP* dib = FreeImage_Load( fif, CubeFaces[i].c_str() );
-		
+
 			// Convert to RGB format
 			dib = FreeImage_ConvertTo32Bits( dib );
 
@@ -637,10 +637,10 @@ namespace Ovgl
 
 	Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
 	{
-		struct stat stFileInfo; 
-		int intStat = stat(file.c_str(), &stFileInfo); 
+		struct stat stFileInfo;
+		int intStat = stat(file.c_str(), &stFileInfo);
 		if(intStat == 0)
-		{ 
+		{
 			// Image format
 			FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 
@@ -661,7 +661,7 @@ namespace Ovgl
 
 			// Load texture
 			FIBITMAP* dib = FreeImage_Load( fif, file.c_str() );
-		
+
 			// Check if file was loaded
 			if(dib == NULL)
 			{
@@ -702,7 +702,7 @@ namespace Ovgl
 				textura[j*4+2] = pixeles[j*4+0];
 				textura[j*4+3] = pixeles[j*4+3];
 			}
-		
+
 			// Create OpenGL texture
 			glGenTextures( 1, &texture->Image );
 			glBindTexture( GL_TEXTURE_2D, texture->Image );
@@ -728,18 +728,18 @@ namespace Ovgl
 		{
 			// File does not exist!
 			return NULL;
-		} 
+		}
 	}
 
 	Ovgl::Shader* Ovgl::MediaLibrary::ImportShader( const std::string& file )
 	{
 		Ovgl::Shader* shader = new Ovgl::Shader;
 		shader->MLibrary = this;
-		
+
 		// Define debugging variables
 		CGerror error;
 		const char* string;
-	
+
 		// Create vertex program
 		shader->VertexProgram = cgCreateProgramFromFile( Inst->CgContext, CG_SOURCE, file.c_str(), Inst->CgVertexProfile, "VS", NULL );
 		string = cgGetLastErrorString(&error);
@@ -890,7 +890,7 @@ namespace Ovgl
 		buffer->Inst = Inst;
 		OggVorbis_File info;
 		FILE* f = NULL;
-		fopen_s( &f, file.c_str(), "rb" );
+		f = fopen( file.c_str(), "rb" );
 		if ( f == NULL )
 		{
 			std::wstring wfile;
@@ -901,7 +901,7 @@ namespace Ovgl
 		}
 		ov_open_callbacks(f, &info, NULL, 0, OV_CALLBACKS_DEFAULT);
 		vorbis_info *vi = ov_info(&info, -1);
-	
+
 		if (vi->channels == 1)
 		{
 			buffer->format = AL_FORMAT_MONO16;

@@ -149,7 +149,7 @@ namespace Ovgl
 			/**
 			* Render debug marker.
 			*/
-			void DrawMarker( Matrix44& matrix );
+			void DrawMarker( const Matrix44& matrix );
 			/**
 			* Release render target.
 			*/
@@ -165,7 +165,7 @@ namespace Ovgl
 			/**
 			* Render a single mesh.
 			*/
-			void RenderMesh( Ovgl::Mesh* mesh, Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender );
+			void RenderMesh( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender );
 		};
 
 		class Interface

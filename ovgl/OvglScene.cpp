@@ -154,7 +154,7 @@ namespace Ovgl
 	Object* Scene::CreateObject( Mesh* mesh, Matrix44* matrix )
 	{
 		Object* object = new Object;
-		object->Scene = this;
+		object->scene = this;
 		object->mesh = mesh;
 		object->materials.resize(mesh->subset_count);
 		bool zeroFound = false;
@@ -336,7 +336,7 @@ namespace Ovgl
 				Matrix44 child;
 				child = mesh->bones[mesh->bones[bone]->childen[i]]->matrix.Translation();
 				child = child * tmatrix * (*matrix);
-				Prop::Update( mesh->bones[bone]->childen[i], &child );	
+				Prop::Update( mesh->bones[bone]->childen[i], &child );
 			}
 		}
 	}
@@ -352,7 +352,7 @@ namespace Ovgl
 		// Get animation rotation.
 		Curve uCurve;
 		Curve lCurve;
-		uCurve.time = ULONG_MAX;
+		uCurve.time = 0xffffffffUL;
 		uCurve.value = Vector4( 0.0f, 0.0f, 0.0f, 0.0f );
 		lCurve.time = 0;
 		lCurve.value = Vector4( 0.0f, 0.0f, 0.0f, 0.0f );
@@ -372,7 +372,7 @@ namespace Ovgl
 		}
 
 		// If we can't find an upper curve then just set it to the lower curve.
-		if(uCurve.time == ULONG_MAX)
+		if(uCurve.time == 0xffffffffUL)
 		{
 			uCurve = lCurve;
 		}
@@ -386,7 +386,7 @@ namespace Ovgl
 		}
 
 		// Offset the center of rotation.
-		animRot2 = MatrixInverse( Vector4(), mesh->bones[bone]->matrix) * animRot * mesh->bones[bone]->matrix; 
+		animRot2 = MatrixInverse( Vector4(), mesh->bones[bone]->matrix) * animRot * mesh->bones[bone]->matrix;
 
 		// Get difference from original pose to the animated pose.
 		matrices[bone] = animRot2 * (*matrix) * MatrixInverse( Vector4(), mesh->bones[bone]->matrix);
@@ -460,7 +460,7 @@ namespace Ovgl
 			Vector3 corrected_trajectory;
 			corrected_trajectory = Vector3Transform( (actors[a]->walkDirection / (1.0f + (float)actors[a]->crouch) ), MatrixRotationY( -actors[a]->lookDirection.z) );
 			actors[a]->controller->setWalkDirection(btVector3(corrected_trajectory.x, corrected_trajectory.y, corrected_trajectory.z));
-		
+
 			btCollisionShape* shape = actors[a]->ghostObject->getCollisionShape();
 			if( (actors[a]->crouch) && shape->getLocalScaling().getY() > 0.5f )
 			{
@@ -555,7 +555,7 @@ namespace Ovgl
 					alListenerfv(AL_POSITION,	ListenerPos);
 					alListenerfv(AL_VELOCITY,	ListenerVel);
 					alListenerfv(AL_ORIENTATION, ListenerOri);
-		
+
 					for( uint32_t i = 0; i < cameras[c]->voices.size(); i++ )
 					{
 						if(cameras[c]->voices[i] != NULL)
@@ -667,11 +667,11 @@ namespace Ovgl
 
 	void Object::Release()
 	{
-		for( uint32_t i = 0; i < Scene->objects.size(); i++)
+		for( uint32_t i = 0; i < scene->objects.size(); i++)
 		{
-			if( Scene->objects[i] == this)
+			if( scene->objects[i] == this)
 			{
-				Scene->objects.erase( Scene->objects.begin() + i );
+				scene->objects.erase( scene->objects.begin() + i );
 			}
 		}
 		CollisionMesh->Release();

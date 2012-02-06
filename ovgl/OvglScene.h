@@ -47,7 +47,7 @@ namespace Ovgl
 		class Vector3;
 
 		/**
-		* This class can be used to get the object that a ray is cast onto, the world space point of collision, and the local space point of collision. 
+		* This class can be used to get the object that a ray is cast onto, the world space point of collision, and the local space point of collision.
 		* @brief Used to return ray collision information.
 		*/
 		class __declspec(dllexport) RayHit
@@ -111,7 +111,7 @@ namespace Ovgl
 			*/
 			void Release();
 		};
-		
+
 		/**
 		* @brief This class represents a light within a Ovgl::Scene.
 		*/
@@ -148,10 +148,10 @@ namespace Ovgl
 			*/
 			void Release();
 		};
-		
+
 		/**
 		* Props are dynamic objects such as vehicles, rag dolls, and any other objects that react to kinetic forces within the scene.
-		* @brief This class represents a prop within a Ovgl::Scene. 
+		* @brief This class represents a prop within a Ovgl::Scene.
 		*/
 		class __declspec(dllexport) Prop
 		{
@@ -216,10 +216,10 @@ namespace Ovgl
 			*/
 			void Release();
 		};
-	
+
 		/**
 		* Objects are static and cannot react to kinetic forces within the scene.
-		* @brief This class represents a object within a Ovgl::Scene. 
+		* @brief This class represents a object within a Ovgl::Scene.
 		*/
 		class __declspec(dllexport) Object
 		{
@@ -227,7 +227,7 @@ namespace Ovgl
 			/**
 			* This is a pointer to the scene that this object resides in.
 			*/
-			Scene* Scene;
+			Scene* scene;
 			/**
 			* This is a pointer to the physics object that represents this object within the scene.
 			*/
@@ -254,10 +254,10 @@ namespace Ovgl
 			*/
 			void Release();
 		};
-	
+
 		/**
 		* Emitters act as a reference points that provides the location and oriantation of the source of an emission for other classes such as Ovgl::AudioInstance and Ovgl::ParticleInstance.
-		* @brief This class represents a emitter within a Ovgl::Scene. 
+		* @brief This class represents a emitter within a Ovgl::Scene.
 		*/
 		class __declspec(dllexport) Emitter
 		{
@@ -311,11 +311,11 @@ namespace Ovgl
 			Matrix44 CameraOffset;
 			/**
 			* Mesh offset
-			*/		
+			*/
 			Matrix44 offset;
 			/**
 			* This is what defines the appearance of the actor.
-			*/			
+			*/
 			Mesh* mesh;
 			/**
 			* List of materials that are used for each subset of the character's mesh.
@@ -478,7 +478,7 @@ namespace Ovgl
 			*/
 			Emitter* CreateEmitter( Matrix44* matrix );
 			/**
-			* This function creates a joint which binds two Ovgl::CMesh together. 
+			* This function creates a joint which binds two Ovgl::CMesh together.
 			* @param obj1 First Ovgl::CMesh.
 			* @param obj2 Second Ovgl::CMesh.
 			* @param anchor This is the point in which the two Ovgl::CMesh are anchored. If this is set to NULL the anchor will be placed at the position of the first Ovgl::CMesh;

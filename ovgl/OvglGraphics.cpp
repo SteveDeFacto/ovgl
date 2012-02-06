@@ -53,9 +53,9 @@ namespace Ovgl
 		// Get the window's rect
 		RECT WindowRect;
 		GetWindowRect( window->hWnd, &WindowRect );
-	
+
 		RECT adjustedrect;
-	
+
 		// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
 		if( rect->x > 0 && rect->x < 1 )
 		{
@@ -65,7 +65,7 @@ namespace Ovgl
 		{
 			adjustedrect.left = (LONG)rect->x;
 		}
-	
+
 		// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
 		if( rect->y > 0 && rect->y < 1 )
 		{
@@ -75,7 +75,7 @@ namespace Ovgl
 		{
 			adjustedrect.top = (LONG)rect->y;
 		}
-	
+
 		// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
 		if( rect->z > 0 && rect->z < 1 )
 		{
@@ -85,7 +85,7 @@ namespace Ovgl
 		{
 			adjustedrect.right = (LONG)rect->z;
 		}
-	
+
 		// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
 		if( rect->w > 0 && rect->w < 1 )
 		{
@@ -95,7 +95,7 @@ namespace Ovgl
 		{
 			adjustedrect.bottom = (LONG)rect->w;
 		}
-	
+
 		return adjustedrect;
 	}
 
@@ -103,19 +103,19 @@ namespace Ovgl
 	{
 		// Get the window's rect
 		RECT WindowRect;
-	
+
 		glBindTexture(GL_TEXTURE_2D, texture->Image);
 		GLint width, height;
 		glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
 		glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
-	
+
 		WindowRect.left =0;
 		WindowRect.top =0;
 		WindowRect.right = width;
 		WindowRect.bottom = height;
-	
+
 		RECT adjustedrect;
-	
+
 		// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
 		if( rect->x > 0 && rect->x < 1 )
 		{
@@ -125,7 +125,7 @@ namespace Ovgl
 		{
 			adjustedrect.left = (LONG)rect->x;
 		}
-	
+
 		// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
 		if( rect->y > 0 && rect->y < 1 )
 		{
@@ -145,7 +145,7 @@ namespace Ovgl
 		{
 			adjustedrect.right = (LONG)rect->z;
 		}
-	
+
 		// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
 		if( rect->w > 0 && rect->w < 1 )
 		{
@@ -155,7 +155,7 @@ namespace Ovgl
 		{
 			adjustedrect.bottom = (LONG)rect->w;
 		}
-	
+
 		return adjustedrect;
 	}
 
@@ -173,18 +173,18 @@ namespace Ovgl
 		multiSample = true;
 		eye_luminance = 0.0f;
 		Rect = *viewport;
-	
+
 		RECT adjustedrect = WindowAdjustedRect( hWin, &Rect);
-	
+
 		int width = (int)(adjustedrect.right - adjustedrect.left);
 		int height = (int)(adjustedrect.bottom - adjustedrect.top);
-	
+
 		wglMakeCurrent( hDC, Inst->hRC );
-	
+
 		// Multi sample framebuffer
 		glGenFramebuffers(1, &MultiSampleFrameBuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, MultiSampleFrameBuffer);
-	
+
 		// Multi sample colorbuffer
 		glGenRenderbuffers(1, &ColorBuffer);
 		glBindRenderbuffer(GL_RENDERBUFFER, ColorBuffer);
@@ -356,12 +356,12 @@ namespace Ovgl
 		delete this;
 	}
 
-	void RenderTarget::RenderMesh( Mesh* mesh, Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender )
+	void RenderTarget::RenderMesh( const Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender )
 	{
 		Matrix44 viewProj = (MatrixInverse( Vector4(0,0,0,0), View->getPose() ) * View->projMat);
 		Matrix44 worldMat = (matrix * viewProj );
 		glLoadMatrixf((float*)&worldMat);
-	
+
 		float LightCount = (float)View->scene->lights.size();
 		std::vector< float > mLights;
 		std::vector< float > LightColors;
@@ -377,7 +377,7 @@ namespace Ovgl
 			LightColors.push_back( 1.0f );
 		}
 
-		for( uint32_t s = 0; s < mesh->subset_count; s++)
+		for( uint32_t s = 0; s < mesh.subset_count; s++)
 		if( PostRender == materials[s]->PostRender )
 		{
 			if(materials[s]->NoZBuffer)
@@ -444,8 +444,8 @@ namespace Ovgl
 				cgSetParameterValuefr( CgVariable, materials[s]->Variables[v].second.size(), (float*)&materials[s]->Variables[v].second[0] );
 			}
 
-			glBindBufferARB( GL_ARRAY_BUFFER, mesh->VertexBuffer );
-			glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, mesh->IndexBuffers[s] );
+			glBindBufferARB( GL_ARRAY_BUFFER, mesh.VertexBuffer );
+			glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, mesh.IndexBuffers[s] );
 
 			// Set vertex attributes
 			glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
@@ -495,11 +495,11 @@ namespace Ovgl
 		glBindTexture(GL_TEXTURE_2D, PrimaryTex);
 		glGenerateMipmap(GL_TEXTURE_2D);
 		float luminance;
-	
+
 		GLint width, height;
 		glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
 		glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
-	
+
 		glGetTexImage(GL_TEXTURE_2D, MaxLevel( width, height), GL_LUMINANCE, GL_FLOAT, &luminance);
 		eye_luminance = eye_luminance + ((( luminance + 0.5f ) - eye_luminance ) * 0.01f);
 		eye_luminance = std::max( 0.5f, std::min( 1.0f, eye_luminance) );
@@ -513,10 +513,10 @@ namespace Ovgl
 		cgGLSetTextureParameter( CgFSTexture4, PrimaryTex );
 		cgGLEnableTextureParameter( CgFSTexture4 );
 
-		// Set brightness 
+		// Set brightness
 		CGparameter CgBrightness = cgGetNamedParameter( Inst->DefaultMedia->Shaders[5]->FragmentProgram, "Brightness" );
 		cgGLSetParameter1f( CgBrightness, 1.0f / eye_luminance );
-	
+
 		// Set vertex attributes
 		glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
 		glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
@@ -763,7 +763,7 @@ namespace Ovgl
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void RenderTarget::DrawMarker( Matrix44& matrix )
+	void RenderTarget::DrawMarker( const Matrix44& matrix )
 	{
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -776,17 +776,17 @@ namespace Ovgl
 		glLineWidth( 1.0f );
 		glColor3f( 1.0f, 0.0f, 0.0f );
 		glBegin(GL_LINES);
-			glVertex3f( 0.0f, 0.0f, 0.0f ); 
+			glVertex3f( 0.0f, 0.0f, 0.0f );
 			glVertex3f( 1.0f, 0.0f, 0.0f );
 		glEnd();
 		glColor3f( 0.0f, 1.0f, 0.0f );
-		glBegin(GL_LINES); 
-			glVertex3f( 0.0f, 0.0f, 0.0f ); 
+		glBegin(GL_LINES);
+			glVertex3f( 0.0f, 0.0f, 0.0f );
 			glVertex3f( 0.0f, 1.0f, 0.0f );
 		glEnd();
 		glColor3f( 0.0f, 0.0f, 1.0f );
-		glBegin(GL_LINES); 
-			glVertex3f( 0.0f, 0.0f, 0.0f ); 
+		glBegin(GL_LINES);
+			glVertex3f( 0.0f, 0.0f, 0.0f );
 			glVertex3f( 0.0f, 0.0f, 1.0f );
 		glEnd();
 	}
@@ -870,7 +870,7 @@ namespace Ovgl
 				CGparameter CgFSTexture = cgGetNamedParameter( Inst->DefaultMedia->Shaders[1]->FragmentProgram, "txSkybox" );
 				cgGLSetTextureParameter( CgFSTexture, scene->SkyBox->Image );
 				cgGLEnableTextureParameter( CgFSTexture );
-		
+
 				// Bind vertex and index buffers
 				glBindBufferARB( GL_ARRAY_BUFFER, Inst->DefaultMedia->Meshes[0]->VertexBuffer );
 				glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, Inst->DefaultMedia->Meshes[0]->IndexBuffers[0] );
@@ -909,7 +909,7 @@ namespace Ovgl
 				glDisableVertexAttribArrayARB( 2 );
 				glDisableVertexAttribArrayARB( 3 );
 				glDisableVertexAttribArrayARB( 4 );
-	
+
 				cgGLDisableTextureParameter( CgFSTexture );
 			}
 			else
@@ -935,13 +935,13 @@ namespace Ovgl
 				{
 					std::vector<Matrix44> temp(1);
 					temp[0] = scene->objects[i]->getPose();
-					RenderMesh( scene->objects[i]->mesh, scene->objects[i]->getPose(), temp, scene->objects[i]->materials, !!PostRender );
+					RenderMesh( *scene->objects[i]->mesh, scene->objects[i]->getPose(), temp, scene->objects[i]->materials, !!PostRender );
 				}
-	
+
 				// Render props
 				for( uint32_t i = 0; i < scene->props.size(); i++ )
 				{
-					RenderMesh( scene->props[i]->mesh, scene->props[i]->getPose(), scene->props[i]->matrices, scene->props[i]->materials, !!PostRender );
+					RenderMesh( *scene->props[i]->mesh, scene->props[i]->getPose(), scene->props[i]->matrices, scene->props[i]->materials, !!PostRender );
 				}
 
 				// Render actors
@@ -949,7 +949,7 @@ namespace Ovgl
 				{
 					if( scene->actors[i]->mesh )
 					{
-						RenderMesh( scene->actors[i]->mesh, scene->actors[i]->getPose(), scene->actors[i]->matrices, scene->actors[i]->materials, !!PostRender );
+						RenderMesh( *scene->actors[i]->mesh, scene->actors[i]->getPose(), scene->actors[i]->matrices, scene->actors[i]->materials, !!PostRender );
 					}
 				}
 			}
@@ -1097,7 +1097,7 @@ namespace Ovgl
 			if(Interfaces[i]->Enabled)
 			{
 				RECT AdjustedRect;
-	
+
 				// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
 				if( Interfaces[i]->Rect.w > 0 && Interfaces[i]->Rect.w < 1 )
 				{
@@ -1107,7 +1107,7 @@ namespace Ovgl
 				{
 					AdjustedRect.left = (LONG)Interfaces[i]->Rect.w;
 				}
-	
+
 				// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
 				if( Interfaces[i]->Rect.x > 0 && Interfaces[i]->Rect.x < 1 )
 				{
@@ -1158,16 +1158,16 @@ namespace Ovgl
 	void RenderTarget::Update()
 	{
 		RECT adjustedrect = WindowAdjustedRect( hWin, &Rect);
-	
+
 		int width = (int)(adjustedrect.right - adjustedrect.left);
 		int height = (int)(adjustedrect.bottom - adjustedrect.top);
-	
+
 		wglMakeCurrent( hWin->hDC, Inst->hRC );
-	
+
 		// Multi sample framebuffer
 		glGenFramebuffers(1, &MultiSampleFrameBuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, MultiSampleFrameBuffer);
-	
+
 		// Multi sample colorbuffer
 		glGenRenderbuffers(1, &ColorBuffer);
 		glBindRenderbuffer(GL_RENDERBUFFER, ColorBuffer);
@@ -1279,7 +1279,7 @@ namespace Ovgl
 		{
 			AdjustedRect.bottom = (LONG)Rect.z;
 		}
-	
+
 		RECT TextRect;
 		TextRect.left = 0;
 		TextRect.top = 0;
@@ -1299,7 +1299,7 @@ namespace Ovgl
 		DrawTextA(hDC, Text.c_str(), Text.size(), &TextRect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX);
 		GdiFlush();
 		DeleteObject(NewBrush);
-		DeleteObject(NewFont);	
+		DeleteObject(NewFont);
 		DeleteObject(hTempBmp);
 
 		GLubyte* pTexels = new GLubyte[TextRect.right * TextRect.bottom * 4];
@@ -1336,7 +1336,7 @@ namespace Ovgl
 		Interfaces.push_back( Sprite );
 		return Sprite;
 	}
-	
+
 	Interface* RenderTarget::CreateText( const std::string& text, Vector4* rect )
 	{
 		Interface* Text = new Interface;

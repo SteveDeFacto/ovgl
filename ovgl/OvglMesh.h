@@ -104,7 +104,7 @@ namespace Ovgl
 		class __declspec(dllexport) PVS
 		{
 		public:
-			Mesh*								Mesh;
+			Mesh*								mesh;
 			std::vector< PVS* >					PVSets;
 		};
 
