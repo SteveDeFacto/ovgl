@@ -18,7 +18,9 @@
 
 #pragma once
 
-#pragma warning(disable : 4251) // disable std warnings 
+#pragma warning(disable : 4251) // Disable std warnings
+
+#define _CRT_SECURE_NO_WARNINGS // Disable security warnings
 
 // Windows Headers
 #include <windows.h>
