@@ -18,11 +18,9 @@ link_directories(${OPENAL_LIBRARY_DIR}
 ${CG_LIBRARY_DIR}
 ${FREEIMAGE_LIBRARY_DIR}
 ${ASSIMP_LIBRARY_DIR}
-${ASSIMP_DEBUG_LIBRARY_DIR}
 ${OGG_LIBRARY_DIR}
 ${VORBIS_LIBRARY_DIR}
-${BULLET_LIBRARY_DIR}
-${BULLET_DEBUG_LIBRARY_DIR})
+${BULLET_LIBRARY_DIR})
 
 add_library( Ovgl SHARED "OvglAudio.h"
 "OvglGraphics.h"
@@ -54,14 +52,10 @@ target_link_libraries( Ovgl "wininet.lib"
 "libvorbis_static.lib"
 "libvorbisfile_static.lib"
 "OpenGLSupport.lib"
-optimized "Assimp.lib"
-optimized "BulletDynamics.lib"
-optimized "BulletCollision.lib"
-optimized "LinearMath.lib"
-debug "Assimp.lib"
-debug "BulletDynamicsd.lib"
-debug "BulletCollisiond.lib"
-debug "LinearMathd.lib")
+"Assimp.lib"
+"BulletDynamics.lib"
+"BulletCollision.lib"
+"LinearMath.lib")
 
 add_definitions( -DNOMINMAX -DWIN32_LEAN_AND_MEAN -DKFBX_DLLINFO )
 
