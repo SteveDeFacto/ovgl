@@ -21,6 +21,7 @@
 #include "OvglMath.h"
 #include "OvglGraphics.h"
 #include "OvglWindow.h"
+#include "OvglAnimation.h"
 
 namespace Ovgl
 {

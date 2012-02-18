@@ -35,6 +35,9 @@
 #include <math.h>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
+#include <map>
+#include <tuple>
 #include <vector>
 #include <string>
 #include <set>
@@ -56,16 +59,15 @@
 #include <Cg/cgGL.h>
 
 // Bullet Headers
-#include <btBulletDynamicsCommon.h>
-#include <BulletDynamics/Character/btKinematicCharacterController.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
-#include <BulletCollision/CollisionShapes/btShapeHull.h>
-#include <..\\OpenGL\\GLDebugDrawer.h>
+#include "btBulletDynamicsCommon.h"
+#include "BulletDynamics/Character/btKinematicCharacterController.h"
+#include "BulletCollision/CollisionDispatch/btGhostObject.h"
+#include "BulletCollision/CollisionShapes/btShapeHull.h"
 
 // Assimp Headers
-#include <assimp.h>
-#include <aiPostProcess.h>
-#include <aiScene.h>
+#include <assimp/cimport.h>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 
 // OGG Headers
 #include <vorbis/codec.h>

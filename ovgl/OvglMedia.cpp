@@ -23,6 +23,8 @@
 #include "OvglAudio.h"
 #include "OvglScene.h"
 #include "OvglMesh.h"
+#include "OvglAnimation.h"
+#include "OvglSkeleton.h"
 
 namespace Ovgl
 {
@@ -44,7 +46,7 @@ namespace Ovgl
 		}
 		for( uint32_t i = 0; i < Meshes.size(); i++ )
 		{
-			Meshes[i]->Release();
+			delete Meshes[i];
 		}
 		for( uint32_t i = 0; i < Scenes.size(); i++ )
 		{
@@ -61,294 +63,297 @@ namespace Ovgl
 		delete this;
 	}
 
-	void MediaLibrary::Save( const std::string& file )
-	{
-		if(!file.empty())
-		{
-			// Open file.
-			FILE *output;
-			output = fopen(file.c_str(),"wb");
+	//void MediaLibrary::Save( const std::string& file )
+	//{
+	//	if(!file.empty())
+	//	{
+	//		// Open file.
+	//		FILE *output;
+	//		output = fopen(file.c_str(),"wb");
 
-			// Write the number of meshes to the file.
-			uint32_t mesh_count = Meshes.size();
-			fwrite( &mesh_count, 4, 1, output );
-			for( uint32_t m = 0; m < mesh_count; m++ )
-			{
-				// Get mesh variables.
-				uint32_t vertex_count = Meshes[m]->vertices.size();
-				uint32_t face_count = Meshes[m]->faces.size();
-				uint32_t bone_count = Meshes[m]->bones.size();
+	//		// Write the number of meshes to the file.
+	//		uint32_t mesh_count = Meshes.size();
+	//		fwrite( &mesh_count, 4, 1, output );
+	//		for( uint32_t m = 0; m < mesh_count; m++ )
+	//		{
+	//			// Get mesh variables.
+	//			uint32_t vertex_count = Meshes[m]->vertices.size();
+	//			uint32_t face_count = Meshes[m]->faces.size();
+	//			uint32_t bone_count = Meshes[m]->bones.size();
 
-				// Write the number of vertices, faces, and bones.
-				fwrite( &vertex_count, 4, 1, output );
-				fwrite( &face_count, 4, 1, output );
-				fwrite( &bone_count, 4, 1, output );
+	//			// Write the number of vertices, faces, and bones.
+	//			fwrite( &vertex_count, 4, 1, output );
+	//			fwrite( &face_count, 4, 1, output );
+	//			fwrite( &bone_count, 4, 1, output );
 
-				// Write the vertices, faces, and bones.
-				fwrite( &Meshes[m]->vertices[0], sizeof(Vertex), vertex_count, output);
-				fwrite( &Meshes[m]->faces[0], sizeof(Face), face_count, output);
-				fwrite( &Meshes[m]->attributes[0], sizeof(uint32_t), face_count, output);
+	//			// Write the vertices, faces, and bones.
+	//			fwrite( &Meshes[m]->vertices[0], sizeof(Vertex), vertex_count, output);
+	//			fwrite( &Meshes[m]->faces[0], sizeof(Face), face_count, output);
+	//			fwrite( &Meshes[m]->attributes[0], sizeof(uint32_t), face_count, output);
 
-				// Write bones.
-				for( uint32_t i = 0; i < bone_count; i++ )
-				{
-					vertex_count = Meshes[m]->bones[i]->mesh->vertices.size();
-					face_count = Meshes[m]->bones[i]->mesh->faces.size();
-					fwrite( &vertex_count, 4, 1, output );
-					fwrite( &face_count, 4, 1, output );
-					if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
-					{
-						fwrite( &Meshes[m]->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, output );
-						fwrite( &Meshes[m]->bones[i]->mesh->faces[0], sizeof(Face), face_count, output );
-					}
-					fwrite( &Meshes[m]->bones[i]->matrix, sizeof(Matrix44), 1, output );
-					fwrite( &Meshes[m]->bones[i]->length, sizeof(float), 1, output );
-					fwrite( &Meshes[m]->bones[i]->min, sizeof(Vector3), 1, output );
-					fwrite( &Meshes[m]->bones[i]->max, sizeof(Vector3), 1, output );
-					fwrite( &Meshes[m]->bones[i]->parent, sizeof(uint32_t), 1, output );
-					uint32_t child_count = Meshes[m]->bones[i]->childen.size();
-					fwrite( &child_count, sizeof(uint32_t), 1, output );
-					if(child_count) fwrite( &Meshes[m]->bones[i]->childen[0], sizeof(uint32_t), child_count, output );
-				}
-			}
-			uint32_t scene_count = Scenes.size();
-			fwrite( &scene_count, 4, 1, output );
-			for( uint32_t s = 0; s < scene_count; s++ )
-			{
-				uint32_t prop_count = Scenes[s]->props.size();
-				fwrite( &prop_count, 4, 1, output );
-				for( uint32_t p = 0; p < Scenes[s]->props.size(); p++ )
-				{
-					Matrix44 matrix = Scenes[s]->props[p]->getPose();
-					fwrite( &matrix, sizeof(Matrix44), 1, output );
-					uint32_t mesh_index = 0;
-					for( uint32_t sm = 0; sm < Meshes.size(); sm++ )
-					{
-						if( Scenes[s]->props[p]->mesh == Meshes[sm] )
-						{
-							mesh_index = sm;
-						}
-					}
-					fwrite( &mesh_index, 4, 1, output );
-					for( uint32_t b = 0; b < Scenes[s]->props[p]->bones.size(); b++ )
-					{
-						uint32_t bodyflags = Scenes[s]->props[p]->bones[b]->GetFlags();
-						fwrite( &bodyflags, 4, 1, output );
-					}
-				}
-				uint32_t object_count = Scenes[s]->objects.size();
-				fwrite( &object_count, 4, 1, output );
-				for( uint32_t o = 0; o < Scenes[s]->objects.size(); o++ )
-				{
-					Matrix44 matrix = Scenes[s]->objects[o]->getPose();
-					fwrite( &matrix, sizeof(Matrix44), 1, output );
-					uint32_t mesh_index = 0;
-					for( uint32_t sm = 0; sm < Meshes.size(); sm++ )
-					{
-						if( Scenes[s]->objects[o]->mesh == Meshes[sm] )
-						{
-							mesh_index = sm;
-						}
-					}
-					fwrite( &mesh_index, 4, 1, output );
-					uint32_t bodyflags = Scenes[s]->objects[o]->CollisionMesh->GetFlags();
-					fwrite( &bodyflags, 4, 1, output );
-				}
-				uint32_t light_count = Scenes[s]->lights.size();
-				fwrite( &light_count, 4, 1, output );
-				for( uint32_t l = 0; l < light_count; l++ )
-				{
-					Matrix44 matrix = Scenes[s]->lights[l]->getPose();
-					fwrite( &matrix, sizeof(Matrix44), 1, output );
-				}
-				uint32_t camera_count = Scenes[s]->cameras.size();
-				fwrite( &camera_count, 4, 1, output );
-				for( uint32_t c = 0; c < camera_count; c++ )
-				{
-					Matrix44 matrix = Scenes[s]->cameras[c]->getPose();
-					fwrite( &matrix, sizeof(Matrix44), 1, output );
-				}
-				//uint32_t joint_count = Scenes[s]->joints.size();
-				//fwrite( &joint_count, 4, 1, output );
-				//for( uint32_t j = 0; j < joint_count; j++ )
-				//{
-				//	Scenes[s]->joints[j]->obj[0];
-				//	Scenes[s]->joints[j]->obj[1];
+	//			// Write bones.
+	//			for( uint32_t i = 0; i < bone_count; i++ )
+	//			{
+	//				vertex_count = Meshes[m]->bones[i]->mesh->vertices.size();
+	//				face_count = Meshes[m]->bones[i]->mesh->faces.size();
+	//				fwrite( &vertex_count, 4, 1, output );
+	//				fwrite( &face_count, 4, 1, output );
+	//				if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
+	//				{
+	//					fwrite( &Meshes[m]->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, output );
+	//					fwrite( &Meshes[m]->bones[i]->mesh->faces[0], sizeof(Face), face_count, output );
+	//				}
+	//				fwrite( &Meshes[m]->bones[i]->matrix, sizeof(Matrix44), 1, output );
+	//				fwrite( &Meshes[m]->bones[i]->length, sizeof(float), 1, output );
+	//				fwrite( &Meshes[m]->bones[i]->min, sizeof(Vector3), 1, output );
+	//				fwrite( &Meshes[m]->bones[i]->max, sizeof(Vector3), 1, output );
+	//				fwrite( &Meshes[m]->bones[i]->parent, sizeof(uint32_t), 1, output );
+	//				uint32_t child_count = Meshes[m]->bones[i]->children.size();
+	//				fwrite( &child_count, sizeof(uint32_t), 1, output );
+	//				if(child_count) fwrite( &Meshes[m]->bones[i]->children[0], sizeof(uint32_t), child_count, output );
+	//			}
+	//		}
+	//		uint32_t scene_count = Scenes.size();
+	//		fwrite( &scene_count, 4, 1, output );
+	//		for( uint32_t s = 0; s < scene_count; s++ )
+	//		{
+	//			uint32_t prop_count = Scenes[s]->props.size();
+	//			fwrite( &prop_count, 4, 1, output );
+	//			for( uint32_t p = 0; p < Scenes[s]->props.size(); p++ )
+	//			{
+	//				Matrix44 matrix = Scenes[s]->props[p]->getPose();
+	//				fwrite( &matrix, sizeof(Matrix44), 1, output );
+	//				uint32_t mesh_index = 0;
+	//				for( uint32_t sm = 0; sm < Meshes.size(); sm++ )
+	//				{
+	//					if( Scenes[s]->props[p]->mesh == Meshes[sm] )
+	//					{
+	//						mesh_index = sm;
+	//					}
+	//				}
+	//				fwrite( &mesh_index, 4, 1, output );
+	//				for( uint32_t b = 0; b < Scenes[s]->props[p]->bones.size(); b++ )
+	//				{
+	//					uint32_t bodyflags = Scenes[s]->props[p]->bones[b]->GetFlags();
+	//					fwrite( &bodyflags, 4, 1, output );
+	//				}
+	//			}
+	//			uint32_t object_count = Scenes[s]->objects.size();
+	//			fwrite( &object_count, 4, 1, output );
+	//			for( uint32_t o = 0; o < Scenes[s]->objects.size(); o++ )
+	//			{
+	//				Matrix44 matrix = Scenes[s]->objects[o]->getPose();
+	//				fwrite( &matrix, sizeof(Matrix44), 1, output );
+	//				uint32_t mesh_index = 0;
+	//				for( uint32_t sm = 0; sm < Meshes.size(); sm++ )
+	//				{
+	//					if( Scenes[s]->objects[o]->mesh == Meshes[sm] )
+	//					{
+	//						mesh_index = sm;
+	//					}
+	//				}
+	//				fwrite( &mesh_index, 4, 1, output );
+	//				uint32_t bodyflags = Scenes[s]->objects[o]->CollisionMesh->GetFlags();
+	//				fwrite( &bodyflags, 4, 1, output );
+	//			}
+	//			uint32_t light_count = Scenes[s]->lights.size();
+	//			fwrite( &light_count, 4, 1, output );
+	//			for( uint32_t l = 0; l < light_count; l++ )
+	//			{
+	//				Matrix44 matrix = Scenes[s]->lights[l]->getPose();
+	//				fwrite( &matrix, sizeof(Matrix44), 1, output );
+	//			}
+	//			uint32_t camera_count = Scenes[s]->cameras.size();
+	//			fwrite( &camera_count, 4, 1, output );
+	//			for( uint32_t c = 0; c < camera_count; c++ )
+	//			{
+	//				Matrix44 matrix = Scenes[s]->cameras[c]->getPose();
+	//				fwrite( &matrix, sizeof(Matrix44), 1, output );
+	//			}
+	//			//uint32_t joint_count = Scenes[s]->joints.size();
+	//			//fwrite( &joint_count, 4, 1, output );
+	//			//for( uint32_t j = 0; j < joint_count; j++ )
+	//			//{
+	//			//	Scenes[s]->joints[j]->obj[0];
+	//			//	Scenes[s]->joints[j]->obj[1];
 
-				//	NxVec3 nxAnchor = Scenes[s]->joints[j]->joint->getGlobalAnchor();
-				//	Vector3 anchor = Vector3(nxAnchor.x, nxAnchor.y, nxAnchor.z);
-				//	fwrite( &anchor, sizeof(Vector3), 1, output );
-				//}
-			}
-			uint32_t texture_count = Textures.size();
-			fwrite( &texture_count, 4, 1, output );
+	//			//	NxVec3 nxAnchor = Scenes[s]->joints[j]->joint->getGlobalAnchor();
+	//			//	Vector3 anchor = Vector3(nxAnchor.x, nxAnchor.y, nxAnchor.z);
+	//			//	fwrite( &anchor, sizeof(Vector3), 1, output );
+	//			//}
+	//		}
+	//		uint32_t texture_count = Textures.size();
+	//		fwrite( &texture_count, 4, 1, output );
 
 
-			// Close file.
-			fclose(output);
-		}
-	}
+	//		// Close file.
+	//		fclose(output);
+	//	}
+	//}
 
-	void MediaLibrary::Load( const std::string& file )
-	{
-		if(!file.empty())
-		{
-			// Get the number of meshes currently in memory so we can offset the indices into the array.
-			uint32_t mesh_offset = Meshes.size();
+	//void MediaLibrary::Load( const std::string& file )
+	//{
+	//	if(!file.empty())
+	//	{
+	//		// Get the number of meshes currently in memory so we can offset the indices into the array.
+	//		uint32_t mesh_offset = Meshes.size();
 
-			// Open file.
-			FILE *input = NULL;
-			input = fopen( file.c_str(),"rb" );
+	//		// Open file.
+	//		FILE *input = NULL;
+	//		input = fopen( file.c_str(),"rb" );
 
-			// If file was unable to be opened present error message to debug output and end function
-			if ( input == NULL )
-			{
-				std::wstring wfile;
-				wfile = L"Unable to open the file ";
-				wfile.append(file.begin(), file.end());
-				OutputDebugString( wfile.c_str() );
-				return;
-			}
+	//		// If file was unable to be opened present error message to debug output and end function
+	//		if ( input == NULL )
+	//		{
+	//			std::wstring wfile;
+	//			wfile = L"Unable to open the file ";
+	//			wfile.append(file.begin(), file.end());
+	//			OutputDebugString( wfile.c_str() );
+	//			return;
+	//		}
 
-			//Get number of meshes.
-			uint32_t mesh_count;
-			fread( &mesh_count, 4, 1, input );
-			for( uint32_t m = 0; m < mesh_count; m++ )
-			{
-				// Specify mesh variables.
-				Mesh* mesh = new Mesh;
-				mesh->ml = this;
-				uint32_t vertex_count;
-				uint32_t face_count;
-				uint32_t bone_count;
-				uint32_t child_count;
-				std::vector< Vector3 > bone_vertices;
-				std::vector< Face > bone_faces;
+	//		//Get number of meshes.
+	//		uint32_t mesh_count;
+	//		fread( &mesh_count, 4, 1, input );
+	//		for( uint32_t m = 0; m < mesh_count; m++ )
+	//		{
+	//			// Specify mesh variables.
+	//			Mesh* mesh = new Mesh;
+	//			mesh->ml = this;
+	//			uint32_t vertex_count;
+	//			uint32_t face_count;
+	//			uint32_t bone_count;
+	//			uint32_t child_count;
+	//			std::vector< Vector3 > bone_vertices;
+	//			std::vector< Face > bone_faces;
 
-				// Get number of vertices, faces, and bones.
-				fread( &vertex_count, 4, 1, input );
-				fread( &face_count, 4, 1, input );
-				fread( &bone_count, 4, 1, input );
+	//			// Get number of vertices, faces, and bones.
+	//			fread( &vertex_count, 4, 1, input );
+	//			fread( &face_count, 4, 1, input );
+	//			fread( &bone_count, 4, 1, input );
 
-				// Resize arrays.
-				mesh->vertices.resize(vertex_count);
-				mesh->faces.resize(face_count);
-				mesh->attributes.resize(face_count);
-				mesh->bones.resize(bone_count);
+	//			// Resize arrays.
+	//			mesh->vertices.resize(vertex_count);
+	//			mesh->faces.resize(face_count);
+	//			mesh->attributes.resize(face_count);
+	//			mesh->bones.resize(bone_count);
 
-				// Load vertices, indices and attributes.
-				fread(&mesh->vertices[0], sizeof(Vertex), vertex_count, input);
-				fread(&mesh->faces[0], sizeof(Face), face_count, input);
-				fread(&mesh->attributes[0], sizeof(uint32_t), face_count, input);
+	//			// Load vertices, indices and attributes.
+	//			fread(&mesh->vertices[0], sizeof(Vertex), vertex_count, input);
+	//			fread(&mesh->faces[0], sizeof(Face), face_count, input);
+	//			fread(&mesh->attributes[0], sizeof(uint32_t), face_count, input);
 
-				// Load bones.
-				for( uint32_t i = 0; i < bone_count; i++ )
-				{
-					mesh->bones[i] = new Bone;
-					mesh->bones[i]->mesh = new Mesh;
-					mesh->bones[i]->convex = NULL;
-					fread( &vertex_count, 4, 1, input );
-					fread( &face_count, 4, 1, input );
-					if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
-					{
-						mesh->bones[i]->mesh->vertices.resize(vertex_count);
-						mesh->bones[i]->mesh->faces.resize(face_count);
-						fread( &mesh->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, input );
-						fread( &mesh->bones[i]->mesh->faces[0], sizeof(Face), face_count, input );
-					}
-					fread( &mesh->bones[i]->matrix, sizeof(Matrix44), 1, input );
-					fread( &mesh->bones[i]->length, sizeof(float), 1, input );
-					fread( &mesh->bones[i]->min, sizeof(Vector3), 1, input );
-					fread( &mesh->bones[i]->max, sizeof(Vector3), 1, input );
-					fread( &mesh->bones[i]->parent, sizeof(uint32_t), 1, input );
-					fread( &child_count, sizeof(uint32_t), 1, input );
-					mesh->bones[i]->childen.resize(child_count);
-					if(child_count) fread( &mesh->bones[i]->childen[0], sizeof(uint32_t), child_count, input );
-				}
+	//			// Load bones.
+	//			for( uint32_t i = 0; i < bone_count; i++ )
+	//			{
+	//				mesh->bones[i] = new Bone;
+	//				mesh->bones[i]->mesh = new Mesh;
+	//				mesh->bones[i]->convex = NULL;
+	//				fread( &vertex_count, 4, 1, input );
+	//				fread( &face_count, 4, 1, input );
+	//				if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
+	//				{
+	//					mesh->bones[i]->mesh->vertices.resize(vertex_count);
+	//					mesh->bones[i]->mesh->faces.resize(face_count);
+	//					fread( &mesh->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, input );
+	//					fread( &mesh->bones[i]->mesh->faces[0], sizeof(Face), face_count, input );
+	//				}
+	//				fread( &mesh->bones[i]->matrix, sizeof(Matrix44), 1, input );
+	//				fread( &mesh->bones[i]->length, sizeof(float), 1, input );
+	//				fread( &mesh->bones[i]->min, sizeof(Vector3), 1, input );
+	//				fread( &mesh->bones[i]->max, sizeof(Vector3), 1, input );
+	//				fread( &mesh->bones[i]->parent, sizeof(uint32_t), 1, input );
+	//				fread( &child_count, sizeof(uint32_t), 1, input );
+	//				mesh->bones[i]->children.resize(child_count);
+	//				if(child_count) fread( &mesh->bones[i]->children[0], sizeof(uint32_t), child_count, input );
+	//			}
 
-				// Nullify buffer addresses.
-				mesh->VertexBuffer = 0;
-				mesh->IndexBuffers = 0;
+	//			// Nullify buffer addresses.
+	//			mesh->VertexBuffer = 0;
+	//			mesh->IndexBuffers = 0;
 
-				// Update buffers.
-				mesh->Update();
+	//			// Update buffers.
+	//			mesh->Update();
 
-				Meshes.push_back(mesh);
-			}
+	//			Meshes.push_back(mesh);
+	//		}
 
-			//Get number of scenes.
-			uint32_t scene_count;
-			fread( &scene_count, 4, 1, input );
-			for( uint32_t s = 0; s < scene_count; s++ )
-			{
-				Scene* scene = CreateScene();
+	//		//Get number of scenes.
+	//		uint32_t scene_count;
+	//		fread( &scene_count, 4, 1, input );
+	//		for( uint32_t s = 0; s < scene_count; s++ )
+	//		{
+	//			Scene* scene = CreateScene();
 
-				uint32_t prop_count;
-				fread( &prop_count, 4, 1, input );
-				for( uint32_t p = 0; p < prop_count; p++ )
-				{
-					// Get the pose of this prop.
-					Matrix44 matrix;
-					fread( &matrix, sizeof(Matrix44), 1, input );
-					uint32_t mesh_index;
-					fread( &mesh_index, 4, 1, input );
-					Prop* prop = scene->CreateProp( Meshes[mesh_index + mesh_offset], &matrix );
-					for( uint32_t b = 0; b < Meshes[mesh_index + mesh_offset]->bones.size(); b++ )
-					{
-						uint32_t bone_flags;
-						fread( &bone_flags, 4, 1, input );
-						prop->bones[b]->SetFlags(bone_flags);
-					}
-				}
+	//			uint32_t prop_count;
+	//			fread( &prop_count, 4, 1, input );
+	//			for( uint32_t p = 0; p < prop_count; p++ )
+	//			{
+	//				// Get the pose of this prop.
+	//				Matrix44 matrix;
+	//				fread( &matrix, sizeof(Matrix44), 1, input );
+	//				uint32_t mesh_index;
+	//				fread( &mesh_index, 4, 1, input );
+	//				Prop* prop = scene->CreateProp( Meshes[mesh_index + mesh_offset], &matrix );
+	//				for( uint32_t b = 0; b < Meshes[mesh_index + mesh_offset]->bones.size(); b++ )
+	//				{
+	//					uint32_t bone_flags;
+	//					fread( &bone_flags, 4, 1, input );
+	//					prop->bones[b]->SetFlags(bone_flags);
+	//				}
+	//			}
 
-				uint32_t object_count;
-				fread( &object_count, 4, 1, input );
-				for( uint32_t o = 0; o < object_count; o++ )
-				{
-					// Get the pose of this object.
-					Matrix44 matrix;
-					fread( &matrix, sizeof(Matrix44), 1, input );
-					uint32_t mesh_index;
-					fread( &mesh_index, 4, 1, input );
-					Object* object = scene->CreateObject( Meshes[mesh_index + mesh_offset], &matrix );
-					uint32_t bone_flags;
-					fread( &bone_flags, 4, 1, input );
-					object->CollisionMesh->SetFlags(bone_flags);
-				}
+	//			uint32_t object_count;
+	//			fread( &object_count, 4, 1, input );
+	//			for( uint32_t o = 0; o < object_count; o++ )
+	//			{
+	//				// Get the pose of this object.
+	//				Matrix44 matrix;
+	//				fread( &matrix, sizeof(Matrix44), 1, input );
+	//				uint32_t mesh_index;
+	//				fread( &mesh_index, 4, 1, input );
+	//				Object* object = scene->CreateObject( Meshes[mesh_index + mesh_offset], &matrix );
+	//				uint32_t bone_flags;
+	//				fread( &bone_flags, 4, 1, input );
+	//				object->CollisionMesh->SetFlags(bone_flags);
+	//			}
 
-				uint32_t light_count;
-				fread( &light_count, 4, 1, input );
-				for( uint32_t l = 0; l < light_count; l++ )
-				{
-					// Get the pose of this light.
-					Matrix44 matrix;
-					fread( &matrix, sizeof(Matrix44), 1, input );
-					scene->CreateLight( &matrix, &Vector4( 1.0f, 1.0f, 1.0f, 1.0f ) );
-				}
+	//			uint32_t light_count;
+	//			fread( &light_count, 4, 1, input );
+	//			for( uint32_t l = 0; l < light_count; l++ )
+	//			{
+	//				// Get the pose of this light.
+	//				Matrix44 matrix;
+	//				fread( &matrix, sizeof(Matrix44), 1, input );
+	//				scene->CreateLight( &matrix, &Vector4( 1.0f, 1.0f, 1.0f, 1.0f ) );
+	//			}
 
-				uint32_t camera_count;
-				fread( &camera_count, 4, 1, input );
-				for( uint32_t c = 0; c < camera_count; c++ )
-				{
-					// Get the pose of this camera.
-					Matrix44 matrix;
-					fread( &matrix, sizeof(Matrix44), 1, input );
-					scene->CreateCamera( &matrix );
-				}
-			}
-			// Close file.
-			fclose(input);
-		}
-	}
+	//			uint32_t camera_count;
+	//			fread( &camera_count, 4, 1, input );
+	//			for( uint32_t c = 0; c < camera_count; c++ )
+	//			{
+	//				// Get the pose of this camera.
+	//				Matrix44 matrix;
+	//				fread( &matrix, sizeof(Matrix44), 1, input );
+	//				scene->CreateCamera( &matrix );
+	//			}
+	//		}
+	//		// Close file.
+	//		fclose(input);
+	//	}
+	//}
 
 	Mesh* MediaLibrary::ImportModel( const std::string& file )
 	{
 		if(!file.empty())
 		{
-			Mesh* mesh = new Ovgl::Mesh;
+			Mesh* mesh = new Mesh;
+
+			// Create a new skeleton.
+			mesh->skeleton = new Skeleton;
 
 			// Set media library to this library.
-			mesh->ml = this;
+			mesh->media_library = this;
 
 			// Import scene from file.
 			const aiScene* scene = aiImportFile(file.c_str(), 0);
@@ -363,6 +368,7 @@ namespace Ovgl
 					uint32_t voffset = mesh->vertices.size();
 					uint32_t foffset = mesh->faces.size();
 					uint32_t aoffset = 0;
+					uint32_t boffset = mesh->skeleton->bones.size();
 					for( uint32_t i = 0; i < mesh->faces.size(); i++ )
 					{
 						if( mesh->attributes[i] > aoffset )
@@ -388,22 +394,33 @@ namespace Ovgl
 					// Get skeleton.
 					if(scene->mMeshes[m]->HasBones())
 					{
+						mesh->skeleton->bones.resize(scene->mMeshes[m]->mNumBones + boffset);
+						
+						for( uint32_t b = 0; b < mesh->skeleton->bones.size(); b++ )
+						{
+							mesh->skeleton->bones[b + boffset] = new Bone;
+						}
+
 						for( uint32_t b = 0; b < scene->mMeshes[m]->mNumBones; b++ )
 						{
-							Bone* bone = new Bone;
-							mesh->bones.push_back(bone);
+							
+							Bone* bone = mesh->skeleton->bones[b];
 							bone->length = 1.0f;
 							bone->mesh = new Mesh;
 							bone->convex = NULL;
+							bone->parent = NULL;
 							aiNode* bnode = scene->mRootNode->FindNode(scene->mMeshes[m]->mBones[b]->mName);
-							aiMatrix4x4 GlobalTransform = bnode->mTransformation;
+							aiMatrix4x4 global_transform = bnode->mTransformation;
 							aiNode* parent = bnode->mParent;
-							while( parent->mParent != scene->mRootNode )
-							{
-								GlobalTransform = parent->mTransformation * GlobalTransform;
-								parent = parent->mParent;
-							}
 							bone->matrix = MatrixInverse( Vector4(), Ovgl::MatrixTranspose(*(Matrix44*)&scene->mMeshes[m]->mBones[b]->mOffsetMatrix)) * MatrixRotationX(1.57f);
+
+							for( uint32_t i = 0; i < scene->mMeshes[m]->mNumBones; i++ )
+							{
+								if( bnode->mName == scene->mMeshes[m]->mBones[i]->mName )
+								{
+									bone->index = i;
+								}
+							}
 
 							// Get bone hierarchy.
 							for( uint32_t cb = 0; cb < bnode->mNumChildren; cb++ )
@@ -412,37 +429,60 @@ namespace Ovgl
 								{
 									if( bnode->mParent->mName == scene->mMeshes[m]->mBones[mb]->mName )
 									{
-										bone->parent = mb;
+										bone->parent = mesh->skeleton->bones[mb];
 									}
 									if( bnode->mChildren[cb]->mName == scene->mMeshes[m]->mBones[mb]->mName )
 									{
-										bone->childen.push_back(mb);
+										bone->children.push_back(mesh->skeleton->bones[mb]);
 									}
 								}
 							}
+
+							// Get bone skinning information.
 							for (uint32_t w = 0 ; w < scene->mMeshes[m]->mBones[b]->mNumWeights; w++)
 							{
 								weights[scene->mMeshes[m]->mBones[b]->mWeights[w].mVertexId].push_back((float)scene->mMeshes[m]->mBones[b]->mWeights[w].mWeight);
 								indices[scene->mMeshes[m]->mBones[b]->mWeights[w].mVertexId].push_back((float)b);
 							}
 
-							// Get animation for this bone.
+
+							// Get bone animation.
+							mesh->skeleton->animations.resize(scene->mNumAnimations);
 							for( uint32_t a = 0; a < scene->mNumAnimations; a++ )
 							{
+								mesh->skeleton->animations[a].channels.resize(scene->mAnimations[a]->mNumChannels);
 								for( uint32_t ac = 0; ac < scene->mAnimations[a]->mNumChannels; ac++ )
 								{
 									if(scene->mAnimations[a]->mChannels[ac]->mNodeName == scene->mMeshes[m]->mBones[b]->mName)
 									{
+										mesh->skeleton->animations[a].channels[ac].index = b;
+										for( uint32_t pk = 0; pk < scene->mAnimations[a]->mChannels[ac]->mNumPositionKeys; pk++ )
+										{
+											PositionKey position_key;
+											position_key.time = scene->mAnimations[a]->mChannels[ac]->mPositionKeys[pk].mTime;
+											position_key.value.x = scene->mAnimations[a]->mChannels[ac]->mPositionKeys[pk].mValue.x;
+											position_key.value.y = scene->mAnimations[a]->mChannels[ac]->mPositionKeys[pk].mValue.y;
+											position_key.value.z = scene->mAnimations[a]->mChannels[ac]->mPositionKeys[pk].mValue.z;
+											mesh->skeleton->animations[a].channels[ac].position_keys.push_back( position_key );
+										}
 										for( uint32_t rk = 0; rk < scene->mAnimations[a]->mChannels[ac]->mNumRotationKeys; rk++ )
 										{
-											scene->mAnimations[a]->mChannels[ac]->mPreState = aiAnimBehaviour_LINEAR;
-											Ovgl::Curve curve;
-											curve.time = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mTime;
-											curve.value.w = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.w;
-											curve.value.x = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.x;
-											curve.value.y = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.y;
-											curve.value.z = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.z;
-											mesh->bones[b]->Rot_Keys.push_back( curve );
+											RotationKey rotation_key;
+											rotation_key.time = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mTime;
+											rotation_key.value.w = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.w;
+											rotation_key.value.x = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.x;
+											rotation_key.value.y = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.y;
+											rotation_key.value.z = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.z;
+											mesh->skeleton->animations[a].channels[ac].rotation_keys.push_back( rotation_key );
+										}
+										for( uint32_t sk = 0; sk < scene->mAnimations[a]->mChannels[ac]->mNumScalingKeys; sk++ )
+										{
+											ScalingKey scaling_key;
+											scaling_key.time = scene->mAnimations[a]->mChannels[ac]->mScalingKeys[sk].mTime;
+											scaling_key.value.x = scene->mAnimations[a]->mChannels[ac]->mScalingKeys[sk].mValue.x;
+											scaling_key.value.y = scene->mAnimations[a]->mChannels[ac]->mScalingKeys[sk].mValue.y;
+											scaling_key.value.z = scene->mAnimations[a]->mChannels[ac]->mScalingKeys[sk].mValue.z;
+											mesh->skeleton->animations[a].channels[ac].scaling_keys.push_back( scaling_key );
 										}
 									}
 								}
@@ -462,7 +502,7 @@ namespace Ovgl
 					// Get geometry.
 					for( uint32_t f = 0; f < scene->mMeshes[m]->mNumFaces; f++ )
 					{
-						uint32_t findices[4];
+						uint32_t f_indices[4];
 						for( uint32_t i = 0; i < scene->mMeshes[m]->mFaces[f].mNumIndices; i++ )
 						{
 							int vi = scene->mMeshes[m]->mFaces[f].mIndices[i];
@@ -493,23 +533,23 @@ namespace Ovgl
 							vertex.indices[1] = indices[vi][1];
 							vertex.indices[2] = indices[vi][2];
 							vertex.indices[3] = indices[vi][3];
-							findices[i] = (uint32_t)vi + voffset;
+							f_indices[i] = (uint32_t)vi + voffset;
 							mesh->vertices[vi+voffset] = vertex;
 						}
 
 						if(scene->mMeshes[m]->mFaces[f].mNumIndices == 4)
 						{
 							Face face;
-							face.indices[0] = findices[0];
-							face.indices[1] = findices[2];
-							face.indices[2] = findices[3];
+							face.indices[0] = f_indices[0];
+							face.indices[1] = f_indices[2];
+							face.indices[2] = f_indices[3];
 							mesh->faces.push_back( face );
 							mesh->attributes.push_back(scene->mMeshes[m]->mMaterialIndex);
 						}
 						Face face;
-						face.indices[0] = findices[0];
-						face.indices[1] = findices[1];
-						face.indices[2] = findices[2];
+						face.indices[0] = f_indices[0];
+						face.indices[1] = f_indices[1];
+						face.indices[2] = f_indices[2];
 						mesh->faces.push_back( face );
 						mesh->attributes.push_back(scene->mMeshes[m]->mMaterialIndex);
 					}
@@ -517,18 +557,18 @@ namespace Ovgl
 			}
 
 			// If no bones exist create one.
-			if(mesh->bones.size() == 0 )
+			if(mesh->skeleton->bones.size() == 0 )
 			{
 				Bone* bone = new Bone;
 				bone->matrix = MatrixIdentity();
 				bone->length = 1.0f;
 				bone->mesh = new Mesh;
 				bone->convex = NULL;
-				mesh->bones.push_back(bone);
+				mesh->skeleton->bones.push_back(bone);
 			}
 
 			// Save vertices which influence each bone for bone shape automatic generation.
-			for( uint32_t i = 0; i < mesh->bones.size(); i++ )
+			for( uint32_t i = 0; i < mesh->skeleton->bones.size(); i++ )
 			{
 				for( uint32_t v = 0; v < mesh->vertices.size(); v++ )
 				{
@@ -537,20 +577,47 @@ namespace Ovgl
 						if(mesh->vertices[v].indices[j] == i && mesh->vertices[v].weight[j] > 0.1f)
 						{
 							Vertex Vertex;
-							Vertex.position = Vector3Transform( mesh->vertices[v].position, MatrixInverse( Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), mesh->bones[i]->matrix));
+							Vertex.position = Vector3Transform( mesh->vertices[v].position, MatrixInverse( Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), mesh->skeleton->bones[i]->matrix));
 							Vertex.weight[0] = 1.0f;
-							mesh->bones[i]->mesh->vertices.push_back( Vertex );
+							mesh->skeleton->bones[i]->mesh->vertices.push_back( Vertex );
 						}
 					}
 				}
 			}
 
+			// Find the root bone.
+			mesh->skeleton->root_bone = 0;
+			for( uint32_t b1 = 0; b1 < mesh->skeleton->bones.size(); b1++ )
+			{
+				bool is_root = true;
+				for( uint32_t b2 = 0; b2 < mesh->skeleton->bones.size(); b2++ )
+				{
+					for( uint32_t c = 0; c < mesh->skeleton->bones[b2]->children.size(); c++ )
+					{
+						if( mesh->skeleton->bones[b2]->children[c]->index == b1 )
+						{
+							is_root = false;
+							break;
+						}
+					}
+				}
+				if( is_root )
+				{
+					mesh->skeleton->root_bone = mesh->skeleton->bones[b1];
+					mesh->skeleton->root_bone->parent = NULL;
+				}
+			}
+
 			// Null index and vertex buffers.
-			mesh->VertexBuffer = 0;
-			mesh->IndexBuffers = 0;
+			mesh->vertex_buffer = 0;
+			mesh->index_buffers = 0;
+
+			mesh->temp = new SceneAnimator;
+			mesh->temp->Init(scene, mesh);
 
 			// Update video memory copies of index and vertex buffers.
-			mesh->Update();
+			mesh->update();
+
 			Meshes.push_back( mesh );
 			return mesh;
 		}
@@ -789,9 +856,9 @@ namespace Ovgl
 		scene->DynamicsWorld = new btDiscreteDynamicsWorld(Inst->PhysicsDispatcher,Inst->PhysicsBroadphase,Inst->PhysicsSolver,Inst->PhysicsConfiguration);
 		scene->DynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.00001f;
 		scene->DynamicsWorld->setGravity(btVector3( 0.0f, -9.8f, 0.0f ));
-		GLDebugDrawer* Drawer = new GLDebugDrawer;
-		Drawer->setDebugMode( btIDebugDraw::DBG_DrawWireframe );
-		scene->DynamicsWorld->setDebugDrawer( Drawer );
+//		GLDebugDrawer* Drawer = new GLDebugDrawer;
+//		Drawer->setDebugMode( btIDebugDraw::DBG_DrawWireframe );
+//		scene->DynamicsWorld->setDebugDrawer( Drawer );
 		btContactSolverInfo& info = scene->DynamicsWorld->getSolverInfo();
 		info.m_numIterations = 20;
 		Scenes.push_back(scene);

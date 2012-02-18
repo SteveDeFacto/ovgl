@@ -557,24 +557,27 @@ namespace Ovgl
 	Matrix44 MatrixRotationQuaternion( const Vector4& q )
 	{
 		Matrix44 out;
-		float xx = q.x * q.x;
-		float xy = q.x * q.y;
-		float xz = q.x * q.z;
-		float xw = q.x * q.w;
-		float yy = q.y * q.y;
-		float yz = q.y * q.z;
-		float yw = q.y * q.w;
-		float zz = q.z * q.z;
-		float zw = q.z * q.w;
-		out._11 = 1 - 2 * ( yy + zz );
-		out._12 = 2 * ( xy - zw );
-		out._13 = 2 * ( xz + yw );
-		out._21 = 2 * ( xy + zw );
-		out._22 = 1 - 2 * ( xx + zz );
-		out._23 = 2 * ( yz - xw );
-		out._31 = 2 * ( xz - yw );
-		out._32 = 2 * ( yz + xw );
-		out._33 = 1 - 2 * ( xx + yy );
+		float x2 = q.x + q.x;
+		float y2 = q.y + q.y;
+		float z2 = q.z + q.z;    
+		float xx2 = q.x * x2;
+		float yy2 = q.y * y2;
+		float zz2 = q.z * z2;
+		float xy2 = q.x * y2;
+		float yz2 = q.y * z2;
+		float zx2 = q.z * x2;
+		float xw2 = q.w * x2;
+		float yw2 = q.w * y2;
+		float zw2 = q.w * z2;
+		out._11 = float(1) - yy2 - zz2;
+		out._12 = xy2 + zw2;
+		out._13 = zx2 - yw2;
+		out._21 = xy2 - zw2;
+		out._22 = float(1) - zz2 - xx2;
+		out._23 = yz2 + xw2;
+		out._31 = zx2 + yw2;
+		out._32 = yz2 - xw2;
+		out._33 = float(1) - xx2 - yy2;
 		out._14 = out._24 = out._34 = out._41 = out._42 = out._43 = 0;
 		out._44 = 1;
 		return out;
@@ -785,13 +788,11 @@ namespace Ovgl
 
 	Vector4 Slerp( const Vector4& q1, const Vector4& q2, float t )
 	{
-		// Quaternion to return.
+
 		Vector4 qm;
 
-		// Temp quaternion.
 		Vector4 qt = q2;
 
-		// Calculate angle between them.
 		float cosHalfTheta = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 
 		if (cosHalfTheta < 0)
@@ -800,17 +801,17 @@ namespace Ovgl
 			cosHalfTheta = -cosHalfTheta;
 		}
 
-		// if qa=qb or qa=-qb then theta = 0 and we can return qa
+
 		if (abs(cosHalfTheta) >= 1.0f){
 			qm.w = q1.w;qm.x = q1.x;qm.y = q1.y;qm.z = q1.z;
 			return qm;
 		}
-		// Calculate temporary values.
+
 		float halfTheta = acos(cosHalfTheta);
 		float sinHalfTheta = sqrt(1.0f - cosHalfTheta*cosHalfTheta);
-		// if theta = 180 degrees then result is not fully defined
-		// we could rotate around any axis normal to qa or qb
-		if (fabs(sinHalfTheta) < 0.001){ // fabs is floating point absolute
+
+		if (fabs(sinHalfTheta) < 0.001)
+		{
 			qm.w = (q1.w * 0.5f + qt.w * 0.5f);
 			qm.x = (q1.x * 0.5f + qt.x * 0.5f);
 			qm.y = (q1.y * 0.5f + qt.y * 0.5f);
@@ -819,11 +820,12 @@ namespace Ovgl
 		}
 		float ratioA = sinf((1.0f - t) * halfTheta) / sinHalfTheta;
 		float ratioB = sinf(t * halfTheta) / sinHalfTheta; 
-		//calculate Quaternion.
+
 		qm.w = (q1.w * ratioA + qt.w * ratioB);
 		qm.x = (q1.x * ratioA + qt.x * ratioB);
 		qm.y = (q1.y * ratioA + qt.y * ratioB);
 		qm.z = (q1.z * ratioA + qt.z * ratioB);
+
 		return qm;
 	}
 

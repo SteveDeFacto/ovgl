@@ -45,6 +45,7 @@ namespace Ovgl
 		class Shader;
 		class Joint;
 		class Vector3;
+		class AnimationController;
 
 		/**
 		* This class can be used to get the object that a ray is cast onto, the world space point of collision, and the local space point of collision.
@@ -183,25 +184,25 @@ namespace Ovgl
 			/**
 			* List of animations affecting this prop.
 			*/
-			std::vector< Animation* >				animations;
+			std::vector< AnimationController* >		animations;
 			/**
 			* Used by Ovgl::Scene to update the bone orientations that are displayed to the Ovgl::RenderTarget. This function will recursivly apply the offset of a parent bone to all child bones and their children until it has gone through the entire tree.
 			* @param bone Index of the first bone to update. Generally the meshes root_bone.
 			* @param matrix This matrix is the amount of offset that is to be applied to the bone.
 			*/
-			void Update( int32_t bone, Matrix44* matrix );
+			void Update( Bone* bone, Matrix44* matrix );
 			/**
 			* This function creates the joints that fuse together bones within the prop. This function will recursivly joints together a parent bone to all child bones and their children until it has gone through the entire tree.
 			* @param bone Index of first bone to joint to it's children. This should generally be the meshes root_bone.
 			*/
-			void CreateJoints( uint32_t bone );
+			void CreateJoints( Bone* bone );
 			/**
 			* Creates an animation clip.
 			* @param current The current time.
 			* @param start The time in which the clip begins.
 			* @param start The time in which the clip ends.
 			*/
-			Animation* CreateAnimation( uint32_t current, uint32_t start, uint32_t end );
+			AnimationController* CreateAnimation( double start, double end, bool repeat );
 			/**
 			* Sets the pose of this prop.
 			* @param matrix The matrix which defines the new pose for this prop.
@@ -288,7 +289,7 @@ namespace Ovgl
 		class __declspec(dllexport) Actor
 		{
 		public:
-			std::vector< Ovgl::Animation* > animations;
+			std::vector< Ovgl::AnimationController* > animations;
 			/**
 			* This is a pointer to the scene that this actor was created by and resides in.
 			*/
@@ -368,7 +369,7 @@ namespace Ovgl
 
 			void UpdateAnimation( int32_t bone, Ovgl::Matrix44* matrix, double time );
 
-			Ovgl::Animation* CreateAnimation( double start, double end, bool repeat );
+			AnimationController* CreateAnimation( double start, double end, bool repeat );
 			/**
 			* Tells the actor where to look.
 			* @param vec The direction to look.

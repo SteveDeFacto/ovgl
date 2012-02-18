@@ -22,6 +22,8 @@
 #include "OvglMesh.h"
 #include "OvglMedia.h"
 #include "OvglScene.h"
+#include "OvglAnimation.h"
+#include "OvglSkeleton.h"
 
 namespace Ovgl
 {
@@ -44,7 +46,7 @@ namespace Ovgl
 		return out;
 	}
 
-	void Mesh::GenerateVertexNormals()
+	void Mesh::generate_vertex_normals()
 	{
 		for(uint32_t v = 0; v < vertices.size(); v++)
 		{
@@ -55,7 +57,7 @@ namespace Ovgl
 				{
 					if( faces[f].indices[i] == v )
 					{
-						adjFaceNormals.push_back( ComputeFaceNormal(f) );
+						adjFaceNormals.push_back( compute_face_normal(f) );
 					}
 				}
 			}
@@ -63,26 +65,26 @@ namespace Ovgl
 		}
 	}
 
-	void Mesh::Update()
+	void Mesh::update()
 	{
 		// Release buffers.
-		if( VertexBuffer ) glDeleteBuffers(1, &VertexBuffer);
-		if( IndexBuffers )
+		if( vertex_buffer ) glDeleteBuffers(1, &vertex_buffer);
+		if( index_buffers )
 		{
 			for(uint32_t i = 0; i < subset_count; i++)
-				if( IndexBuffers[i] ) 
-					glDeleteBuffers(1, &IndexBuffers[i]);
-			delete [] IndexBuffers;
+				if( index_buffers[i] ) 
+					glDeleteBuffers(1, &index_buffers[i]);
+			delete [] index_buffers;
 		}
-		for( uint32_t i = 0; i < bones.size(); i++ )
+		for( uint32_t i = 0; i < skeleton->bones.size(); i++ )
 		{
-			if(bones[i]->convex)
+			if(skeleton->bones[i]->convex)
 			{
-				delete bones[i]->convex;
+				delete skeleton->bones[i]->convex;
 			}
 		}
-		glGenBuffersARB( 1, &VertexBuffer );
-		glBindBufferARB( GL_ARRAY_BUFFER, VertexBuffer );
+		glGenBuffersARB( 1, &vertex_buffer );
+		glBindBufferARB( GL_ARRAY_BUFFER, vertex_buffer );
 		glBufferDataARB( GL_ARRAY_BUFFER, vertices.size()*sizeof(Vertex), &vertices[0], GL_STATIC_DRAW );
 
 		// Create Index buffers.
@@ -105,34 +107,12 @@ namespace Ovgl
 		// Get subset count.
 		subset_count = index_subsets.size();
 
-		IndexBuffers = new uint32_t[subset_count];
+		index_buffers = new uint32_t[subset_count];
 		for( uint32_t i = 0; i < subset_count; i++ )
 		{
-			glGenBuffersARB( 1, &IndexBuffers[i] );
-			glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, IndexBuffers[i] );
+			glGenBuffersARB( 1, &index_buffers[i] );
+			glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, index_buffers[i] );
 			glBufferDataARB( GL_ELEMENT_ARRAY_BUFFER, index_subsets[i].size()*sizeof(Face), &index_subsets[i][0], GL_STATIC_DRAW );
-		}
-
-		// Find the root bone.
-		root_bone = 0;
-		for( uint32_t b1 = 0; b1 < bones.size(); b1++ )
-		{
-			bool is_root = true;
-			for( uint32_t b2 = 0; b2 < bones.size(); b2++ )
-			{
-				for( uint32_t c = 0; c < bones[b2]->childen.size(); c++ )
-				{
-					if( bones[b2]->childen[c] == b1 )
-					{
-						is_root = false;
-						break;
-					}
-				}
-			}
-			if( is_root )
-			{
-				root_bone = b1;
-			}
 		}
 
 		// Create triangle mesh.
@@ -144,78 +124,86 @@ namespace Ovgl
 			btVector3* v2 = (btVector3*)&vertices[faces[t].indices[2]].position;
 			trimesh->addTriangle( *v0, *v1, *v2 );
 		}
-		TriangleMesh = new btBvhTriangleMeshShape(trimesh, false);
-		TriangleMesh->setMargin(0.1f);
-
-		// Create bone shapes.
-		for( uint32_t i = 0; i < bones.size(); i++ )
+		if( trimesh->getNumTriangles() )
 		{
-			if(bones[i]->mesh->vertices.size() > 0)
+			triangle_mesh = new btBvhTriangleMeshShape(trimesh, false);
+			triangle_mesh->setMargin(0.1f);
+		}
+		else
+		{
+			delete trimesh;
+		}
+		// Create bone shapes.
+		for( uint32_t i = 0; i < skeleton->bones.size(); i++ )
+		{
+			if(skeleton->bones[i]->mesh->vertices.size() > 0)
 			{
-				bones[i]->mesh->Clean( 0.001f, CLEAN_CLOSE_VERTICES );
-				bones[i]->volume = bones[i]->mesh->QuickHull();
-				bones[i]->mesh->Simplify(100, 0);
-				bones[i]->convex = new btConvexHullShape((float*)&bones[i]->mesh->vertices[0], bones[i]->mesh->vertices.size(), sizeof(Vertex));
+				skeleton->bones[i]->mesh->clean( 0.001f, CLEAN_CLOSE_VERTICES );
+				skeleton->bones[i]->volume = skeleton->bones[i]->mesh->quick_hull();
+				skeleton->bones[i]->mesh->simplify(100, 0);
+				skeleton->bones[i]->convex = new btConvexHullShape((float*)&skeleton->bones[i]->mesh->vertices[0], skeleton->bones[i]->mesh->vertices.size(), sizeof(Vertex));
 			}
 		}
 	}
 
-	void Mesh::Release()
+	Mesh::Mesh()
 	{
-		for( uint32_t i = 0; i < bones.size(); i++ )
+		triangle_mesh = NULL;
+	}
+
+	Mesh::~Mesh()
+	{
+		delete triangle_mesh;
+		for( uint32_t m = 0; m < media_library->Meshes.size(); m++ )
 		{
-			if( bones[i]->convex )
+			if( media_library->Meshes[m] == this )
 			{
-				delete bones[i]->convex;
+				media_library->Meshes.erase( media_library->Meshes.begin() + m );
 			}
 		}
-		delete this->TriangleMesh;
-		for( uint32_t m = 0; m < ml->Meshes.size(); m++ )
-		{
-			if( ml->Meshes[m] == this )
-			{
-				ml->Meshes.erase( ml->Meshes.begin() + m );
-			}
-		}
-		glDeleteBuffers( 1, &VertexBuffer );
+		glDeleteBuffers( 1, &vertex_buffer );
 		for( uint32_t i = 0; i < subset_count; i++)
 		{
-			glDeleteBuffers( 1, &IndexBuffers[i] );
+			glDeleteBuffers( 1, &index_buffers[i] );
 		}
-		delete this;
 	}
 
-	Matrix44 CMesh::getPose()
+	void CMesh::set_pose( Matrix44* matrix )
+	{
+		actor->getWorldTransform().setFromOpenGLMatrix((float*)matrix);
+	}
+
+	Matrix44 CMesh::get_pose()
 	{
 		Matrix44 matrix;
 		actor->getWorldTransform().getOpenGLMatrix((float*)&matrix);
 		return matrix;
 	}
 
-	void CMesh::SetFlags( uint32_t flags )
+	void CMesh::set_flags( uint32_t flags )
 	{
 	
 	}
 
-	uint32_t CMesh::GetFlags()
+	uint32_t CMesh::get_flags()
 	{
 		uint32_t flags = 0;
 		return flags;
 	}
 
-	void CMesh::setPose( Matrix44* matrix )
+	CMesh::CMesh()
 	{
-		actor->getWorldTransform().setFromOpenGLMatrix((float*)matrix);
+
 	}
 
-	void CMesh::Release()
+	CMesh::~CMesh()
 	{
 	//	delete actor->getMotionState();
 		scene->DynamicsWorld->removeCollisionObject(actor);
 		delete actor;
 	}
 
-	void Mesh::CubeCloud( float sx, float sy, float sz, int32_t count )
+	void Mesh::cube_cloud( float sx, float sy, float sz, int32_t count )
 	{
 		for( int32_t i = 0; i < count; i++)
 		{
@@ -228,7 +216,7 @@ namespace Ovgl
 		}
 	}
 
-	float Mesh::QuickHull()
+	float Mesh::quick_hull()
 	{
 		float volume = 0;
 
@@ -248,7 +236,7 @@ namespace Ovgl
 		{
 			bool foundVertex = false;
 			uint32_t distantVertex = 0;
-			Vector3 faceNormal = ComputeFaceNormal( f );
+			Vector3 faceNormal = compute_face_normal( f );
 			Vector3 facePosition = vertices[faces[f].indices[0]].position;
 
 			// Find the most distance vertex from this face.
@@ -270,7 +258,7 @@ namespace Ovgl
 				std::vector< uint32_t > TaggedFaces;
 				for( uint32_t f2 = 0; f2 < faces.size(); f2++ )
 				{
-					Vector3 faceNormal2 = ComputeFaceNormal( f2 );
+					Vector3 faceNormal2 = compute_face_normal( f2 );
 					if( Vector3Dot( faceNormal2, (vertices[distantVertex].position - vertices[faces[f2].indices[0]].position)) > 0.0f )
 					{
 						TaggedFaces.push_back( f2 );
@@ -283,7 +271,7 @@ namespace Ovgl
 				}
 
 			    // Now that we know which faces this vertex lands on we need to remap the mesh to include the new vertex.
-				ConnectVertex( TaggedFaces, distantVertex);
+				connect_vertex( TaggedFaces, distantVertex);
 			}
 			else
 			{
@@ -293,11 +281,11 @@ namespace Ovgl
 		}
 
 		// Clean the mesh from stray vertices.
-		this->Clean( 0.0f, CLEAN_ALL );
+		this->clean( 0.0f, CLEAN_ALL );
 		return volume;
 	}
 
-	void Mesh::ConnectVertex( std::vector< uint32_t >& faceList, uint32_t vertex)
+	void Mesh::connect_vertex( std::vector< uint32_t >& faceList, uint32_t vertex)
 	{
 		std::vector< Face > newFaces;
 
@@ -371,7 +359,7 @@ namespace Ovgl
 	}
 
 
-	void Mesh::MergeVerices( std::vector< uint32_t >& vertexList, uint32_t flag )
+	void Mesh::merge_verices( std::vector< uint32_t >& vertexList, uint32_t flag )
 	{
 		// Move all vertices to last vertex;
 		if( flag == 0 )
@@ -382,10 +370,10 @@ namespace Ovgl
 			}
 		}
 		// Clean the mesh.
-		this->Clean( 0.001f, CLEAN_ALL );
+		clean( 0.001f, CLEAN_ALL );
 	}
 
-	void Mesh::Simplify( uint32_t max_faces, uint32_t max_vertices )
+	void Mesh::simplify( uint32_t max_faces, uint32_t max_vertices )
 	{
 		while(  (faces.size() > max_faces && max_faces != 0) || (vertices.size() > max_vertices && max_vertices != 0) )
 		{
@@ -403,7 +391,7 @@ namespace Ovgl
 					{
 						if( faces[f].indices[i] == v )
 						{
-							adjFaceNormals.push_back( ComputeFaceNormal(f) );
+							adjFaceNormals.push_back( compute_face_normal(f) );
 							adjVertexFaces[v].push_back( f );
 						}
 					}
@@ -444,11 +432,11 @@ namespace Ovgl
 			std::vector< uint32_t > VerticesToMerge;
 			VerticesToMerge.push_back( LeastAngleVertexIndex );
 			VerticesToMerge.push_back( LeastDistantVertex );
-			this->MergeVerices( VerticesToMerge, 0 );
+			this->merge_verices( VerticesToMerge, 0 );
 		}
 	}
 
-	void Mesh::Clean( float min, uint32_t flags )
+	void Mesh::clean( float min, uint32_t flags )
 	{
 		switch( flags )
 		{
@@ -607,7 +595,7 @@ namespace Ovgl
 		}
 	}
 	
-	Vector3 Mesh::ComputeFaceNormal( uint32_t face )
+	Vector3 Mesh::compute_face_normal( uint32_t face )
 	{
 		Vector3 out;
 		uint32_t test = faces[face].indices[2];

@@ -27,14 +27,13 @@ namespace Ovgl
 	class Face;
 	class Bone;
 	class Joint;
-	class Curve;
+	class Key;
 	class Animation;
 	class CMesh;
 	class Mesh;
-	class Instance;
-	class Scene;
 	class Matrix44;
-	class PVS;
+	class SceneAnimator;
+	class Skeleton;
 
 	extern "C"
 	{
@@ -64,87 +63,43 @@ namespace Ovgl
 			Face Flip();
 		};
 
-		class __declspec(dllexport) Curve
-		{
-		public:
-			double time;
-			Vector4 value;
-		};
-
-		class __declspec(dllexport) Animation
-		{
-		public:
-			uint32_t							animationState;
-			double								currentTime;
-			double								startTime;
-			double								endTime;
-			double								stepTime;
-			bool								repeat;
-			void play( float speed, bool repeat );
-			void stop();
-			void pause();
-			void set( float time );
-		};
-
-		class __declspec(dllexport) Bone
-		{
-		public:
-			btConvexHullShape*					convex;
-			Mesh*								mesh;
-			Matrix44							matrix;
-			float								length;
-			float								volume;
-			Ovgl::Vector3						min;
-			Ovgl::Vector3						max;
-			uint32_t							parent;
-			std::vector< Curve >				Rot_Keys;
-			std::vector< uint32_t >				childen;
-		};
-
-		class __declspec(dllexport) PVS
-		{
-		public:
-			Mesh*								mesh;
-			std::vector< PVS* >					PVSets;
-		};
-
 		class __declspec(dllexport) CMesh
 		{
 		public:
+			CMesh();
+			~CMesh();
 			Scene* scene;
 			btRigidBody* actor;
-			void setPose( Matrix44* matrix );
-			Matrix44 getPose();
-			void SetFlags( uint32_t flags );
-			uint32_t GetFlags();
-			void Release();
+			void set_pose( Matrix44* matrix );
+			Matrix44 get_pose();
+			void set_flags( uint32_t flags );
+			uint32_t get_flags();
 		};
 
 		class __declspec(dllexport) Mesh
 		{
 		public:
-			MediaLibrary*						ml;
+			Mesh();
+			~Mesh();
+			MediaLibrary*						media_library;
 			std::vector< Vertex >				vertices;
 			std::vector< Face >					faces;
 			std::vector< uint32_t >				attributes;
-			std::vector< Bone* >				bones;
-			std::vector< Material* >			materials;
 			uint32_t							subset_count;
-			uint32_t							root_bone;
-			uint32_t						VertexBuffer;
-			uint32_t*						IndexBuffers;
-			btBvhTriangleMeshShape*				TriangleMesh;
-			std::vector< PVS* >					PVSCache;
-			void GenerateVertexNormals();
-			void CubeCloud( float sx, float sy, float sz, int32_t count );
-			float QuickHull();
-			void Simplify( uint32_t max_faces, uint32_t max_vertices );
-			void Clean( float min, uint32_t flags  );
-			void ConnectVertex( std::vector< uint32_t >& faceList, uint32_t vertex );
-			void MergeVerices( std::vector< uint32_t >& vertexList, uint32_t flag );
-			Ovgl::Vector3 ComputeFaceNormal( uint32_t face );
-			void Update();
-			void Release();
+			uint32_t							vertex_buffer;
+			uint32_t*							index_buffers;
+			btBvhTriangleMeshShape*				triangle_mesh;
+			Skeleton*							skeleton;
+			SceneAnimator*						temp;
+			void generate_vertex_normals();
+			void cube_cloud( float sx, float sy, float sz, int32_t count );
+			float quick_hull();
+			void simplify( uint32_t max_faces, uint32_t max_vertices );
+			void clean( float min, uint32_t flags  );
+			void connect_vertex( std::vector< uint32_t >& faceList, uint32_t vertex );
+			void merge_verices( std::vector< uint32_t >& vertexList, uint32_t flag );
+			Ovgl::Vector3 compute_face_normal( uint32_t face );
+			void update();
 		};
 	}
 }

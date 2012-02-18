@@ -24,6 +24,7 @@
 #include "OvglScene.h"
 #include "OvglAudio.h"
 #include "OvglWindow.h"
+#include "OvglAnimation.h"
 
 namespace Ovgl
 {

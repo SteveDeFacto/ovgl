@@ -25,6 +25,8 @@
 #include "OvglScene.h"
 #include "OvglMesh.h"
 #include "OvglWindow.h"
+#include "OvglAnimation.h"
+#include "OvglSkeleton.h"
 
 namespace Ovgl
 {
@@ -118,14 +120,14 @@ namespace Ovgl
 		{
 			prop->materials[s] = Inst->DefaultMedia->Materials[0];
 		}
-		for( uint32_t i = 0; i < mesh->bones.size(); i++ )
+		for( uint32_t i = 0; i < mesh->skeleton->bones.size(); i++ )
 		{
 			btTransform Transform;
-			Transform.setFromOpenGLMatrix((float*)&(mesh->bones[i]->matrix * (*matrix) ) );
+			Transform.setFromOpenGLMatrix((float*)&(mesh->skeleton->bones[i]->matrix * (*matrix) ) );
 			btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
 			btVector3 localInertia(0,0,0);
-			mesh->bones[i]->convex->calculateLocalInertia(1, localInertia);
-			btRigidBody::btRigidBodyConstructionInfo rbInfo( mesh->bones[i]->volume, MotionState, mesh->bones[i]->convex, localInertia );
+			mesh->skeleton->bones[i]->convex->calculateLocalInertia(1, localInertia);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo( mesh->skeleton->bones[i]->volume, MotionState, mesh->skeleton->bones[i]->convex, localInertia );
 			CMesh* CollisionMesh = new CMesh;
 			CollisionMesh->scene = this;
 			CollisionMesh->actor = new btRigidBody(rbInfo);
@@ -133,7 +135,7 @@ namespace Ovgl
 			prop->bones.push_back(CollisionMesh);
 		}
 		prop->joints.resize(prop->bones.size());
-		prop->CreateJoints( prop->mesh->root_bone );
+		prop->CreateJoints( prop->mesh->skeleton->root_bone );
 		for(uint32_t np = 0; np < prop->bones.size(); np++)
 		{
 			for(uint32_t nq = 0; nq < prop->bones.size(); nq++)
@@ -157,26 +159,14 @@ namespace Ovgl
 		object->scene = this;
 		object->mesh = mesh;
 		object->materials.resize(mesh->subset_count);
-		bool zeroFound = false;
-		for( uint32_t i = 0; i < mesh->attributes.size(); i++ )
+		for( uint32_t s = 0; s < object->materials.size(); s++)
 		{
-			if( mesh->attributes[i] == 0)
-			{
-				zeroFound = true;
-			}
-		}
-		if(zeroFound)
-		{
-			object->materials[0] = Inst->DefaultMedia->Materials[0];
-		}
-		for( uint32_t s = 0; s < object->materials.size() - zeroFound; s++)
-		{
-			object->materials[s + zeroFound] = mesh->materials[s];
+			object->materials[s] = Inst->DefaultMedia->Materials[0];
 		}
 		btTransform Transform;
 		Transform.setFromOpenGLMatrix((float*)matrix);
 		btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
-		btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, mesh->TriangleMesh, btVector3(0,0,0) );
+		btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, mesh->triangle_mesh, btVector3(0,0,0) );
 		CMesh* CollisionMesh = new CMesh;
 		CollisionMesh->scene = this;
 		CollisionMesh->actor = new btRigidBody(rbInfo);
@@ -193,7 +183,7 @@ namespace Ovgl
 		actor->mesh = mesh;
 		if( mesh )
 		{
-			actor->matrices.resize( mesh->bones.size() );
+			actor->matrices.resize( mesh->skeleton->bones.size() );
 			for( uint32_t i = 0; i < actor->matrices.size(); i++ )
 			{
 				actor->matrices[i] = MatrixIdentity();
@@ -202,6 +192,54 @@ namespace Ovgl
 			for( uint32_t i = 0; i < mesh->subset_count; i++ )
 			{
 				actor->materials[i] = Inst->DefaultMedia->Materials[0];
+			}
+
+			actor->animations.resize( mesh->skeleton->animations.size() );
+			for( uint32_t i = 0; i < actor->animations.size(); i++ )
+			{
+				double max_time = 0.0;
+				double min_time = 0.0;
+				for( uint32_t c = 0; c < mesh->skeleton->animations[i].channels.size(); c++ )
+				{
+					for( uint32_t pk = 0; pk < mesh->skeleton->animations[i].channels[c].position_keys.size(); pk++ )
+					{
+						if(mesh->skeleton->animations[i].channels[c].position_keys[pk].time > max_time)
+						{
+							max_time = mesh->skeleton->animations[i].channels[c].position_keys[pk].time;
+						}
+						if(mesh->skeleton->animations[i].channels[c].position_keys[pk].time < min_time)
+						{
+							min_time = mesh->skeleton->animations[i].channels[c].position_keys[pk].time;
+						}
+					}
+					for( uint32_t rk = 0; rk < mesh->skeleton->animations[i].channels[c].rotation_keys.size(); rk++ )
+					{
+						if(mesh->skeleton->animations[i].channels[c].rotation_keys[rk].time > max_time)
+						{
+							max_time = mesh->skeleton->animations[i].channels[c].rotation_keys[rk].time;
+						}
+						if(mesh->skeleton->animations[i].channels[c].rotation_keys[rk].time < min_time)
+						{
+							min_time = mesh->skeleton->animations[i].channels[c].rotation_keys[rk].time;
+						}
+					}
+					for( uint32_t sk = 0; sk < mesh->skeleton->animations[i].channels[c].scaling_keys.size(); sk++ )
+					{
+						if(mesh->skeleton->animations[i].channels[c].scaling_keys[sk].time > max_time)
+						{
+							max_time = mesh->skeleton->animations[i].channels[c].scaling_keys[sk].time;
+						}
+						if(mesh->skeleton->animations[i].channels[c].scaling_keys[sk].time < min_time)
+						{
+							min_time = mesh->skeleton->animations[i].channels[c].scaling_keys[sk].time;
+						}
+					}
+				}
+				actor->animations[i] = new AnimationController;
+				actor->animations[i]->animation_state = 1;
+				actor->animations[i]->current_time = min_time;
+				actor->animations[i]->start_time = min_time;
+				actor->animations[i]->end_time = max_time;
 			}
 		}
 		actor->crouch = false;
@@ -243,8 +281,8 @@ namespace Ovgl
 		joint->obj[0] = obj1;
 		joint->obj[1] = obj2;
 		Matrix44 bodyMatA, bodyMatB;
-		bodyMatA = joint->obj[0]->getPose();
-		bodyMatB = joint->obj[1]->getPose();
+		bodyMatA = joint->obj[0]->get_pose();
+		bodyMatB = joint->obj[1]->get_pose();
 		btTransform frameInA, frameInB;
 		frameInA.setFromOpenGLMatrix((float*)&(bodyMatB * MatrixInverse(Vector4( 0.0f, 0.0f, 0.0f, 0.0f), bodyMatA)));
 		frameInB.setIdentity();
@@ -262,7 +300,7 @@ namespace Ovgl
 
 	void Prop::setPose( Matrix44* matrix )
 	{
-		bones[mesh->root_bone]->setPose(matrix);
+		bones[mesh->skeleton->root_bone->index]->set_pose(matrix);
 	}
 
 	void Object::setPose( Matrix44* matrix )
@@ -282,7 +320,7 @@ namespace Ovgl
 	Matrix44 Prop::getPose()
 	{
 		Matrix44 matrix;
-		bones[mesh->root_bone]->actor->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
+		bones[mesh->skeleton->root_bone->index]->actor->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
 		return matrix;
 	};
 
@@ -321,113 +359,40 @@ namespace Ovgl
 		return matrix;
 	}
 
-	void Prop::Update( int32_t bone, Matrix44* matrix )
+	void Prop::Update( Bone* bone, Matrix44* matrix )
 	{
 		Matrix44 inv_matrix, inv_mesh_bone, tmatrix;
-		matrices[bone] = bones[bone]->getPose();
-		if( this->mesh->bones.size() > 0 )
+		matrices[bone->index] = bones[bone->index]->get_pose();
+		if( this->mesh->skeleton->bones.size() > 0 )
 		{
-			inv_mesh_bone = MatrixInverse( Vector4(0,0,0,0), this->mesh->bones[bone]->matrix );
-			matrices[bone] = ( inv_mesh_bone * matrices[bone]  );
+			inv_mesh_bone = MatrixInverse( Vector4(0,0,0,0), bone->matrix );
+			matrices[bone->index] = ( inv_mesh_bone * matrices[bone->index]  );
 			inv_matrix = MatrixInverse( Vector4(0,0,0,0), *matrix );
-			tmatrix = matrices[bone] * inv_matrix;
-			for (uint32_t i = 0; i < this->mesh->bones[bone]->childen.size(); i++)
+			tmatrix = matrices[bone->index] * inv_matrix;
+			for (uint32_t i = 0; i < bone->children.size(); i++)
 			{
 				Matrix44 child;
-				child = mesh->bones[mesh->bones[bone]->childen[i]]->matrix.Translation();
+				child = bone->children[i]->matrix.Translation();
 				child = child * tmatrix * (*matrix);
-				Prop::Update( mesh->bones[bone]->childen[i], &child );
+				Prop::Update( bone->children[i], &child );
 			}
 		}
 	}
 
-	void Actor::UpdateAnimation( int32_t bone, Matrix44* matrix, double time )
+	void Prop::CreateJoints( Bone* bone )
 	{
-		// Initialize animation rotation matrix.
-		Matrix44 animRot;
-		Matrix44 animRot2;
-		animRot = MatrixIdentity();
-		animRot2 = MatrixIdentity();
-
-		// Get animation rotation.
-		Curve uCurve;
-		Curve lCurve;
-		uCurve.time = 0xffffffffUL;
-		uCurve.value = Vector4( 0.0f, 0.0f, 0.0f, 0.0f );
-		lCurve.time = 0;
-		lCurve.value = Vector4( 0.0f, 0.0f, 0.0f, 0.0f );
-
-		// Find one frame that are directly before and one that is directly after the current time.
-		for( uint32_t i = 0; i < mesh->bones[bone]->Rot_Keys.size(); i++)
-		{
-			Curve nCurve = mesh->bones[bone]->Rot_Keys[i];
-			if(nCurve.time > lCurve.time && nCurve.time < time )
-			{
-				lCurve = nCurve;
-			}
-			if(nCurve.time < uCurve.time && nCurve.time > time )
-			{
-				uCurve = nCurve;
-			}
-		}
-
-		// If we can't find an upper curve then just set it to the lower curve.
-		if(uCurve.time == 0xffffffffUL)
-		{
-			uCurve = lCurve;
-		}
-
-		// Check if we found any frames then interpolate between the two rotations and create a matrix from the quaternion.
-		if(uCurve.time > 0)
-		{
-			Vector4 currentRot;
-			currentRot = Slerp(lCurve.value, uCurve.value, (float)(time - lCurve.time) / (float)(uCurve.time - lCurve.time) );
-			animRot = MatrixRotationQuaternion( currentRot );
-		}
-
-		// Offset the center of rotation.
-		animRot2 = MatrixInverse( Vector4(), mesh->bones[bone]->matrix) * animRot * mesh->bones[bone]->matrix;
-
-		// Get difference from original pose to the animated pose.
-		matrices[bone] = animRot2 * (*matrix) * MatrixInverse( Vector4(), mesh->bones[bone]->matrix);
-
-		// Loop through all child bones and update their animations.
-		for( uint32_t i = 0; i < mesh->bones[bone]->childen.size(); i++)
-		{
-			Matrix44 accumulate;
-			Matrix44 Bone2Parent;
-			Bone2Parent = MatrixInverse( Vector4(), mesh->bones[bone]->matrix ) * mesh->bones[mesh->bones[bone]->childen[i]]->matrix;
-			accumulate = animRot2 * (*matrix) * Bone2Parent;
-			Actor::UpdateAnimation( mesh->bones[bone]->childen[i], &accumulate, time );
-		}
-	}
-
-	Animation* Actor::CreateAnimation( double start, double end, bool repeat )
-	{
-		Animation* animation = new Animation;
-		animation->startTime = start;
-		animation->endTime = end;
-		animation->currentTime = start;
-		animation->repeat = repeat;
-		animation->animationState = 1;
-		this->animations.push_back(animation);
-		return animation;
-	}
-
-	void Prop::CreateJoints( uint32_t bone )
-	{
-		if( mesh->bones[bone]->childen.size() > 0 )
+		if( bone->children.size() > 0 )
 		{
 			Joint* joint = new Joint;
 			joint->scene = this->scene;
-			joint->obj[0] = bones[bone];
-			for(uint32_t i = 0; i < mesh->bones[bone]->childen.size(); i++)
+			joint->obj[0] = bones[bone->index];
+			for(uint32_t i = 0; i < bone->children.size(); i++)
 			{
-				joint->obj[1] = bones[mesh->bones[bone]->childen[i]];
-				Bone* childBone = this->mesh->bones[mesh->bones[bone]->childen[i]];
+				joint->obj[1] = bones[bone->children[i]->index];
+				Bone* childBone = bone->children[i];
 				Matrix44 bodyMatA, bodyMatB;
-				bodyMatA = joint->obj[0]->getPose();
-				bodyMatB = joint->obj[1]->getPose();
+				bodyMatA = joint->obj[0]->get_pose();
+				bodyMatB = joint->obj[1]->get_pose();
 				btTransform frameInA, frameInB;
 				frameInA.setFromOpenGLMatrix((float*)&(bodyMatB * MatrixInverse(Vector4( 0.0f, 0.0f, 0.0f, 0.0f), bodyMatA)));
 				frameInB.setIdentity();
@@ -435,20 +400,31 @@ namespace Ovgl
 				joint->joint->setAngularLowerLimit( btVector3(DegToRad(-childBone->max.x), DegToRad(childBone->min.y), DegToRad(-childBone->max.z)) );
 				joint->joint->setAngularUpperLimit( btVector3(DegToRad(-childBone->min.x), DegToRad(childBone->max.y), DegToRad(-childBone->min.z)) );
 				scene->DynamicsWorld->addConstraint(joint->joint, true);
-				joints[mesh->bones[bone]->childen[i]] = joint;
-				Prop::CreateJoints(mesh->bones[bone]->childen[i]);
+				joints[bone->children[i]->index] = joint;
+				Prop::CreateJoints(bone->children[i]);
 			}
 		}
 	}
 
-	Animation* Prop::CreateAnimation( uint32_t current, uint32_t start, uint32_t end )
+	AnimationController* Prop::CreateAnimation( double start, double end, bool repeat )
 	{
-		Animation* animation = new Animation;
-		animation->animationState = 0;
-		animation->currentTime = current;
-		animation->startTime = start;
-		animation->endTime = end;
-		animation->stepTime = 1;
+		AnimationController* animation = new AnimationController;
+		animation->animation_state = 0;
+		animation->current_time = 0;
+		animation->start_time = start;
+		animation->end_time = end;
+		animation->step_time = 1;
+		return animation;
+	}
+
+	AnimationController* Actor::CreateAnimation( double start, double end, bool repeat )
+	{
+		AnimationController* animation = new AnimationController;
+		animation->animation_state = 0;
+		animation->current_time = 0;
+		animation->start_time = start;
+		animation->end_time = end;
+		animation->step_time = 1;
 		return animation;
 	}
 
@@ -494,36 +470,31 @@ namespace Ovgl
 			Matrix44 new_matrix = MatrixRotationY( -actors[a]->lookDirection.z) * MatrixTranslation(matrix._41, matrix._42, matrix._43);
 			actors[a]->ghostObject->getWorldTransform().setFromOpenGLMatrix((float*)&new_matrix);
 
-			// Check if actor's mesh has animation keys.
-			bool isKeys = false;
-			for(uint32_t i = 0; i < actors[a]->mesh->bones.size(); i++)
-			{
-				if(actors[a]->mesh->bones[i]->Rot_Keys.size())
-				{
-					isKeys = true;
-				}
-			}
-
 			// Update animations.
-			if(actors[a]->animations.size() > 0 && isKeys)
+			if(actors[a]->animations.size() > 0 && actors[a]->mesh->skeleton->animations.size())
 			{
 				for(uint32_t i = 0; i < actors[a]->animations.size(); i++)
 				{
-					if(actors[a]->animations[i]->currentTime > actors[a]->animations[i]->endTime)
+					if(actors[a]->animations[i]->current_time > actors[a]->animations[i]->end_time)
 					{
 						if(actors[a]->animations[i]->repeat)
 						{
-							actors[a]->animations[i]->currentTime = actors[a]->animations[i]->startTime;
+							actors[a]->animations[i]->current_time = actors[a]->animations[i]->start_time;
 						}
 						else
 						{
-							actors[a]->animations[i]->currentTime = actors[a]->animations[i]->endTime;
+							actors[a]->animations[i]->current_time = actors[a]->animations[i]->end_time;
 						}
 					}
-					actors[a]->UpdateAnimation( actors[a]->mesh->root_bone, &actors[a]->mesh->bones[actors[a]->mesh->root_bone]->matrix, actors[a]->animations[i]->currentTime );
-					if(actors[a]->animations[i]->animationState == 1)
+					actors[a]->mesh->temp->Calculate((float)actors[a]->animations[i]->current_time);
+					for(uint32_t b = 0; b < actors[a]->matrices.size(); b++)
 					{
-						actors[a]->animations[i]->currentTime = actors[a]->animations[i]->currentTime + (((double)UpdateTime)/100);
+						actors[a]->matrices[b]= actors[a]->mesh->temp->Bones[b]->GlobalTransform;
+						actors[a]->matrices[b] = MatrixInverse( Vector4(), actors[a]->mesh->skeleton->bones[b]->matrix) * actors[a]->matrices[b];
+					}
+					if(actors[a]->animations[i]->animation_state == 1)
+					{
+						actors[a]->animations[i]->current_time = actors[a]->animations[i]->current_time + (((double)UpdateTime)/100);
 					}
 				}
 			}
@@ -534,6 +505,7 @@ namespace Ovgl
 					actors[a]->matrices[i] = MatrixIdentity();
 				}
 			}
+
 			for(uint32_t i = 0; i < actors[a]->matrices.size(); i++)
 			{
 				actors[a]->matrices[i] = actors[a]->matrices[i]* (actors[a]->offset * new_matrix);
@@ -584,7 +556,7 @@ namespace Ovgl
 		// Update prop bones.
 		for( uint32_t p = 0; p < props.size(); p++ )
 		{
-			props[p]->Update(props[p]->mesh->root_bone, &MatrixIdentity() );
+			props[p]->Update(props[p]->mesh->skeleton->root_bone, &MatrixIdentity() );
 		}
 
 		// Update physics scene.
@@ -617,7 +589,7 @@ namespace Ovgl
 			}
 		}
 		delete CollisionMesh->actor->getCollisionShape();
-		CollisionMesh->Release();
+		delete CollisionMesh;
 		delete this;
 	}
 
@@ -631,7 +603,7 @@ namespace Ovgl
 			}
 		}
 		delete CollisionMesh->actor->getCollisionShape();
-		CollisionMesh->Release();
+		delete CollisionMesh;
 		delete this;
 	}
 
@@ -645,7 +617,7 @@ namespace Ovgl
 			}
 		}
 		delete CollisionMesh->actor->getCollisionShape();
-		CollisionMesh->Release();
+		delete CollisionMesh;
 		delete this;
 	}
 
@@ -660,7 +632,7 @@ namespace Ovgl
 		}
 		for( uint32_t i = 0; i < bones.size(); i++)
 		{
-			bones[i]->Release();
+			delete bones[i];
 		}
 		delete this;
 	}
@@ -674,7 +646,7 @@ namespace Ovgl
 				scene->objects.erase( scene->objects.begin() + i );
 			}
 		}
-		CollisionMesh->Release();
+		delete CollisionMesh;
 		delete this;
 	}
 

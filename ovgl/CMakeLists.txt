@@ -18,9 +18,11 @@ link_directories(${OPENAL_LIBRARY_DIR}
 ${CG_LIBRARY_DIR}
 ${FREEIMAGE_LIBRARY_DIR}
 ${ASSIMP_LIBRARY_DIR}
+${ASSIMP_DEBUG_LIBRARY_DIR}
 ${OGG_LIBRARY_DIR}
 ${VORBIS_LIBRARY_DIR}
-${BULLET_LIBRARY_DIR})
+${BULLET_LIBRARY_DIR}
+${BULLET_DEBUG_LIBRARY_DIR})
 
 add_library( Ovgl SHARED "OvglAudio.h"
 "OvglGraphics.h"
@@ -31,6 +33,8 @@ add_library( Ovgl SHARED "OvglAudio.h"
 "OvglMesh.h"
 "OvglScene.h"
 "OvglWindow.h"
+"OvglAnimation.h"
+"OvglSkeleton.h"
 "OvglAudio.cpp"
 "OvglGraphics.cpp"
 "OvglInstance.cpp"
@@ -38,7 +42,9 @@ add_library( Ovgl SHARED "OvglAudio.h"
 "OvglMedia.cpp"
 "OvglMesh.cpp"
 "OvglScene.cpp"
-"OvglWindow.cpp")
+"OvglWindow.cpp"
+"OvglAnimation.cpp"
+"OvglSkeleton.cpp")
 
 target_link_libraries( Ovgl "wininet.lib"
 "winmm.lib"
@@ -52,10 +58,10 @@ target_link_libraries( Ovgl "wininet.lib"
 "libvorbis_static.lib"
 "libvorbisfile_static.lib"
 "OpenGLSupport.lib"
-"Assimp.lib"
 "BulletDynamics.lib"
 "BulletCollision.lib"
-"LinearMath.lib")
+"LinearMath.lib"
+"Assimp.lib")
 
 add_definitions( -DNOMINMAX -DWIN32_LEAN_AND_MEAN -DKFBX_DLLINFO )
 

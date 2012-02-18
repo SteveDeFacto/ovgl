@@ -25,6 +25,8 @@
 #include "OvglAudio.h"
 #include "OvglMesh.h"
 #include "OvglWindow.h"
+#include "OvglAnimation.h"
+#include "OvglSkeleton.h"
 
 namespace Ovgl
 {
@@ -444,8 +446,8 @@ namespace Ovgl
 				cgSetParameterValuefr( CgVariable, materials[s]->Variables[v].second.size(), (float*)&materials[s]->Variables[v].second[0] );
 			}
 
-			glBindBufferARB( GL_ARRAY_BUFFER, mesh.VertexBuffer );
-			glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, mesh.IndexBuffers[s] );
+			glBindBufferARB( GL_ARRAY_BUFFER, mesh.vertex_buffer );
+			glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffers[s] );
 
 			// Set vertex attributes
 			glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
@@ -872,8 +874,8 @@ namespace Ovgl
 				cgGLEnableTextureParameter( CgFSTexture );
 
 				// Bind vertex and index buffers
-				glBindBufferARB( GL_ARRAY_BUFFER, Inst->DefaultMedia->Meshes[0]->VertexBuffer );
-				glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, Inst->DefaultMedia->Meshes[0]->IndexBuffers[0] );
+				glBindBufferARB( GL_ARRAY_BUFFER, Inst->DefaultMedia->Meshes[0]->vertex_buffer );
+				glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, Inst->DefaultMedia->Meshes[0]->index_buffers[0] );
 
 				// Set vertex attributes
 				glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
@@ -1068,7 +1070,7 @@ namespace Ovgl
 			{
 				for( uint32_t m = 0; m < scene->actors[i]->matrices.size(); m++ )
 				{
-					DrawMarker( MatrixScaling( 0.1f, 0.1f, 0.1f ) *  scene->actors[i]->mesh->bones[m]->matrix * scene->actors[i]->matrices[m]);
+					DrawMarker( MatrixScaling( 0.1f, 0.1f, 0.1f ) * scene->actors[i]->mesh->skeleton->bones[m]->matrix * scene->actors[i]->matrices[m]);
 				}
 			}
 		}
