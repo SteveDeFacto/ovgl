@@ -25,7 +25,6 @@
 #include "OvglScene.h"
 #include "OvglMesh.h"
 #include "OvglWindow.h"
-#include "OvglAnimation.h"
 #include "OvglSkeleton.h"
 
 namespace Ovgl
@@ -406,6 +405,108 @@ namespace Ovgl
 		}
 	}
 
+	void Actor::UpdateAnimation( Bone* bone, Matrix44* matrix, double time )
+	{
+		// Get animation position.
+		Vector3 present_position;
+		VectorKey upper_position_key;
+		VectorKey lower_position_key;
+		upper_position_key.time = 0xffffffffUL;
+		upper_position_key.value = Vector3( 0.0f, 0.0f, 0.0f );
+		lower_position_key.time = 0;
+		lower_position_key.value = Vector3( 0.0f, 0.0f, 0.0f );
+
+		// Find one frame that are directly before and one that is directly after the current time.
+		for( uint32_t c = 0; c < mesh->skeleton->animations[0].channels.size(); c++)
+		{
+			if(mesh->skeleton->animations[0].channels[c].index == bone->index)
+			for( uint32_t i = 0; i < mesh->skeleton->animations[0].channels[c].position_keys.size(); i++)
+			{
+				VectorKey check_position_key = mesh->skeleton->animations[0].channels[c].position_keys[i];
+				if(check_position_key.time > lower_position_key.time && check_position_key.time < time )
+				{
+					lower_position_key = check_position_key;
+				}
+				if(check_position_key.time < upper_position_key.time && check_position_key.time > time )
+				{
+					upper_position_key = check_position_key;
+				}
+			}
+		}
+
+		// If we can't find an upper curve then just set it to the lower curve.
+		if(upper_position_key.time == 0xffffffffUL)
+		{
+			upper_position_key = lower_position_key;
+		}
+
+		// Check if we found any frames then interpolate between the two positions and create a matrix from the quaternion.
+		if(upper_position_key.time > 0)
+		{
+			present_position = (upper_position_key.value - lower_position_key.value) * ((float)(time - lower_position_key.time) / (float)(upper_position_key.time - lower_position_key.time) );
+		}
+
+
+		// Get animation rotation.
+		Vector4 present_rotation;
+		QuatKey upper_rotation_key;
+		QuatKey lower_rotation_key;
+		upper_rotation_key.time = 0xffffffffUL;
+		upper_rotation_key.value = Vector4( 0.0f, 0.0f, 0.0f, 1.0f );
+		lower_rotation_key.time = 0;
+		lower_rotation_key.value = Vector4( 0.0f, 0.0f, 0.0f, 1.0f );
+
+		// Find one frame that are directly before and one that is directly after the current time.
+		for( uint32_t c = 0; c < mesh->skeleton->animations[0].channels.size(); c++)
+		{
+			if(mesh->skeleton->animations[0].channels[c].index == bone->index)
+			for( uint32_t i = 0; i < mesh->skeleton->animations[0].channels[c].rotation_keys.size(); i++)
+			{
+				QuatKey check_rotation_key = mesh->skeleton->animations[0].channels[c].rotation_keys[i];
+				if(check_rotation_key.time > lower_rotation_key.time && check_rotation_key.time < time )
+				{
+					lower_rotation_key = check_rotation_key;
+				}
+				if(check_rotation_key.time < upper_rotation_key.time && check_rotation_key.time > time )
+				{
+					upper_rotation_key = check_rotation_key;
+				}
+			}
+		}
+
+		// If we can't find an upper curve then just set it to the lower curve.
+		if(upper_rotation_key.time == 0xffffffffUL)
+		{
+			upper_rotation_key = lower_rotation_key;
+		}
+
+		// Check if we found any frames then interpolate between the two rotations and create a matrix from the quaternion.
+		if(upper_rotation_key.time > 0)
+		{
+			present_rotation = Slerp(lower_rotation_key.value, upper_rotation_key.value, (float)(time - lower_rotation_key.time) / (float)(upper_rotation_key.time - lower_rotation_key.time) );
+		}
+
+		Matrix44 mat = Ovgl::MatrixRotationQuaternion( present_rotation );
+
+		//mat._11 *= presentScaling.x; mat._12 *= presentScaling.x; mat._13 *= presentScaling.x;
+		//mat._21 *= presentScaling.y; mat._22 *= presentScaling.y; mat._23 *= presentScaling.y;
+		//mat._31 *= presentScaling.z; mat._32 *= presentScaling.z; mat._33 *= presentScaling.z;
+		mat._41 = present_position.x; mat._42 = present_position.y; mat._43 = present_position.z;
+
+		// Get difference from original pose to the animated pose.
+		matrices[bone->index] = mat *(*matrix) * MatrixInverse( Vector4(), bone->matrix);
+
+		// Loop through all child bones and update their animations.
+		for( uint32_t i = 0; i < bone->children.size(); i++)
+		{
+			Matrix44 accumulate;
+			Matrix44 bone_to_parent;
+			bone_to_parent = MatrixInverse( Vector4(), bone->matrix ) * bone->children[i]->matrix;
+			accumulate = (*matrix) * bone_to_parent;
+			Actor::UpdateAnimation( bone->children[i], &accumulate, time );
+		}
+	}
+
 	AnimationController* Prop::CreateAnimation( double start, double end, bool repeat )
 	{
 		AnimationController* animation = new AnimationController;
@@ -486,12 +587,13 @@ namespace Ovgl
 							actors[a]->animations[i]->current_time = actors[a]->animations[i]->end_time;
 						}
 					}
-					actors[a]->mesh->temp->Calculate((float)actors[a]->animations[i]->current_time);
+					actors[a]->mesh->skeleton->Calculate((float)actors[a]->animations[i]->current_time);
 					for(uint32_t b = 0; b < actors[a]->matrices.size(); b++)
 					{
-						actors[a]->matrices[b]= actors[a]->mesh->temp->Bones[b]->GlobalTransform;
+						actors[a]->matrices[b]= actors[a]->mesh->skeleton->bones[b]->GlobalTransform;
 						actors[a]->matrices[b] = MatrixInverse( Vector4(), actors[a]->mesh->skeleton->bones[b]->matrix) * actors[a]->matrices[b];
 					}
+
 					if(actors[a]->animations[i]->animation_state == 1)
 					{
 						actors[a]->animations[i]->current_time = actors[a]->animations[i]->current_time + (((double)UpdateTime)/100);

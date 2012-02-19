@@ -23,7 +23,6 @@
 #include "OvglAudio.h"
 #include "OvglScene.h"
 #include "OvglMesh.h"
-#include "OvglAnimation.h"
 #include "OvglSkeleton.h"
 
 namespace Ovgl
@@ -410,8 +409,7 @@ namespace Ovgl
 							bone->convex = NULL;
 							bone->parent = NULL;
 							aiNode* bnode = scene->mRootNode->FindNode(scene->mMeshes[m]->mBones[b]->mName);
-							aiMatrix4x4 global_transform = bnode->mTransformation;
-							aiNode* parent = bnode->mParent;
+							bone->LocalTransform = Ovgl::MatrixTranspose(*(Matrix44*)&bnode->mTransformation);
 							bone->matrix = MatrixInverse( Vector4(), Ovgl::MatrixTranspose(*(Matrix44*)&scene->mMeshes[m]->mBones[b]->mOffsetMatrix)) * MatrixRotationX(1.57f);
 
 							for( uint32_t i = 0; i < scene->mMeshes[m]->mNumBones; i++ )
@@ -423,14 +421,14 @@ namespace Ovgl
 							}
 
 							// Get bone hierarchy.
-							for( uint32_t cb = 0; cb < bnode->mNumChildren; cb++ )
+							for( uint32_t mb = 0; mb < scene->mMeshes[m]->mNumBones; mb++ )
 							{
-								for( uint32_t mb = 0; mb < scene->mMeshes[m]->mNumBones; mb++ )
+								if( bnode->mParent->mName == scene->mMeshes[m]->mBones[mb]->mName )
 								{
-									if( bnode->mParent->mName == scene->mMeshes[m]->mBones[mb]->mName )
-									{
-										bone->parent = mesh->skeleton->bones[mb];
-									}
+									bone->parent = mesh->skeleton->bones[mb];
+								}
+								for( uint32_t cb = 0; cb < bnode->mNumChildren; cb++ )
+								{
 									if( bnode->mChildren[cb]->mName == scene->mMeshes[m]->mBones[mb]->mName )
 									{
 										bone->children.push_back(mesh->skeleton->bones[mb]);
@@ -458,7 +456,7 @@ namespace Ovgl
 										mesh->skeleton->animations[a].channels[ac].index = b;
 										for( uint32_t pk = 0; pk < scene->mAnimations[a]->mChannels[ac]->mNumPositionKeys; pk++ )
 										{
-											PositionKey position_key;
+											VectorKey position_key;
 											position_key.time = scene->mAnimations[a]->mChannels[ac]->mPositionKeys[pk].mTime;
 											position_key.value.x = scene->mAnimations[a]->mChannels[ac]->mPositionKeys[pk].mValue.x;
 											position_key.value.y = scene->mAnimations[a]->mChannels[ac]->mPositionKeys[pk].mValue.y;
@@ -467,7 +465,7 @@ namespace Ovgl
 										}
 										for( uint32_t rk = 0; rk < scene->mAnimations[a]->mChannels[ac]->mNumRotationKeys; rk++ )
 										{
-											RotationKey rotation_key;
+											QuatKey rotation_key;
 											rotation_key.time = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mTime;
 											rotation_key.value.w = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.w;
 											rotation_key.value.x = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.x;
@@ -477,7 +475,7 @@ namespace Ovgl
 										}
 										for( uint32_t sk = 0; sk < scene->mAnimations[a]->mChannels[ac]->mNumScalingKeys; sk++ )
 										{
-											ScalingKey scaling_key;
+											VectorKey scaling_key;
 											scaling_key.time = scene->mAnimations[a]->mChannels[ac]->mScalingKeys[sk].mTime;
 											scaling_key.value.x = scene->mAnimations[a]->mChannels[ac]->mScalingKeys[sk].mValue.x;
 											scaling_key.value.y = scene->mAnimations[a]->mChannels[ac]->mScalingKeys[sk].mValue.y;
@@ -605,15 +603,13 @@ namespace Ovgl
 				{
 					mesh->skeleton->root_bone = mesh->skeleton->bones[b1];
 					mesh->skeleton->root_bone->parent = NULL;
+					mesh->skeleton->root_bone->LocalTransform = mesh->skeleton->root_bone->LocalTransform * MatrixRotationX(1.57f);
 				}
 			}
 
 			// Null index and vertex buffers.
 			mesh->vertex_buffer = 0;
 			mesh->index_buffers = 0;
-
-			mesh->temp = new SceneAnimator;
-			mesh->temp->Init(scene, mesh);
 
 			// Update video memory copies of index and vertex buffers.
 			mesh->update();

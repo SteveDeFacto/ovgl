@@ -32,7 +32,6 @@ namespace Ovgl
 	class CMesh;
 	class Mesh;
 	class Matrix44;
-	class SceneAnimator;
 	class Skeleton;
 
 	extern "C"
@@ -90,7 +89,6 @@ namespace Ovgl
 			uint32_t*							index_buffers;
 			btBvhTriangleMeshShape*				triangle_mesh;
 			Skeleton*							skeleton;
-			SceneAnimator*						temp;
 			void generate_vertex_normals();
 			void cube_cloud( float sx, float sy, float sz, int32_t count );
 			float quick_hull();

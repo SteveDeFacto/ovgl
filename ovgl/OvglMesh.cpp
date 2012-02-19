@@ -22,7 +22,6 @@
 #include "OvglMesh.h"
 #include "OvglMedia.h"
 #include "OvglScene.h"
-#include "OvglAnimation.h"
 #include "OvglSkeleton.h"
 
 namespace Ovgl

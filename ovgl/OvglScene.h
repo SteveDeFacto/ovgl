@@ -367,7 +367,7 @@ namespace Ovgl
 			*/
 			Matrix44 getPose();
 
-			void UpdateAnimation( int32_t bone, Ovgl::Matrix44* matrix, double time );
+			void UpdateAnimation( Bone* bone, Ovgl::Matrix44* matrix, double time );
 
 			AnimationController* CreateAnimation( double start, double end, bool repeat );
 			/**

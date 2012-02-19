@@ -37,34 +37,27 @@ namespace Ovgl
 
 	extern "C"
 	{
-		class __declspec(dllexport) PositionKey
+		class __declspec(dllexport) VectorKey
 		{
 		public:
 			double time;
 			Vector3 value;
 		};
 
-		class __declspec(dllexport) RotationKey
+		class __declspec(dllexport) QuatKey
 		{
 		public:
 			double time;
 			Vector4 value;
 		};
 
-		class __declspec(dllexport) ScalingKey
-		{
-		public:
-			double time;
-			Vector3 value;
-		};
-
 		class __declspec(dllexport) Channel
 		{
 		public:
 			uint32_t index;
-			std::vector< PositionKey >						position_keys;
-			std::vector< RotationKey >						rotation_keys;
-			std::vector< ScalingKey	>						scaling_keys;
+			std::vector< VectorKey >						position_keys;
+			std::vector< QuatKey >							rotation_keys;
+			std::vector< VectorKey	>						scaling_keys;
 		};
 
 		class __declspec(dllexport) Animation
@@ -114,6 +107,9 @@ namespace Ovgl
 			Bone*											root_bone;
 			std::vector< Animation >						animations;
 			void generate_bone_shapes();
+			void Evaluate( float pTime, std::vector<Bone*>& bones);
+			void Calculate( float pTime );
+			void Skeleton::UpdateTransforms( Bone* pNode );
 		};
 	}
 }
