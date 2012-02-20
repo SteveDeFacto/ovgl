@@ -101,10 +101,10 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 											"..\\media\\textures\\skybox\\bottom.png", "..\\media\\textures\\skybox\\left.png", "..\\media\\textures\\skybox\\right.png");
 	// Create 2D texture
 	Texture2 = MediaLibrary->ImportTexture("..\\media\\textures\\Grass.png");
-
+	
 	// Import mesh
-	Mesh = MediaLibrary->ImportModel( "..\\media\\meshes\\plane.dae" );
-	Mesh2 = MediaLibrary->ImportModel( "..\\media\\meshes\\test.dae" );
+	Mesh = MediaLibrary->ImportModel( "..\\media\\meshes\\plane.dae", true );
+	Mesh2 = MediaLibrary->ImportModel( "..\\media\\meshes\\test.dae", true );
 
 	// Add object to scene
 	Object = Scene->CreateObject(Mesh, &Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
@@ -112,8 +112,9 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 
 	// Add actor to scene
 	Actor = Scene->CreateActor(Mesh2, 0.1f, 1.0f, &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
-	Actor->CreateAnimation(0, 11, true);
-
+	Actor->CreateAnimation( &Mesh2->skeleton->animations[0], 0, 10, true);
+	Ovgl::Actor* Actor2 = Scene->CreateActor(Mesh2, 0.1f, 1.0f, &Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+	Actor2->CreateAnimation( &Mesh2->skeleton->animations[0], 5, 6, true);
 	// Set scene sky box
 	Scene->SkyBox = Texture1;
 

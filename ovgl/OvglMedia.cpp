@@ -342,7 +342,7 @@ namespace Ovgl
 	//	}
 	//}
 
-	Mesh* MediaLibrary::ImportModel( const std::string& file )
+	Mesh* MediaLibrary::ImportModel( const std::string& file, bool z_up )
 	{
 		if(!file.empty())
 		{
@@ -377,13 +377,16 @@ namespace Ovgl
 					}
 					uint32_t m = scene->mRootNode->mChildren[n]->mMeshes[sm];
 					Matrix44 matrix;
-					if(scene->mMeshes[m]->HasBones())
-						matrix = Ovgl::MatrixTranspose(*(Matrix44*)&scene->mRootNode->FindNode(scene->mMeshes[m]->mBones[0]->mName)->mTransformation).Translation();
-					else
+					if(!scene->mMeshes[m]->HasBones())
+					{
 						matrix = *(Matrix44*)&scene->mRootNode->mChildren[n]->mTransformation.Transpose();
-					matrix = matrix * MatrixRotationX(1.57f);
-					if(scene->mMeshes[m]->HasBones())
-					matrix = matrix * Ovgl::MatrixTranspose(*(Matrix44*)&scene->mMeshes[m]->mBones[0]->mOffsetMatrix).Translation();
+					}
+					if(z_up)
+					{
+						matrix = matrix * MatrixRotationX(1.57f);
+					}
+					//if(scene->mMeshes[m]->HasBones())
+					//matrix = matrix * Ovgl::MatrixTranspose(*(Matrix44*)&scene->mMeshes[m]->mBones[0]->mOffsetMatrix).Translation();
 					std::vector< std::vector< float > > weights(scene->mMeshes[m]->mNumVertices);
 					std::vector< std::vector< float > > indices(scene->mMeshes[m]->mNumVertices);
 					std::vector< Face > faces;
@@ -409,8 +412,13 @@ namespace Ovgl
 							bone->convex = NULL;
 							bone->parent = NULL;
 							aiNode* bnode = scene->mRootNode->FindNode(scene->mMeshes[m]->mBones[b]->mName);
-							bone->LocalTransform = Ovgl::MatrixTranspose(*(Matrix44*)&bnode->mTransformation);
-							bone->matrix = MatrixInverse( Vector4(), Ovgl::MatrixTranspose(*(Matrix44*)&scene->mMeshes[m]->mBones[b]->mOffsetMatrix)) * MatrixRotationX(1.57f);
+							bone->local_transform = Ovgl::MatrixTranspose(*(Matrix44*)&bnode->mTransformation);
+							bone->matrix = MatrixInverse( Vector4(), Ovgl::MatrixTranspose(*(Matrix44*)&scene->mMeshes[m]->mBones[b]->mOffsetMatrix));
+
+							if(!z_up)
+							{
+								bone->matrix = MatrixRotationZ(1.57f) * bone->matrix * MatrixRotationX(1.57f);
+							}
 
 							for( uint32_t i = 0; i < scene->mMeshes[m]->mNumBones; i++ )
 							{
@@ -462,6 +470,14 @@ namespace Ovgl
 											position_key.value.y = scene->mAnimations[a]->mChannels[ac]->mPositionKeys[pk].mValue.y;
 											position_key.value.z = scene->mAnimations[a]->mChannels[ac]->mPositionKeys[pk].mValue.z;
 											mesh->skeleton->animations[a].channels[ac].position_keys.push_back( position_key );
+											if(position_key.time > mesh->skeleton->animations[a].end_time)
+											{
+												mesh->skeleton->animations[a].end_time = position_key.time;
+											}
+											if(position_key.time < mesh->skeleton->animations[a].start_time)
+											{
+												mesh->skeleton->animations[a].start_time = position_key.time;
+											}
 										}
 										for( uint32_t rk = 0; rk < scene->mAnimations[a]->mChannels[ac]->mNumRotationKeys; rk++ )
 										{
@@ -472,6 +488,14 @@ namespace Ovgl
 											rotation_key.value.y = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.y;
 											rotation_key.value.z = scene->mAnimations[a]->mChannels[ac]->mRotationKeys[rk].mValue.z;
 											mesh->skeleton->animations[a].channels[ac].rotation_keys.push_back( rotation_key );
+											if(rotation_key.time > mesh->skeleton->animations[a].end_time)
+											{
+												mesh->skeleton->animations[a].end_time = rotation_key.time;
+											}
+											if(rotation_key.time < mesh->skeleton->animations[a].start_time)
+											{
+												mesh->skeleton->animations[a].start_time = rotation_key.time;
+											}
 										}
 										for( uint32_t sk = 0; sk < scene->mAnimations[a]->mChannels[ac]->mNumScalingKeys; sk++ )
 										{
@@ -481,6 +505,14 @@ namespace Ovgl
 											scaling_key.value.y = scene->mAnimations[a]->mChannels[ac]->mScalingKeys[sk].mValue.y;
 											scaling_key.value.z = scene->mAnimations[a]->mChannels[ac]->mScalingKeys[sk].mValue.z;
 											mesh->skeleton->animations[a].channels[ac].scaling_keys.push_back( scaling_key );
+											if(scaling_key.time > mesh->skeleton->animations[a].end_time)
+											{
+												mesh->skeleton->animations[a].end_time = scaling_key.time;
+											}
+											if(scaling_key.time < mesh->skeleton->animations[a].start_time)
+											{
+												mesh->skeleton->animations[a].start_time = scaling_key.time;
+											}
 										}
 									}
 								}
@@ -508,11 +540,20 @@ namespace Ovgl
 							vertex.position.x = scene->mMeshes[m]->mVertices[vi].x;
 							vertex.position.y = scene->mMeshes[m]->mVertices[vi].y;
 							vertex.position.z = scene->mMeshes[m]->mVertices[vi].z;
-							vertex.position = Vector3Transform(vertex.position, matrix);
 							vertex.normal.x = scene->mMeshes[m]->mNormals[vi].x;
 							vertex.normal.y = scene->mMeshes[m]->mNormals[vi].y;
 							vertex.normal.z = scene->mMeshes[m]->mNormals[vi].z;
-							vertex.normal = Vector3Transform(vertex.normal, matrix.Rotation());
+
+							if( scene->mMeshes[m]->HasBones() && !z_up)
+							{
+								vertex.position = Vector3Transform(vertex.position, MatrixRotationX(1.57f));
+								vertex.normal = Vector3Transform(vertex.normal, MatrixRotationX(1.57f));
+							}
+							else if(!scene->mMeshes[m]->HasBones())
+							{
+								vertex.position = Vector3Transform(vertex.position, matrix);
+								vertex.normal = Vector3Transform(vertex.normal, matrix.Rotation());
+							}
 							if(scene->mMeshes[m]->GetNumUVChannels() > 0)
 							{
 								vertex.texture.x = scene->mMeshes[m]->mTextureCoords[0][vi].x;
@@ -584,7 +625,7 @@ namespace Ovgl
 			}
 
 			// Find the root bone.
-			mesh->skeleton->root_bone = 0;
+			mesh->skeleton->root_bone = NULL;
 			for( uint32_t b1 = 0; b1 < mesh->skeleton->bones.size(); b1++ )
 			{
 				bool is_root = true;
@@ -603,7 +644,7 @@ namespace Ovgl
 				{
 					mesh->skeleton->root_bone = mesh->skeleton->bones[b1];
 					mesh->skeleton->root_bone->parent = NULL;
-					mesh->skeleton->root_bone->LocalTransform = mesh->skeleton->root_bone->LocalTransform * MatrixRotationX(1.57f);
+					mesh->skeleton->root_bone->local_transform = mesh->skeleton->root_bone->local_transform * MatrixRotationX(1.57f);
 				}
 			}
 

@@ -64,6 +64,8 @@ namespace Ovgl
 		{
 		public:
 			std::vector< Channel >							channels;
+			double											start_time;
+			double											end_time;
 		};
 
 		class __declspec(dllexport) AnimationController
@@ -89,13 +91,35 @@ namespace Ovgl
 			btConvexHullShape*								convex;
 			Mesh*											mesh;
 			Matrix44										matrix;
-			Matrix44 Offset, LocalTransform, GlobalTransform, OriginalLocalTransform;
+			Matrix44										local_transform;
+			Matrix44 										global_transform;
 			float											length;
 			float											volume;
 			Vector3											min;
 			Vector3											max;
 			Bone*											parent;
 			std::vector< Bone* >							children;
+		};
+
+		class __declspec(dllexport) Joint
+		{
+		public:
+			Joint*											parent;
+			std::vector< Joint* >							children;
+			Matrix44										offset;
+			Matrix44										local_transform;
+			Matrix44 										global_transform;
+		};	
+		
+		class __declspec(dllexport) Pose
+		{
+		public:
+			std::vector< Matrix44 >							matrices;
+			std::vector< Joint* >							joints;
+			Joint*											root_joint;
+			void animate( Animation* anim, float time );
+			void UpdateTransforms( Joint* pNode );
+			void Evaluate( Animation* anim, float pTime );
 		};
 
 		class __declspec(dllexport) Skeleton
@@ -107,9 +131,6 @@ namespace Ovgl
 			Bone*											root_bone;
 			std::vector< Animation >						animations;
 			void generate_bone_shapes();
-			void Evaluate( float pTime, std::vector<Bone*>& bones);
-			void Calculate( float pTime );
-			void Skeleton::UpdateTransforms( Bone* pNode );
 		};
 	}
 }

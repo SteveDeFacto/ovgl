@@ -37,14 +37,14 @@ namespace Ovgl
 	{
 	}
 
-	void Skeleton::Evaluate( float pTime, std::vector<Bone*>& bones)
+	void Pose::Evaluate( Animation* anim, float pTime )
 	{
 		float time = 0.0f;
 		time = pTime;
 
-		for( unsigned int a = 0; a < animations[0].channels.size(); a++)
+		for( unsigned int a = 0; a < anim->channels.size(); a++)
 		{
-			Ovgl::Channel* channel = &animations[0].channels[a];
+			Ovgl::Channel* channel = &anim->channels[a];
 
 			Vector3 presentPosition( 0, 0, 0);
 			if( channel->position_keys.size() > 0)
@@ -123,23 +123,28 @@ namespace Ovgl
 			mat._31 *= presentScaling.z; mat._32 *= presentScaling.z; mat._33 *= presentScaling.z;
 			mat._41 = presentPosition.x; mat._42 = presentPosition.y; mat._43 = presentPosition.z;
 		
-			bones[channel->index]->LocalTransform = mat;
+			joints[channel->index]->local_transform = mat;
 		}
 	}
 
-	void Skeleton::Calculate(float pTime)
+	void Pose::animate( Animation* anim, float time )
 	{
-		Evaluate( pTime, bones);
-		UpdateTransforms(root_bone);
+		Evaluate( anim, time );
+		UpdateTransforms( root_joint );
+		for(uint32_t b = 0; b < matrices.size(); b++)
+		{
+			matrices[b] = joints[b]->global_transform;
+			matrices[b] = MatrixInverse( Vector4(), joints[b]->offset) * matrices[b];
+		}
 	}
 
-	void Skeleton::UpdateTransforms(Bone* pNode)
+	void Pose::UpdateTransforms(Joint* pNode)
 	{
-		pNode->GlobalTransform = pNode->LocalTransform;
-		Bone* parent = pNode->parent;
+		pNode->global_transform = pNode->local_transform;
+		Joint* parent = pNode->parent;
 		while( parent )
 		{
-			pNode->GlobalTransform = pNode->GlobalTransform * parent->LocalTransform;
+			pNode->global_transform = pNode->global_transform * parent->local_transform;
 			parent  = parent->parent;
 		}
 

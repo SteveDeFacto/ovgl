@@ -35,6 +35,7 @@ namespace Ovgl
 		class Actor;
 		class Camera;
 		class Light;
+		class Pose;
 		class Prop;
 		class Scene;
 		class Mesh;
@@ -63,10 +64,10 @@ namespace Ovgl
 		};
 
 		/**
-		* Joints form bounds between objects in the physics scene.
-		* @brief Scene joint class.
+		* Constraint form bounds between objects in the physics scene.
+		* @brief Scene constraint class.
 		*/
-		class __declspec(dllexport) Joint
+		class __declspec(dllexport) Constraint
 		{
 		public:
 			Scene* scene;
@@ -180,7 +181,7 @@ namespace Ovgl
 			/**
 			* List of joints that are holding together the bones of this prop.
 			*/
-			std::vector< Joint* >					joints;
+			std::vector< Constraint* >				constraints;
 			/**
 			* List of animations affecting this prop.
 			*/
@@ -362,6 +363,9 @@ namespace Ovgl
 			* This will be true if the actor is standing on the ground.
 			*/
 			bool onGround;
+
+			Pose* pose;
+
 			/**
 			* Returns the current post of this actor.
 			*/
@@ -369,7 +373,7 @@ namespace Ovgl
 
 			void UpdateAnimation( Bone* bone, Ovgl::Matrix44* matrix, double time );
 
-			AnimationController* CreateAnimation( double start, double end, bool repeat );
+			AnimationController* CreateAnimation(  Animation* anim, double start, double end, bool repeat );
 			/**
 			* Tells the actor where to look.
 			* @param vec The direction to look.
@@ -436,7 +440,7 @@ namespace Ovgl
 			/**
 			* This array contains all joints within the scene.
 			*/
-			std::vector< Joint* >					joints;
+			std::vector< Constraint* >				constraints;
 			/**
 			* This array contains all markers within the scene.
 			*/
@@ -479,12 +483,12 @@ namespace Ovgl
 			*/
 			Emitter* CreateEmitter( Matrix44* matrix );
 			/**
-			* This function creates a joint which binds two Ovgl::CMesh together.
+			* This function creates a constraint which binds two Ovgl::CMesh together.
 			* @param obj1 First Ovgl::CMesh.
 			* @param obj2 Second Ovgl::CMesh.
 			* @param anchor This is the point in which the two Ovgl::CMesh are anchored. If this is set to NULL the anchor will be placed at the position of the first Ovgl::CMesh;
 			*/
-			Joint* CreateJoint( CMesh* obj1, CMesh* obj2);
+			Constraint* CreateConstraint( CMesh* obj1, CMesh* obj2);
 			/**
 			* This function updates the animations, audio emition points, and the physics objects of the scene.
 			* @param update_time The amount of time that has passed since the last scene update.

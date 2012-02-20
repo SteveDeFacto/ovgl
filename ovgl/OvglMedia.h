@@ -39,7 +39,7 @@ namespace Ovgl
 			std::vector< Mesh* > Meshes;
 			std::vector< Texture* > Textures;
 			std::vector< AudioBuffer* > AudioBuffers;
-			Mesh* ImportModel( const std::string& file );
+			Mesh* ImportModel( const std::string& file, bool z_up );
 			Shader* ImportShader( const std::string& file );
 			Texture* ImportTexture( const std::string& file );
 			Texture* ImportCubeMap( const std::string& front, const std::string& back, const std::string& top, const std::string& bottom, const std::string& left, const std::string& right );

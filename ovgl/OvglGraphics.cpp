@@ -950,7 +950,7 @@ namespace Ovgl
 				{
 					if( scene->actors[i]->mesh )
 					{
-						RenderMesh( *scene->actors[i]->mesh, scene->actors[i]->getPose(), scene->actors[i]->matrices, scene->actors[i]->materials, !!PostRender );
+						RenderMesh( *scene->actors[i]->mesh, scene->actors[i]->getPose(), scene->actors[i]->pose->matrices, scene->actors[i]->materials, !!PostRender );
 					}
 				}
 			}

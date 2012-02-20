@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.61.0 r42615</authoring_tool>
     </contributor>
-    <created>2012-01-28T08:56:36</created>
-    <modified>2012-01-28T08:56:36</modified>
+    <created>2012-02-19T15:40:57</created>
+    <modified>2012-02-19T15:40:57</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -14,7 +14,7 @@
     <geometry id="Plane-mesh">
       <mesh>
         <source id="Plane-mesh-positions">
-          <float_array id="Plane-mesh-positions-array" count="12">8.04513 8.045129 0 8.04513 -8.045132 0 -8.045132 -8.04513 0 -8.045128 8.045133 0</float_array>
+          <float_array id="Plane-mesh-positions-array" count="12">1 1 0 1 -1 0 -1 -0.9999998 0 -0.9999997 1 0</float_array>
           <technique_common>
             <accessor source="#Plane-mesh-positions-array" count="4" stride="3">
               <param name="X" type="float"/>
@@ -33,24 +33,14 @@
             </accessor>
           </technique_common>
         </source>
-        <source id="Plane-mesh-map-0">
-          <float_array id="Plane-mesh-map-0-array" count="8">0 0 0.9999998 0 0.9999998 1 0 0.9999999</float_array>
-          <technique_common>
-            <accessor source="#Plane-mesh-map-0-array" count="4" stride="2">
-              <param name="S" type="float"/>
-              <param name="T" type="float"/>
-            </accessor>
-          </technique_common>
-        </source>
         <vertices id="Plane-mesh-vertices">
           <input semantic="POSITION" source="#Plane-mesh-positions"/>
         </vertices>
         <polylist count="1">
           <input semantic="VERTEX" source="#Plane-mesh-vertices" offset="0"/>
           <input semantic="NORMAL" source="#Plane-mesh-normals" offset="1"/>
-          <input semantic="TEXCOORD" source="#Plane-mesh-map-0" offset="2" set="0"/>
           <vcount>4 </vcount>
-          <p>0 0 0 3 0 1 2 0 2 1 0 3</p>
+          <p>0 0 3 0 2 0 1 0</p>
         </polylist>
       </mesh>
       <extra><technique profile="MAYA"><double_sided>1</double_sided></technique></extra>
@@ -63,7 +53,7 @@
         <rotate sid="rotationZ">0 0 1 0</rotate>
         <rotate sid="rotationY">0 1 0 0</rotate>
         <rotate sid="rotationX">1 0 0 0</rotate>
-        <scale sid="scale">1 1 1</scale>
+        <scale sid="scale">11.92984 12.90857 1</scale>
         <instance_geometry url="#Plane-mesh"/>
       </node>
     </visual_scene>
