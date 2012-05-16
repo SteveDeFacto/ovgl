@@ -20,7 +20,11 @@
 
 #pragma warning(disable : 4251) // Disable std warnings
 
+#pragma warning(disable : 4244) // Disable conversion loss of data warnings
+
 #define _CRT_SECURE_NO_WARNINGS // Disable security warnings
+
+#define __STDC_CONSTANT_MACROS // Enable c99 macros
 
 // Windows Headers
 #include <windows.h>
@@ -69,7 +73,9 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-// OGG Headers
-#include <vorbis/codec.h>
-#include <vorbis/vorbisfile.h>
-
+// FFMPEG Headers
+extern "C"
+{
+	#include <libavcodec/avcodec.h>
+	#include <libavformat/avformat.h>
+}

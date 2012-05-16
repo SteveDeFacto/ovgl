@@ -68,7 +68,7 @@ namespace Ovgl
 			double											end_time;
 		};
 
-		class __declspec(dllexport) AnimationController
+		class __declspec(dllexport) AnimationInstance
 		{
 		public:
 			Animation*										animation;
@@ -77,7 +77,6 @@ namespace Ovgl
 			double											start_time;
 			double											end_time;
 			double											step_time;
-			bool											repeat;
 			void play( float speed, bool repeat );
 			void stop();
 			void pause();

@@ -6,23 +6,21 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ".\\..\\lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ".\\..\\lib")
 set(CMAKE_DEBUG_POSTFIX "d")
 
-include_directories(${OPENAL_INCLUDE_DIR}
-${CG_INCLUDE_DIR}
-${FREEIMAGE_INCLUDE_DIR}
-${ASSIMP_INCLUDE_DIR}
-${OGG_INCLUDE_DIR}
-${VORBIS_INCLUDE_DIR}
-${BULLET_INCLUDE_DIR})
+include_directories("${OPENAL_DIR}\\include"
+"${CG_DIR}\\include"
+"${FREEIMAGE_DIR}\\Dist"
+"${ASSIMP_DIR}\\include"
+"${BULLET_DIR}\\include\\bullet"
+"${GLEW_DIR}\\include"
+"${FFMPEG_DIR}\\include")
 
-link_directories(${OPENAL_LIBRARY_DIR}
-${CG_LIBRARY_DIR}
-${FREEIMAGE_LIBRARY_DIR}
-${ASSIMP_LIBRARY_DIR}
-${ASSIMP_DEBUG_LIBRARY_DIR}
-${OGG_LIBRARY_DIR}
-${VORBIS_LIBRARY_DIR}
-${BULLET_LIBRARY_DIR}
-${BULLET_DEBUG_LIBRARY_DIR})
+link_directories("${OPENAL_DIR}\\libs\\Win32"
+"${CG_DIR}\\lib"
+"${FREEIMAGE_DIR}\\Dist"
+"${ASSIMP_DIR}\\lib"
+"${BULLET_DIR}\\lib\\$(ConfigurationName)"
+"${GLEW_DIR}\\lib"
+"${FFMPEG_DIR}\\lib")
 
 add_library( Ovgl SHARED "OvglAudio.h"
 "OvglGraphics.h"
@@ -47,21 +45,21 @@ add_library( Ovgl SHARED "OvglAudio.h"
 target_link_libraries( Ovgl "wininet.lib"
 "winmm.lib"
 "opengl32.lib"
-"glew32.lib"
+"glew32s.lib"
 "OpenAL32.lib"
 "FreeImage.lib"
 "cg.lib"
 "cgGL.lib"
-"libogg_static.lib"
-"libvorbis_static.lib"
-"libvorbisfile_static.lib"
 "OpenGLSupport.lib"
 "BulletDynamics.lib"
 "BulletCollision.lib"
 "LinearMath.lib"
-"Assimp.lib")
+"Assimp.lib"
+"avcodec.lib"
+"avformat.lib"
+"avutil.lib")
 
-add_definitions( -DNOMINMAX -DWIN32_LEAN_AND_MEAN -DKFBX_DLLINFO )
+add_definitions( -DNOMINMAX -DWIN32_LEAN_AND_MEAN -DFREEIMAGE_LIB -DGLEW_STATIC )
 
 if(OVGL_BUILD_DOC)
 	find_package( Doxygen )

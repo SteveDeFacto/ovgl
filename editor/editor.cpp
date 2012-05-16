@@ -28,6 +28,7 @@ Ovgl::Window*				Window;
 Ovgl::MediaLibrary*			MediaLibrary;
 Ovgl::Scene*				Scene;
 Ovgl::Actor*				Actor;
+Ovgl::Actor*				Actor2;
 Ovgl::Camera*				Camera;
 Ovgl::Emitter*				Emitter;
 Ovgl::Texture*				Texture1;
@@ -56,9 +57,15 @@ void KeyDown(char key)
 	if( key == 'S')
 		Camera->setPose( &(Ovgl::MatrixTranslation( 0.0f, 0.0f, -0.1f ) * Camera->getPose() ) );
 	if( key == 'A')
+	{
+		Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 1, 6, false);
 		Camera->setPose( &(Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
+	}
 	if( key == 'D')
+	{
+		Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
 		Camera->setPose( &(Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
+	}
 }
 
 int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int32_t nCmdShow )
@@ -106,17 +113,21 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	Mesh = MediaLibrary->ImportModel( "..\\media\\meshes\\plane.dae", true );
 	Mesh2 = MediaLibrary->ImportModel( "..\\media\\meshes\\test.dae", true );
 
+	MediaLibrary->ImportAudio("..\\media\\audio\\glacier.ogg")->CreateAudioInstance(NULL, true);
+
 	// Add object to scene
 	Object = Scene->CreateObject(Mesh, &Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
 	Object->materials[0]->setFSTexture("txDiffuse", Texture2);
 
 	// Add actor to scene
 	Actor = Scene->CreateActor(Mesh2, 0.1f, 1.0f, &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
-	Actor->CreateAnimation( &Mesh2->skeleton->animations[0], 0, 10, true);
-	Ovgl::Actor* Actor2 = Scene->CreateActor(Mesh2, 0.1f, 1.0f, &Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
-	Actor2->CreateAnimation( &Mesh2->skeleton->animations[0], 5, 6, true);
+	Actor->PlayAnimation( &Mesh2->skeleton->animations[0], 0, 10, true);
+
+	Actor2 = Scene->CreateActor(Mesh2, 0.1f, 1.0f, &Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+	Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
+
 	// Set scene sky box
-	Scene->SkyBox = Texture1;
+	Scene->sky_box = Texture1;
 
 	uint32_t previousTime = timeGetTime();
 	

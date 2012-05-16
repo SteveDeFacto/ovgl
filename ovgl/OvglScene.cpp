@@ -13,7 +13,7 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* @brief This file contains classes related to 3D scenes.
+* @brief This file contains classes related to 3D scene objects.
 */
 
 #include "OvglIncludes.h"
@@ -29,89 +29,155 @@
 
 namespace Ovgl
 {
-	struct DisablePairCollision : public btCollisionWorld::ContactResultCallback
+	btScalar DisablePairCollision::addSingleResult(btManifoldPoint& cp, const btCollisionObject* colObj0, int32_t partId0, int32_t index0, const btCollisionObject* colObj1, int32_t partId1, int32_t index1)
 	{
-		virtual	btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObject* colObj0, int32_t partId0, int32_t index0, const btCollisionObject* colObj1, int32_t partId1, int32_t index1)
-		{
-			btTransform frame;
-			frame.setIdentity();
-			btGeneric6DofConstraint* Constraint;
-			Constraint = new btGeneric6DofConstraint( *(btRigidBody*)colObj0, *(btRigidBody*)colObj1, frame, frame, true );
-			Constraint->setLinearLowerLimit( btVector3(1, 1, 1 ) );
-			Constraint->setLinearUpperLimit( btVector3(0, 0, 0 ) );
-			Constraint->setAngularLowerLimit( btVector3(1, 1, 1 ) );
-			Constraint->setAngularUpperLimit( btVector3(0, 0, 0 ) );
-			DynamicsWorld->addConstraint(Constraint, true);
-			return 0;
-		}
+		// Create an identity matrix.
+		btTransform frame;
+		frame.setIdentity();
 
-		btDiscreteDynamicsWorld*	DynamicsWorld;
-	};
+		// Create a constraint between the two bone shapes which are contacting each other.
+		btGeneric6DofConstraint* Constraint;
+		Constraint = new btGeneric6DofConstraint( *(btRigidBody*)colObj0, *(btRigidBody*)colObj1, frame, frame, true );
+			
+		// Set limits to be limitless.
+		Constraint->setLinearLowerLimit( btVector3(1, 1, 1 ) );
+		Constraint->setLinearUpperLimit( btVector3(0, 0, 0 ) );
+		Constraint->setAngularLowerLimit( btVector3(1, 1, 1 ) );
+		Constraint->setAngularUpperLimit( btVector3(0, 0, 0 ) );
+			
+		// Add constraint to scene.
+		DynamicsWorld->addConstraint(Constraint, true);
+		return 0;
+	}
 
 	Camera* Scene::CreateCamera( Matrix44* matrix )
 	{
+		// Create a new camera object.
 		Camera* camera = new Camera;
+
+		// Link this scene to camera.
 		camera->scene = this;
+
+		// Set default perspective for camera.
 		camera->projMat = MatrixPerspectiveLH( (((float)OvglPi) / 2.0f), (640.0f / 480.0f) , 0.01f, 100000.0f );
+		
+		// Build a motion state object for bullet positioned where we want the camera.
 		btTransform Transform;
 		Transform.setFromOpenGLMatrix((float*)matrix);
 		btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
+
+		// Create a sphere shape.
 		btSphereShape* Sphere = new btSphereShape(1.0f);
 		btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, Sphere, btVector3(0,0,0) );
+		
+		// Create a new collision mesh.
 		CMesh* CollisionMesh = new CMesh;
+
+		// Link scene to collision mesh.
 		CollisionMesh->scene = this;
+
+		// Create a dynamic object, set it to not respond to contact, and link it to the camera.
 		CollisionMesh->actor = new btRigidBody(rbInfo);
 		CollisionMesh->actor->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
 		camera->CollisionMesh = CollisionMesh;
+
+		// Add dynamic object to physics scene.
 		DynamicsWorld->addRigidBody(CollisionMesh->actor, btBroadphaseProxy::KinematicFilter, 0);
-		this->cameras.push_back( camera );
+
+		// Add camera to scene list of cameras.
+		cameras.push_back( camera );
+
+		// Return pointer to light.
 		return camera;
 	};
 
 	Light* Scene::CreateLight( Matrix44* matrix, Vector4* color )
 	{
+		// Create a new light object.
 		Light* light = new Light;
+
+		// Link this scene to light.
 		light->scene = this;
+
+		// Build a motion state object for bullet positioned where we want the light.
 		btTransform Transform;
 		Transform.setFromOpenGLMatrix((float*)matrix);
 		btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
+
+		// Create a sphere shape.
 		btSphereShape* Sphere = new btSphereShape(1.0f);
 		btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, Sphere, btVector3(0,0,0) );
+
+		// Create a new collision mesh.
 		CMesh* CollisionMesh = new CMesh;
+
+		// Link scene to collision mesh.
 		CollisionMesh->scene = this;
+
+		// Create a dynamic object, set it to not respond to contact, and link it to the light.
 		CollisionMesh->actor = new btRigidBody(rbInfo);
 		CollisionMesh->actor->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
 		light->CollisionMesh = CollisionMesh;
+
+		// Add dynamic object to physics scene.
 		DynamicsWorld->addRigidBody(CollisionMesh->actor, btBroadphaseProxy::KinematicFilter, 0);
+
+		// Set light colors.
 		light->color.x = color->x;
 		light->color.y = color->y;
 		light->color.z = color->z;
+
+		// Add light to scene list of lights.
 		this->lights.push_back( light );
+
+		// Return pointer to light.
 		return light;
 	};
 
 	Emitter* Scene::CreateEmitter( Matrix44* matrix )
 	{
+		// Create a new emitter object.
 		Emitter* emitter = new Emitter;
+
+		// Link this scene to emitter.
 		emitter->scene = this;
+
+		// Build a motion state object for bullet positioned where we want the emitter.
 		btTransform Transform;
 		Transform.setFromOpenGLMatrix((float*)matrix);
 		btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
+
+		// Create a sphere shape.
 		btSphereShape* Sphere = new btSphereShape(1.0f);
 		btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, Sphere, btVector3(0,0,0) );
+		
+		// Create a new collision mesh.
 		CMesh* CollisionMesh = new CMesh;
+
+		// Link scene to collision mesh.
 		CollisionMesh->scene = this;
+
+		// Create a dynamic object, set it to not respond to contact, and link it to the emitter.
 		CollisionMesh->actor = new btRigidBody(rbInfo);
 		CollisionMesh->actor->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
 		emitter->CollisionMesh = CollisionMesh;
+
+		// Add dynamic object to physics scene.
 		DynamicsWorld->addRigidBody(CollisionMesh->actor, btBroadphaseProxy::KinematicFilter, 0);
+
+		// Add emitter to scene list of emitters.
 		this->emitters.push_back( emitter );
+
+		// Return pointer to emitter.
 		return emitter;
 	};
 
 	Prop* Scene::CreateProp( Mesh* mesh, Matrix44* matrix )
 	{
+		// Create a new prop object.
 		Prop* prop = new Prop;
+
+		// Link this scene to prop.
 		prop->scene = this;
 		prop->mesh = mesh;
 		prop->materials.resize(mesh->subset_count);
@@ -378,9 +444,9 @@ namespace Ovgl
 		}
 	}
 
-	AnimationController* Prop::CreateAnimation( double start, double end, bool repeat )
+	AnimationInstance* Prop::PlayAnimation( double start, double end, bool repeat )
 	{
-		AnimationController* animation = new AnimationController;
+		AnimationInstance* animation = new AnimationInstance;
 		animation->animation_state = 0;
 		animation->current_time = 0;
 		animation->start_time = start;
@@ -389,12 +455,12 @@ namespace Ovgl
 		return animation;
 	}
 
-	AnimationController* Actor::CreateAnimation( Animation* anim, double start, double end, bool repeat )
+	AnimationInstance* Actor::PlayAnimation( Animation* anim, double start, double end, bool repeat )
 	{
-		AnimationController* animation = new AnimationController;
+		AnimationInstance* animation = new AnimationInstance;
 		animation->animation = anim;
-		animation->animation_state = 1;
-		animation->current_time = 0;
+		animation->animation_state = 1 + repeat;
+		animation->current_time = start;
 		animation->start_time = start;
 		animation->end_time = end;
 		animation->step_time = 1;
@@ -451,7 +517,7 @@ namespace Ovgl
 				{
 					if(actors[a]->animations[i]->current_time > actors[a]->animations[i]->end_time)
 					{
-						if(actors[a]->animations[i]->repeat)
+						if(actors[a]->animations[i]->animation_state == 2)
 						{
 							actors[a]->animations[i]->current_time = actors[a]->animations[i]->start_time;
 						}
@@ -462,7 +528,7 @@ namespace Ovgl
 					}
 					actors[a]->pose->animate( actors[a]->animations[i]->animation, (float)actors[a]->animations[i]->current_time);
 
-					if(actors[a]->animations[i]->animation_state == 1)
+					if(actors[a]->animations[i]->animation_state > 0)
 					{
 						actors[a]->animations[i]->current_time = actors[a]->animations[i]->current_time + (((double)UpdateTime)/100);
 					}

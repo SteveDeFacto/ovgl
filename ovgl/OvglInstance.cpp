@@ -611,6 +611,12 @@ namespace Ovgl
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable (GL_CULL_FACE);
 
+		// Initialize FFMPEG
+		av_register_all();
+
+		// Initialize FreeImage
+		FreeImage_Initialise();
+
 		// Initialize CG
 		CgContext = cgCreateContext();
 		CgVertexProfile = cgGLGetLatestProfile(CG_GL_VERTEX);

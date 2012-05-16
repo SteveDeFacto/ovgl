@@ -43,7 +43,7 @@ namespace Ovgl
 			Shader* ImportShader( const std::string& file );
 			Texture* ImportTexture( const std::string& file );
 			Texture* ImportCubeMap( const std::string& front, const std::string& back, const std::string& top, const std::string& bottom, const std::string& left, const std::string& right );
-			AudioBuffer* ImportOGG( const std::string& file );
+			AudioBuffer* ImportAudio( const std::string& file );
 			Scene* CreateScene();
 			Shader* CreateShader( const std::string& code );
 			Mesh* CreateMesh();

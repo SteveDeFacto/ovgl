@@ -30,6 +30,16 @@ namespace Ovgl
 		OBJECT_KINEMATIC = 4,
 	};
 
+	// This class is used with bullet as a callback to disable collisions between bones which are contacting each other during the creation of a skeleton.
+	// Doing this is necessary to prevent a bug where dynamic objects will flail wildly until they fling themselves into the unknown.
+	class DisablePairCollision : public btCollisionWorld::ContactResultCallback
+	{
+	public:
+		virtual	btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObject* colObj0, int32_t partId0, int32_t index0, const btCollisionObject* colObj1, int32_t partId1, int32_t index1);
+
+		btDiscreteDynamicsWorld*	DynamicsWorld;
+	};
+
 	extern "C"
 	{
 		class Actor;
@@ -46,7 +56,7 @@ namespace Ovgl
 		class Shader;
 		class Joint;
 		class Vector3;
-		class AnimationController;
+		class AnimationInstance;
 
 		/**
 		* This class can be used to get the object that a ray is cast onto, the world space point of collision, and the local space point of collision.
@@ -185,7 +195,7 @@ namespace Ovgl
 			/**
 			* List of animations affecting this prop.
 			*/
-			std::vector< AnimationController* >		animations;
+			std::vector< AnimationInstance* >		animations;
 			/**
 			* Used by Ovgl::Scene to update the bone orientations that are displayed to the Ovgl::RenderTarget. This function will recursivly apply the offset of a parent bone to all child bones and their children until it has gone through the entire tree.
 			* @param bone Index of the first bone to update. Generally the meshes root_bone.
@@ -203,7 +213,7 @@ namespace Ovgl
 			* @param start The time in which the clip begins.
 			* @param start The time in which the clip ends.
 			*/
-			AnimationController* CreateAnimation( double start, double end, bool repeat );
+			AnimationInstance* PlayAnimation( double start, double end, bool repeat );
 			/**
 			* Sets the pose of this prop.
 			* @param matrix The matrix which defines the new pose for this prop.
@@ -290,7 +300,7 @@ namespace Ovgl
 		class __declspec(dllexport) Actor
 		{
 		public:
-			std::vector< Ovgl::AnimationController* > animations;
+			std::vector< Ovgl::AnimationInstance* > animations;
 			/**
 			* This is a pointer to the scene that this actor was created by and resides in.
 			*/
@@ -373,7 +383,7 @@ namespace Ovgl
 
 			void UpdateAnimation( Bone* bone, Ovgl::Matrix44* matrix, double time );
 
-			AnimationController* CreateAnimation(  Animation* anim, double start, double end, bool repeat );
+			AnimationInstance* PlayAnimation(  Animation* anim, double start, double end, bool repeat );
 			/**
 			* Tells the actor where to look.
 			* @param vec The direction to look.
@@ -412,7 +422,7 @@ namespace Ovgl
 			/**
 			* This texture is the cubemap for the skybox.
 			*/
-			Texture*								SkyBox;
+			Texture*								sky_box;
 			/**
 			* This array contains all static objects within the scene.
 			*/

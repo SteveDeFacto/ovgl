@@ -62,285 +62,285 @@ namespace Ovgl
 		delete this;
 	}
 
-	//void MediaLibrary::Save( const std::string& file )
-	//{
-	//	if(!file.empty())
-	//	{
-	//		// Open file.
-	//		FILE *output;
-	//		output = fopen(file.c_str(),"wb");
+	void MediaLibrary::Save( const std::string& file )
+	{
+		if(!file.empty())
+		{
+			// Open file.
+			FILE *output;
+			output = fopen(file.c_str(),"wb");
 
-	//		// Write the number of meshes to the file.
-	//		uint32_t mesh_count = Meshes.size();
-	//		fwrite( &mesh_count, 4, 1, output );
-	//		for( uint32_t m = 0; m < mesh_count; m++ )
-	//		{
-	//			// Get mesh variables.
-	//			uint32_t vertex_count = Meshes[m]->vertices.size();
-	//			uint32_t face_count = Meshes[m]->faces.size();
-	//			uint32_t bone_count = Meshes[m]->bones.size();
+			// Write the number of meshes to the file.
+			uint32_t mesh_count = Meshes.size();
+			fwrite( &mesh_count, 4, 1, output );
+			for( uint32_t m = 0; m < mesh_count; m++ )
+			{
+				// Get mesh variables.
+				uint32_t vertex_count = Meshes[m]->vertices.size();
+				uint32_t face_count = Meshes[m]->faces.size();
+				uint32_t bone_count = Meshes[m]->skeleton->bones.size();
 
-	//			// Write the number of vertices, faces, and bones.
-	//			fwrite( &vertex_count, 4, 1, output );
-	//			fwrite( &face_count, 4, 1, output );
-	//			fwrite( &bone_count, 4, 1, output );
+				// Write the number of vertices, faces, and bones.
+				fwrite( &vertex_count, 4, 1, output );
+				fwrite( &face_count, 4, 1, output );
+				fwrite( &bone_count, 4, 1, output );
 
-	//			// Write the vertices, faces, and bones.
-	//			fwrite( &Meshes[m]->vertices[0], sizeof(Vertex), vertex_count, output);
-	//			fwrite( &Meshes[m]->faces[0], sizeof(Face), face_count, output);
-	//			fwrite( &Meshes[m]->attributes[0], sizeof(uint32_t), face_count, output);
+				// Write the vertices, faces, and bones.
+				fwrite( &Meshes[m]->vertices[0], sizeof(Vertex), vertex_count, output);
+				fwrite( &Meshes[m]->faces[0], sizeof(Face), face_count, output);
+				fwrite( &Meshes[m]->attributes[0], sizeof(uint32_t), face_count, output);
 
-	//			// Write bones.
-	//			for( uint32_t i = 0; i < bone_count; i++ )
-	//			{
-	//				vertex_count = Meshes[m]->bones[i]->mesh->vertices.size();
-	//				face_count = Meshes[m]->bones[i]->mesh->faces.size();
-	//				fwrite( &vertex_count, 4, 1, output );
-	//				fwrite( &face_count, 4, 1, output );
-	//				if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
-	//				{
-	//					fwrite( &Meshes[m]->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, output );
-	//					fwrite( &Meshes[m]->bones[i]->mesh->faces[0], sizeof(Face), face_count, output );
-	//				}
-	//				fwrite( &Meshes[m]->bones[i]->matrix, sizeof(Matrix44), 1, output );
-	//				fwrite( &Meshes[m]->bones[i]->length, sizeof(float), 1, output );
-	//				fwrite( &Meshes[m]->bones[i]->min, sizeof(Vector3), 1, output );
-	//				fwrite( &Meshes[m]->bones[i]->max, sizeof(Vector3), 1, output );
-	//				fwrite( &Meshes[m]->bones[i]->parent, sizeof(uint32_t), 1, output );
-	//				uint32_t child_count = Meshes[m]->bones[i]->children.size();
-	//				fwrite( &child_count, sizeof(uint32_t), 1, output );
-	//				if(child_count) fwrite( &Meshes[m]->bones[i]->children[0], sizeof(uint32_t), child_count, output );
-	//			}
-	//		}
-	//		uint32_t scene_count = Scenes.size();
-	//		fwrite( &scene_count, 4, 1, output );
-	//		for( uint32_t s = 0; s < scene_count; s++ )
-	//		{
-	//			uint32_t prop_count = Scenes[s]->props.size();
-	//			fwrite( &prop_count, 4, 1, output );
-	//			for( uint32_t p = 0; p < Scenes[s]->props.size(); p++ )
-	//			{
-	//				Matrix44 matrix = Scenes[s]->props[p]->getPose();
-	//				fwrite( &matrix, sizeof(Matrix44), 1, output );
-	//				uint32_t mesh_index = 0;
-	//				for( uint32_t sm = 0; sm < Meshes.size(); sm++ )
-	//				{
-	//					if( Scenes[s]->props[p]->mesh == Meshes[sm] )
-	//					{
-	//						mesh_index = sm;
-	//					}
-	//				}
-	//				fwrite( &mesh_index, 4, 1, output );
-	//				for( uint32_t b = 0; b < Scenes[s]->props[p]->bones.size(); b++ )
-	//				{
-	//					uint32_t bodyflags = Scenes[s]->props[p]->bones[b]->GetFlags();
-	//					fwrite( &bodyflags, 4, 1, output );
-	//				}
-	//			}
-	//			uint32_t object_count = Scenes[s]->objects.size();
-	//			fwrite( &object_count, 4, 1, output );
-	//			for( uint32_t o = 0; o < Scenes[s]->objects.size(); o++ )
-	//			{
-	//				Matrix44 matrix = Scenes[s]->objects[o]->getPose();
-	//				fwrite( &matrix, sizeof(Matrix44), 1, output );
-	//				uint32_t mesh_index = 0;
-	//				for( uint32_t sm = 0; sm < Meshes.size(); sm++ )
-	//				{
-	//					if( Scenes[s]->objects[o]->mesh == Meshes[sm] )
-	//					{
-	//						mesh_index = sm;
-	//					}
-	//				}
-	//				fwrite( &mesh_index, 4, 1, output );
-	//				uint32_t bodyflags = Scenes[s]->objects[o]->CollisionMesh->GetFlags();
-	//				fwrite( &bodyflags, 4, 1, output );
-	//			}
-	//			uint32_t light_count = Scenes[s]->lights.size();
-	//			fwrite( &light_count, 4, 1, output );
-	//			for( uint32_t l = 0; l < light_count; l++ )
-	//			{
-	//				Matrix44 matrix = Scenes[s]->lights[l]->getPose();
-	//				fwrite( &matrix, sizeof(Matrix44), 1, output );
-	//			}
-	//			uint32_t camera_count = Scenes[s]->cameras.size();
-	//			fwrite( &camera_count, 4, 1, output );
-	//			for( uint32_t c = 0; c < camera_count; c++ )
-	//			{
-	//				Matrix44 matrix = Scenes[s]->cameras[c]->getPose();
-	//				fwrite( &matrix, sizeof(Matrix44), 1, output );
-	//			}
-	//			//uint32_t joint_count = Scenes[s]->joints.size();
-	//			//fwrite( &joint_count, 4, 1, output );
-	//			//for( uint32_t j = 0; j < joint_count; j++ )
-	//			//{
-	//			//	Scenes[s]->joints[j]->obj[0];
-	//			//	Scenes[s]->joints[j]->obj[1];
+				// Write bones.
+				for( uint32_t i = 0; i < bone_count; i++ )
+				{
+					vertex_count = Meshes[m]->skeleton->bones[i]->mesh->vertices.size();
+					face_count = Meshes[m]->skeleton->bones[i]->mesh->faces.size();
+					fwrite( &vertex_count, 4, 1, output );
+					fwrite( &face_count, 4, 1, output );
+					if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
+					{
+						fwrite( &Meshes[m]->skeleton->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, output );
+						fwrite( &Meshes[m]->skeleton->bones[i]->mesh->faces[0], sizeof(Face), face_count, output );
+					}
+					fwrite( &Meshes[m]->skeleton->bones[i]->matrix, sizeof(Matrix44), 1, output );
+					fwrite( &Meshes[m]->skeleton->bones[i]->length, sizeof(float), 1, output );
+					fwrite( &Meshes[m]->skeleton->bones[i]->min, sizeof(Vector3), 1, output );
+					fwrite( &Meshes[m]->skeleton->bones[i]->max, sizeof(Vector3), 1, output );
+					fwrite( &Meshes[m]->skeleton->bones[i]->parent, sizeof(uint32_t), 1, output );
+					uint32_t child_count = Meshes[m]->skeleton->bones[i]->children.size();
+					fwrite( &child_count, sizeof(uint32_t), 1, output );
+					if(child_count) fwrite( &Meshes[m]->skeleton->bones[i]->children[0], sizeof(uint32_t), child_count, output );
+				}
+			}
+			uint32_t scene_count = Scenes.size();
+			fwrite( &scene_count, 4, 1, output );
+			for( uint32_t s = 0; s < scene_count; s++ )
+			{
+				uint32_t prop_count = Scenes[s]->props.size();
+				fwrite( &prop_count, 4, 1, output );
+				for( uint32_t p = 0; p < Scenes[s]->props.size(); p++ )
+				{
+					Matrix44 matrix = Scenes[s]->props[p]->getPose();
+					fwrite( &matrix, sizeof(Matrix44), 1, output );
+					uint32_t mesh_index = 0;
+					for( uint32_t sm = 0; sm < Meshes.size(); sm++ )
+					{
+						if( Scenes[s]->props[p]->mesh == Meshes[sm] )
+						{
+							mesh_index = sm;
+						}
+					}
+					fwrite( &mesh_index, 4, 1, output );
+					for( uint32_t b = 0; b < Scenes[s]->props[p]->bones.size(); b++ )
+					{
+						uint32_t bodyflags = Scenes[s]->props[p]->bones[b]->get_flags();
+						fwrite( &bodyflags, 4, 1, output );
+					}
+				}
+				uint32_t object_count = Scenes[s]->objects.size();
+				fwrite( &object_count, 4, 1, output );
+				for( uint32_t o = 0; o < Scenes[s]->objects.size(); o++ )
+				{
+					Matrix44 matrix = Scenes[s]->objects[o]->getPose();
+					fwrite( &matrix, sizeof(Matrix44), 1, output );
+					uint32_t mesh_index = 0;
+					for( uint32_t sm = 0; sm < Meshes.size(); sm++ )
+					{
+						if( Scenes[s]->objects[o]->mesh == Meshes[sm] )
+						{
+							mesh_index = sm;
+						}
+					}
+					fwrite( &mesh_index, 4, 1, output );
+					uint32_t bodyflags = Scenes[s]->objects[o]->CollisionMesh->get_flags();
+					fwrite( &bodyflags, 4, 1, output );
+				}
+				uint32_t light_count = Scenes[s]->lights.size();
+				fwrite( &light_count, 4, 1, output );
+				for( uint32_t l = 0; l < light_count; l++ )
+				{
+					Matrix44 matrix = Scenes[s]->lights[l]->getPose();
+					fwrite( &matrix, sizeof(Matrix44), 1, output );
+				}
+				uint32_t camera_count = Scenes[s]->cameras.size();
+				fwrite( &camera_count, 4, 1, output );
+				for( uint32_t c = 0; c < camera_count; c++ )
+				{
+					Matrix44 matrix = Scenes[s]->cameras[c]->getPose();
+					fwrite( &matrix, sizeof(Matrix44), 1, output );
+				}
+				//uint32_t joint_count = Scenes[s]->joints.size();
+				//fwrite( &joint_count, 4, 1, output );
+				//for( uint32_t j = 0; j < joint_count; j++ )
+				//{
+				//	Scenes[s]->joints[j]->obj[0];
+				//	Scenes[s]->joints[j]->obj[1];
 
-	//			//	NxVec3 nxAnchor = Scenes[s]->joints[j]->joint->getGlobalAnchor();
-	//			//	Vector3 anchor = Vector3(nxAnchor.x, nxAnchor.y, nxAnchor.z);
-	//			//	fwrite( &anchor, sizeof(Vector3), 1, output );
-	//			//}
-	//		}
-	//		uint32_t texture_count = Textures.size();
-	//		fwrite( &texture_count, 4, 1, output );
+				//	NxVec3 nxAnchor = Scenes[s]->joints[j]->joint->getGlobalAnchor();
+				//	Vector3 anchor = Vector3(nxAnchor.x, nxAnchor.y, nxAnchor.z);
+				//	fwrite( &anchor, sizeof(Vector3), 1, output );
+				//}
+			}
+			uint32_t texture_count = Textures.size();
+			fwrite( &texture_count, 4, 1, output );
 
 
-	//		// Close file.
-	//		fclose(output);
-	//	}
-	//}
+			// Close file.
+			fclose(output);
+		}
+	}
 
-	//void MediaLibrary::Load( const std::string& file )
-	//{
-	//	if(!file.empty())
-	//	{
-	//		// Get the number of meshes currently in memory so we can offset the indices into the array.
-	//		uint32_t mesh_offset = Meshes.size();
+	void MediaLibrary::Load( const std::string& file )
+	{
+		if(!file.empty())
+		{
+			// Get the number of meshes currently in memory so we can offset the indices into the array.
+			uint32_t mesh_offset = Meshes.size();
 
-	//		// Open file.
-	//		FILE *input = NULL;
-	//		input = fopen( file.c_str(),"rb" );
+			// Open file.
+			FILE *input = NULL;
+			input = fopen( file.c_str(),"rb" );
 
-	//		// If file was unable to be opened present error message to debug output and end function
-	//		if ( input == NULL )
-	//		{
-	//			std::wstring wfile;
-	//			wfile = L"Unable to open the file ";
-	//			wfile.append(file.begin(), file.end());
-	//			OutputDebugString( wfile.c_str() );
-	//			return;
-	//		}
+			// If file was unable to be opened present error message to debug output and end function
+			if ( input == NULL )
+			{
+				std::wstring wfile;
+				wfile = L"Unable to open the file ";
+				wfile.append(file.begin(), file.end());
+				OutputDebugString( wfile.c_str() );
+				return;
+			}
 
-	//		//Get number of meshes.
-	//		uint32_t mesh_count;
-	//		fread( &mesh_count, 4, 1, input );
-	//		for( uint32_t m = 0; m < mesh_count; m++ )
-	//		{
-	//			// Specify mesh variables.
-	//			Mesh* mesh = new Mesh;
-	//			mesh->ml = this;
-	//			uint32_t vertex_count;
-	//			uint32_t face_count;
-	//			uint32_t bone_count;
-	//			uint32_t child_count;
-	//			std::vector< Vector3 > bone_vertices;
-	//			std::vector< Face > bone_faces;
+			//Get number of meshes.
+			uint32_t mesh_count;
+			fread( &mesh_count, 4, 1, input );
+			for( uint32_t m = 0; m < mesh_count; m++ )
+			{
+				// Specify mesh variables.
+				Mesh* mesh = new Mesh;
+				mesh->media_library = this;
+				uint32_t vertex_count;
+				uint32_t face_count;
+				uint32_t bone_count;
+				uint32_t child_count;
+				std::vector< Vector3 > bone_vertices;
+				std::vector< Face > bone_faces;
 
-	//			// Get number of vertices, faces, and bones.
-	//			fread( &vertex_count, 4, 1, input );
-	//			fread( &face_count, 4, 1, input );
-	//			fread( &bone_count, 4, 1, input );
+				// Get number of vertices, faces, and bones.
+				fread( &vertex_count, 4, 1, input );
+				fread( &face_count, 4, 1, input );
+				fread( &bone_count, 4, 1, input );
 
-	//			// Resize arrays.
-	//			mesh->vertices.resize(vertex_count);
-	//			mesh->faces.resize(face_count);
-	//			mesh->attributes.resize(face_count);
-	//			mesh->bones.resize(bone_count);
+				// Resize arrays.
+				mesh->vertices.resize(vertex_count);
+				mesh->faces.resize(face_count);
+				mesh->attributes.resize(face_count);
+				mesh->skeleton->bones.resize(bone_count);
 
-	//			// Load vertices, indices and attributes.
-	//			fread(&mesh->vertices[0], sizeof(Vertex), vertex_count, input);
-	//			fread(&mesh->faces[0], sizeof(Face), face_count, input);
-	//			fread(&mesh->attributes[0], sizeof(uint32_t), face_count, input);
+				// Load vertices, indices and attributes.
+				fread(&mesh->vertices[0], sizeof(Vertex), vertex_count, input);
+				fread(&mesh->faces[0], sizeof(Face), face_count, input);
+				fread(&mesh->attributes[0], sizeof(uint32_t), face_count, input);
 
-	//			// Load bones.
-	//			for( uint32_t i = 0; i < bone_count; i++ )
-	//			{
-	//				mesh->bones[i] = new Bone;
-	//				mesh->bones[i]->mesh = new Mesh;
-	//				mesh->bones[i]->convex = NULL;
-	//				fread( &vertex_count, 4, 1, input );
-	//				fread( &face_count, 4, 1, input );
-	//				if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
-	//				{
-	//					mesh->bones[i]->mesh->vertices.resize(vertex_count);
-	//					mesh->bones[i]->mesh->faces.resize(face_count);
-	//					fread( &mesh->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, input );
-	//					fread( &mesh->bones[i]->mesh->faces[0], sizeof(Face), face_count, input );
-	//				}
-	//				fread( &mesh->bones[i]->matrix, sizeof(Matrix44), 1, input );
-	//				fread( &mesh->bones[i]->length, sizeof(float), 1, input );
-	//				fread( &mesh->bones[i]->min, sizeof(Vector3), 1, input );
-	//				fread( &mesh->bones[i]->max, sizeof(Vector3), 1, input );
-	//				fread( &mesh->bones[i]->parent, sizeof(uint32_t), 1, input );
-	//				fread( &child_count, sizeof(uint32_t), 1, input );
-	//				mesh->bones[i]->children.resize(child_count);
-	//				if(child_count) fread( &mesh->bones[i]->children[0], sizeof(uint32_t), child_count, input );
-	//			}
+				// Load bones.
+				for( uint32_t i = 0; i < bone_count; i++ )
+				{
+					mesh->skeleton->bones[i] = new Bone;
+					mesh->skeleton->bones[i]->mesh = new Mesh;
+					mesh->skeleton->bones[i]->convex = NULL;
+					fread( &vertex_count, 4, 1, input );
+					fread( &face_count, 4, 1, input );
+					if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
+					{
+						mesh->skeleton->bones[i]->mesh->vertices.resize(vertex_count);
+						mesh->skeleton->bones[i]->mesh->faces.resize(face_count);
+						fread( &mesh->skeleton->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, input );
+						fread( &mesh->skeleton->bones[i]->mesh->faces[0], sizeof(Face), face_count, input );
+					}
+					fread( &mesh->skeleton->bones[i]->matrix, sizeof(Matrix44), 1, input );
+					fread( &mesh->skeleton->bones[i]->length, sizeof(float), 1, input );
+					fread( &mesh->skeleton->bones[i]->min, sizeof(Vector3), 1, input );
+					fread( &mesh->skeleton->bones[i]->max, sizeof(Vector3), 1, input );
+					fread( &mesh->skeleton->bones[i]->parent, sizeof(uint32_t), 1, input );
+					fread( &child_count, sizeof(uint32_t), 1, input );
+					mesh->skeleton->bones[i]->children.resize(child_count);
+					if(child_count) fread( &mesh->skeleton->bones[i]->children[0], sizeof(uint32_t), child_count, input );
+				}
 
-	//			// Nullify buffer addresses.
-	//			mesh->VertexBuffer = 0;
-	//			mesh->IndexBuffers = 0;
+				// Nullify buffer addresses.
+				mesh->vertex_buffer = 0;
+				mesh->index_buffers = 0;
 
-	//			// Update buffers.
-	//			mesh->Update();
+				// Update buffers.
+				mesh->update();
 
-	//			Meshes.push_back(mesh);
-	//		}
+				Meshes.push_back(mesh);
+			}
 
-	//		//Get number of scenes.
-	//		uint32_t scene_count;
-	//		fread( &scene_count, 4, 1, input );
-	//		for( uint32_t s = 0; s < scene_count; s++ )
-	//		{
-	//			Scene* scene = CreateScene();
+			//Get number of scenes.
+			uint32_t scene_count;
+			fread( &scene_count, 4, 1, input );
+			for( uint32_t s = 0; s < scene_count; s++ )
+			{
+				Scene* scene = CreateScene();
 
-	//			uint32_t prop_count;
-	//			fread( &prop_count, 4, 1, input );
-	//			for( uint32_t p = 0; p < prop_count; p++ )
-	//			{
-	//				// Get the pose of this prop.
-	//				Matrix44 matrix;
-	//				fread( &matrix, sizeof(Matrix44), 1, input );
-	//				uint32_t mesh_index;
-	//				fread( &mesh_index, 4, 1, input );
-	//				Prop* prop = scene->CreateProp( Meshes[mesh_index + mesh_offset], &matrix );
-	//				for( uint32_t b = 0; b < Meshes[mesh_index + mesh_offset]->bones.size(); b++ )
-	//				{
-	//					uint32_t bone_flags;
-	//					fread( &bone_flags, 4, 1, input );
-	//					prop->bones[b]->SetFlags(bone_flags);
-	//				}
-	//			}
+				uint32_t prop_count;
+				fread( &prop_count, 4, 1, input );
+				for( uint32_t p = 0; p < prop_count; p++ )
+				{
+					// Get the pose of this prop.
+					Matrix44 matrix;
+					fread( &matrix, sizeof(Matrix44), 1, input );
+					uint32_t mesh_index;
+					fread( &mesh_index, 4, 1, input );
+					Prop* prop = scene->CreateProp( Meshes[mesh_index + mesh_offset], &matrix );
+					for( uint32_t b = 0; b < Meshes[mesh_index + mesh_offset]->skeleton->bones.size(); b++ )
+					{
+						uint32_t bone_flags;
+						fread( &bone_flags, 4, 1, input );
+						prop->bones[b]->set_flags(bone_flags);
+					}
+				}
 
-	//			uint32_t object_count;
-	//			fread( &object_count, 4, 1, input );
-	//			for( uint32_t o = 0; o < object_count; o++ )
-	//			{
-	//				// Get the pose of this object.
-	//				Matrix44 matrix;
-	//				fread( &matrix, sizeof(Matrix44), 1, input );
-	//				uint32_t mesh_index;
-	//				fread( &mesh_index, 4, 1, input );
-	//				Object* object = scene->CreateObject( Meshes[mesh_index + mesh_offset], &matrix );
-	//				uint32_t bone_flags;
-	//				fread( &bone_flags, 4, 1, input );
-	//				object->CollisionMesh->SetFlags(bone_flags);
-	//			}
+				uint32_t object_count;
+				fread( &object_count, 4, 1, input );
+				for( uint32_t o = 0; o < object_count; o++ )
+				{
+					// Get the pose of this object.
+					Matrix44 matrix;
+					fread( &matrix, sizeof(Matrix44), 1, input );
+					uint32_t mesh_index;
+					fread( &mesh_index, 4, 1, input );
+					Object* object = scene->CreateObject( Meshes[mesh_index + mesh_offset], &matrix );
+					uint32_t bone_flags;
+					fread( &bone_flags, 4, 1, input );
+					object->CollisionMesh->set_flags(bone_flags);
+				}
 
-	//			uint32_t light_count;
-	//			fread( &light_count, 4, 1, input );
-	//			for( uint32_t l = 0; l < light_count; l++ )
-	//			{
-	//				// Get the pose of this light.
-	//				Matrix44 matrix;
-	//				fread( &matrix, sizeof(Matrix44), 1, input );
-	//				scene->CreateLight( &matrix, &Vector4( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	//			}
+				uint32_t light_count;
+				fread( &light_count, 4, 1, input );
+				for( uint32_t l = 0; l < light_count; l++ )
+				{
+					// Get the pose of this light.
+					Matrix44 matrix;
+					fread( &matrix, sizeof(Matrix44), 1, input );
+					scene->CreateLight( &matrix, &Vector4( 1.0f, 1.0f, 1.0f, 1.0f ) );
+				}
 
-	//			uint32_t camera_count;
-	//			fread( &camera_count, 4, 1, input );
-	//			for( uint32_t c = 0; c < camera_count; c++ )
-	//			{
-	//				// Get the pose of this camera.
-	//				Matrix44 matrix;
-	//				fread( &matrix, sizeof(Matrix44), 1, input );
-	//				scene->CreateCamera( &matrix );
-	//			}
-	//		}
-	//		// Close file.
-	//		fclose(input);
-	//	}
-	//}
+				uint32_t camera_count;
+				fread( &camera_count, 4, 1, input );
+				for( uint32_t c = 0; c < camera_count; c++ )
+				{
+					// Get the pose of this camera.
+					Matrix44 matrix;
+					fread( &matrix, sizeof(Matrix44), 1, input );
+					scene->CreateCamera( &matrix );
+				}
+			}
+			// Close file.
+			fclose(input);
+		}
+	}
 
 	Mesh* MediaLibrary::ImportModel( const std::string& file, bool z_up )
 	{
@@ -889,7 +889,7 @@ namespace Ovgl
 	{
 		Ovgl::Scene* scene = new Ovgl::Scene;
 		scene->Inst = Inst;
-		scene->SkyBox = NULL;
+		scene->sky_box = NULL;
 		scene->DynamicsWorld = new btDiscreteDynamicsWorld(Inst->PhysicsDispatcher,Inst->PhysicsBroadphase,Inst->PhysicsSolver,Inst->PhysicsConfiguration);
 		scene->DynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.00001f;
 		scene->DynamicsWorld->setGravity(btVector3( 0.0f, -9.8f, 0.0f ));
@@ -988,25 +988,28 @@ namespace Ovgl
 		return texture;
 	};
 
-	Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportOGG( const std::string& file )
+	Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportAudio( const std::string& file )
 	{
 		Ovgl::AudioBuffer* buffer = new Ovgl::AudioBuffer;
 		buffer->Inst = Inst;
-		OggVorbis_File info;
-		FILE* f = NULL;
-		f = fopen( file.c_str(), "rb" );
-		if ( f == NULL )
+		AVFrame* frame = avcodec_alloc_frame();
+		AVFormatContext* formatContext = NULL;
+		avformat_open_input(&formatContext, file.c_str(), NULL, NULL);
+		avformat_find_stream_info(formatContext, NULL);
+		AVStream* audioStream = NULL;
+		for (unsigned int i = 0; i < formatContext->nb_streams; ++i)
 		{
-			std::wstring wfile;
-			wfile = L"Ovgl::MediaLibrary::ImportOGG was unable to open the file ";
-			wfile.append( file.begin(), file.end() );
-			OutputDebugString( wfile.c_str() );
-			return NULL;
+			if (formatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+			{
+				audioStream = formatContext->streams[i];
+			break;
+			}
 		}
-		ov_open_callbacks(f, &info, NULL, 0, OV_CALLBACKS_DEFAULT);
-		vorbis_info *vi = ov_info(&info, -1);
+		AVCodecContext* codecContext = audioStream->codec;
+		codecContext->codec = avcodec_find_decoder(codecContext->codec_id);
+		avcodec_open2(codecContext, codecContext->codec, NULL);
 
-		if (vi->channels == 1)
+		if (codecContext->channels == 1)
 		{
 			buffer->format = AL_FORMAT_MONO16;
 		}
@@ -1015,28 +1018,39 @@ namespace Ovgl
 			buffer->format = AL_FORMAT_STEREO16;
 		}
 
-		buffer->frequency = vi->rate;
+		buffer->frequency = codecContext->sample_rate;
 
-		buffer->data.resize( vi->channels * (uint32_t)ov_pcm_total( &info, -1 ));
-		uint32_t pos = 0;
-		int sec = 0;
-		int ret = 1;
-		while( ret && pos < (buffer->data.size()*2) )
+		AVPacket packet;
+		av_init_packet(&packet);
+		while (av_read_frame(formatContext, &packet) == 0)
 		{
-			ret = ov_read( &info, (char*)&buffer->data[0] + pos, (buffer->data.size()*2) - pos, 0, 2, 1, &sec );
-			pos += ret;
+			if (packet.stream_index == audioStream->index)
+			{
+				int frameFinished = 0;
+				avcodec_decode_audio4(codecContext, frame, &frameFinished, &packet);
+				if (frameFinished)
+				{
+					int data_size = av_samples_get_buffer_size(NULL, codecContext->channels, frame->nb_samples, codecContext->sample_fmt, 1);
+					buffer->data.resize( buffer->data.size() + data_size );
+					memcpy( &buffer->data[buffer->data.size() - data_size], frame->data[0], data_size);
+				}
+			}
+			av_free_packet(&packet);
 		}
-		fclose( f );
+
+		av_free(frame);
+		avcodec_close(codecContext);
+		av_close_input_file(formatContext);
 
 		if( buffer->format == AL_FORMAT_MONO16 )
 		{
 			alGenBuffers( 1, &buffer->mono );
-			alBufferData( buffer->mono, AL_FORMAT_MONO16, (ALvoid*)&buffer->data[0], buffer->data.size()*2, buffer->frequency );
+			alBufferData( buffer->mono, AL_FORMAT_MONO16, (ALvoid*)&buffer->data[0], buffer->data.size() * 2, buffer->frequency );
 		}
 		else
 		{
 			alGenBuffers( 1, &buffer->stereo );
-			alBufferData( buffer->stereo, AL_FORMAT_STEREO16, (ALvoid*)&buffer->data[0], buffer->data.size()*2, buffer->frequency );
+			alBufferData( buffer->stereo, AL_FORMAT_STEREO16, (ALvoid*)&buffer->data[0], buffer->data.size(), buffer->frequency );
 			std::vector< signed short > mono(buffer->data.size() / 2);
 			for (uint32_t i = 0; i < mono.size(); i++)
 			{

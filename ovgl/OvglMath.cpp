@@ -842,33 +842,33 @@ namespace Ovgl
 		return (width * height * depth) / 3.0f;
 	}
 	
-	void Vector3Box( std::vector< Ovgl::Vector3 >& vertices, Ovgl::Vector3* min, Ovgl::Vector3* max )
+	void Vector3Box( std::vector< Ovgl::Vector3 >& vectors, Ovgl::Vector3* min, Ovgl::Vector3* max )
 	{
-		for( uint32_t i = 0; i < vertices.size(); i++ )
+		for( uint32_t i = 0; i < vectors.size(); i++ )
 		{
-			if( vertices[i].x < min->x )
+			if( vectors[i].x < min->x )
 			{
-				min->x = vertices[i].x;
+				min->x = vectors[i].x;
 			}
-			if( vertices[i].y < min->y )
+			if( vectors[i].y < min->y )
 			{
-				min->y = vertices[i].y;
+				min->y = vectors[i].y;
 			}
-			if( vertices[i].z < min->z )
+			if( vectors[i].z < min->z )
 			{
-				min->z = vertices[i].z;
+				min->z = vectors[i].z;
 			}
-			if( vertices[i].x > max->x )
+			if( vectors[i].x > max->x )
 			{
-				max->x = vertices[i].x;
+				max->x = vectors[i].x;
 			}
-			if( vertices[i].y > max->y )
+			if( vectors[i].y > max->y )
 			{
-				max->y = vertices[i].y;
+				max->y = vectors[i].y;
 			}
-			if( vertices[i].z > max->z )
+			if( vectors[i].z > max->z )
 			{
-				max->z = vertices[i].z;
+				max->z = vectors[i].z;
 			}
 		}
 	}

@@ -1,17 +1,18 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.8)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}\\modules")
 
-find_package( OpenGL )
-find_package( OpenAL )
-find_package( CG )
-find_package( FreeImage )
-find_package( Bullet )
-find_package( Assimp )
-find_package( Ogg )
+set(OPENGL_DIR "NOT-DEFINED" CACHE PATH "Path to the OpenGL library.")
+set(OPENAL_DIR "NOT-DEFINED" CACHE PATH "Path to the OpenAL library.")
+set(GLEW_DIR "NOT-DEFINED" CACHE PATH "Path to the Glew library.")
+set(CG_DIR "NOT-DEFINED" CACHE PATH "Path to the CG library.")
+set(FREEIMAGE_DIR "NOT-DEFINED" CACHE PATH "Path to the FreeImage library.")
+set(BULLET_DIR "NOT-DEFINED" CACHE PATH "Path to the Bullet library.")
+set(ASSIMP_DIR "NOT-DEFINED" CACHE PATH "Path to the Assimp library.")
+set(FFMPEG_DIR "NOT-DEFINED" CACHE PATH "Path to the FFMPEG library.")
 
 add_definitions(-DUNICODE -D_UNICODE)
-set(OVGL_VERSION 0.2.5)
+set(OVGL_VERSION 0.8.0)
 
 option(OVGL_BUILD_DOC "Auto build documentation evertime Ovgl is compiled?" OFF)
 option(OVGL_BUILD_EDITOR "Build Ovgl examples" ON)

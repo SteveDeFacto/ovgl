@@ -29,6 +29,8 @@
 
 namespace Ovgl
 {
+
+	// This function is used to find the maximum number of mipmaps that can be produced from the given resolution.
 	uint32_t MaxLevel( uint32_t width, uint32_t height)
 	{
 		uint32_t max = 0;
@@ -851,7 +853,7 @@ namespace Ovgl
 			glDepthMask (GL_TRUE);
 			glClear( GL_DEPTH_BUFFER_BIT );
 
-			if(scene->SkyBox)
+			if(scene->sky_box)
 			{
 				// Disable depth test
 				glDisable (GL_DEPTH_TEST);
@@ -869,7 +871,7 @@ namespace Ovgl
 
 				// Set skybox texture
 				CGparameter CgFSTexture = cgGetNamedParameter( Inst->DefaultMedia->Shaders[1]->FragmentProgram, "txSkybox" );
-				cgGLSetTextureParameter( CgFSTexture, scene->SkyBox->Image );
+				cgGLSetTextureParameter( CgFSTexture, scene->sky_box->Image );
 				cgGLEnableTextureParameter( CgFSTexture );
 
 				// Bind vertex and index buffers

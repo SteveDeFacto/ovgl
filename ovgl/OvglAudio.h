@@ -34,9 +34,9 @@ namespace Ovgl
 			Instance*							Inst;
 			int									format;
 			int									frequency;
-			uint32_t						stereo;
-			uint32_t						mono;
-			std::vector< signed short >			data;
+			uint32_t							stereo;
+			uint32_t							mono;
+			std::vector< int8_t >				data;
 			AudioInstance* CreateAudioInstance( Emitter* emitter, bool loop );
 			void Release();
 		};
