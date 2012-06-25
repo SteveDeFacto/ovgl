@@ -26,7 +26,7 @@
 
 #define __STDC_CONSTANT_MACROS // Enable c99 macros
 
-#ifdef Win32
+#ifdef WIN32
     // Windows Headers
 
     #include <windows.h>
@@ -50,13 +50,13 @@
 #include <set>
 
 // OpenAl Headers
-#include <al.h>
-#include <alc.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 
 // OpenGL Headers
-#include <gl\glew.h>
-#include <gl\wglew.h>
-#include <gl\gl.h>
+#include <GL/glew.h>
+#include <GL/wglew.h>
+#include <GL/gl.h>
 
 // FreeImage Headers
 #include <FreeImage.h>
@@ -66,19 +66,19 @@
 #include <Cg/cgGL.h>
 
 // Bullet Headers
-#include "btBulletDynamicsCommon.h"
-#include "BulletDynamics/Character/btKinematicCharacterController.h"
-#include "BulletCollision/CollisionDispatch/btGhostObject.h"
-#include "BulletCollision/CollisionShapes/btShapeHull.h"
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletDynamics/Character/btKinematicCharacterController.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
 
 // Assimp Headers
-#include <assimp/cimport.h>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
+#include <assimp/assimp.h>
+#include <assimp/aiPostProcess.h>
+#include <assimp/aiScene.h>
 
 // FFMPEG Headers
 extern "C"
 {
-	#include <libavcodec/avcodec.h>
+    #include <libavcodec/avcodec.h>
 	#include <libavformat/avformat.h>
 }
