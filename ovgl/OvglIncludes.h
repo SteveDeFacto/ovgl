@@ -26,12 +26,15 @@
 
 #define __STDC_CONSTANT_MACROS // Enable c99 macros
 
-// Windows Headers
-#include <windows.h>
-#include <wchar.h>
-#include <mmsystem.h>
-#include <sys/stat.h>
-#include <winnt.h>
+#ifdef Win32
+    // Windows Headers
+
+    #include <windows.h>
+    #include <wchar.h>
+    #include <mmsystem.h>
+    #include <sys/stat.h>
+    #include <winnt.h>
+#endif
 
 // C++ Standard Library Headers
 #include <stdint.h>
