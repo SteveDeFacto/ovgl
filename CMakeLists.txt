@@ -25,6 +25,6 @@ if(OVGL_BUILD_EDITOR)
 endif(OVGL_BUILD_EDITOR)
 
 if(OVGL_BUILD_EXAMPLES)
-	add_subdirectory(examples\\HelloWorld)
-	add_subdirectory(examples\\FPS)
+	add_subdirectory(examples/HelloWorld)
+	add_subdirectory(examples/FPS)
 endif(OVGL_BUILD_EXAMPLES)
