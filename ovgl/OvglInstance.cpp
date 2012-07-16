@@ -745,36 +745,52 @@ namespace Ovgl
 		glDeleteTextures(1, &Image);
 		delete this;
 	}
-}
 
-void Ovgl::Instance::Start()
-{
-	sf::Clock clock;
-	uint32_t previousTime = clock.getElapsedTime().asMilliseconds();
+	void Instance::Start()
+	{
+		sf::Clock clock;
+		uint32_t previousTime = clock.getElapsedTime().asMilliseconds();
 	
-	// Main message loop
-    while( !g_Quit )
-    {
-		uint32_t currentTime = clock.getElapsedTime().asMilliseconds();
-		uint32_t elapsedTime = currentTime - previousTime;
-		for( uint32_t ml = 0; ml < MediaLibraries.size(); ml++ )
+		// Main message loop
+		while( !g_Quit )
 		{
-			for( uint32_t s = 0; s < MediaLibraries[ml]->Scenes.size(); s++ )
+			uint32_t currentTime = clock.getElapsedTime().asMilliseconds();
+			uint32_t elapsedTime = currentTime - previousTime;
+			for( uint32_t ml = 0; ml < MediaLibraries.size(); ml++ )
 			{
-				MediaLibraries[ml]->Scenes[s]->Update(elapsedTime);
+				for( uint32_t s = 0; s < MediaLibraries[ml]->Scenes.size(); s++ )
+				{
+					MediaLibraries[ml]->Scenes[s]->Update(elapsedTime);
+				}
 			}
-		}
-		for( uint32_t w = 0; w < Windows.size(); w++ )
-		{
-			for( uint32_t r = 0; r < Windows[w]->RenderTargets.size(); r++ )
+			for( uint32_t w = 0; w < Windows.size(); w++ )
 			{
-				Windows[w]->RenderTargets[r]->Render();
+				for( uint32_t r = 0; r < Windows[w]->RenderTargets.size(); r++ )
+				{
+					Windows[w]->RenderTargets[r]->Render();
+				}
 			}
+			for( uint32_t w = 0; w < Windows.size(); w++ )
+			{
+				Windows[w]->DoEvents();
+			}
+			previousTime = currentTime;
 		}
-		for( uint32_t w = 0; w < Windows.size(); w++ )
-		{
-			Windows[w]->DoEvents();
-		}
-		previousTime = currentTime;
-    }
+	}
+
+	Rect::Rect()
+	{
+		left = 0;
+		top = 0;
+		right = 0;
+		bottom = 0;
+	}
+
+	Rect::Rect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom )
+	{
+		this->left = left;
+		this->top = top;
+		this->right = right;
+		this->bottom = bottom;
+	}
 }

@@ -51,17 +51,17 @@ namespace Ovgl
 		return max;
 	}
 
-	RECT WindowAdjustedRect( Window* window, Vector4* rect)
+	Ovgl::Rect WindowAdjustedRect( Window* window, Vector4* rect)
 	{
 		// Get the window's rect
-		RECT WindowRect;
+		Ovgl::Rect WindowRect;
 
 		WindowRect.left = window->hWnd->getPosition().x;
 		WindowRect.top = window->hWnd->getPosition().y;
 		WindowRect.right = window->hWnd->getPosition().x + window->hWnd->getSize().x;
 		WindowRect.bottom = window->hWnd->getPosition().y + window->hWnd->getSize().y;
 
-		RECT adjustedrect;
+		Ovgl::Rect adjustedrect;
 
 		// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
 		if( rect->x > 0 && rect->x < 1 )
@@ -106,10 +106,10 @@ namespace Ovgl
 		return adjustedrect;
 	}
 
-	RECT TextureAdjustedRect( Texture* texture, Vector4* rect)
+	Ovgl::Rect TextureAdjustedRect( Texture* texture, Vector4* rect)
 	{
 		// Get the window's rect
-		RECT WindowRect;
+		Ovgl::Rect WindowRect;
 
 		glBindTexture(GL_TEXTURE_2D, texture->Image);
 		GLint width, height;
@@ -121,7 +121,7 @@ namespace Ovgl
 		WindowRect.right = width;
 		WindowRect.bottom = height;
 
-		RECT adjustedrect;
+		Ovgl::Rect adjustedrect;
 
 		// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
 		if( rect->x > 0 && rect->x < 1 )
@@ -180,7 +180,7 @@ namespace Ovgl
 		eye_luminance = 0.0f;
 		Rect = *viewport;
 
-		RECT adjustedrect = WindowAdjustedRect( hWin, &Rect );
+		Ovgl::Rect adjustedrect = WindowAdjustedRect( hWin, &Rect );
 
 		int width = (int)(adjustedrect.right - adjustedrect.left);
 		int height = (int)(adjustedrect.bottom - adjustedrect.top);
@@ -273,7 +273,7 @@ namespace Ovgl
 
 		Rect = *viewport;
 
-		RECT adjustedrect = TextureAdjustedRect( hTex, &Rect);
+		Ovgl::Rect adjustedrect = TextureAdjustedRect( hTex, &Rect);
 
 		int width = (int)(adjustedrect.right - adjustedrect.left);
 		int height = (int)(adjustedrect.bottom - adjustedrect.top);
@@ -799,8 +799,8 @@ namespace Ovgl
 	void RenderTarget::Render()
 	{
 		// Get the window's rect
-		RECT WindowRect;
-		RECT adjustedrect;
+		Ovgl::Rect WindowRect;
+		Ovgl::Rect adjustedrect;
 
 		if(hWin)
 		{
@@ -1104,7 +1104,7 @@ namespace Ovgl
 		{
 			if(Interfaces[i]->Enabled)
 			{
-				RECT AdjustedRect;
+				Ovgl::Rect AdjustedRect;
 
 				// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
 				if( Interfaces[i]->Rect.w > 0 && Interfaces[i]->Rect.w < 1 )
@@ -1165,7 +1165,7 @@ namespace Ovgl
 
 	void RenderTarget::Update()
 	{
-		RECT adjustedrect = WindowAdjustedRect( hWin, &Rect);
+		Ovgl::Rect adjustedrect = WindowAdjustedRect( hWin, &Rect);
 
 		int width = (int)(adjustedrect.right - adjustedrect.left);
 		int height = (int)(adjustedrect.bottom - adjustedrect.top);
@@ -1254,97 +1254,97 @@ namespace Ovgl
 
 	void Interface::UpdateText()
 	{
-		RECT WindowRect;
+		//Ovgl::Rect WindowRect;
 
-		WindowRect.left = RenderTarget->hWin->hWnd->getPosition().x;
-		WindowRect.top = RenderTarget->hWin->hWnd->getPosition().y;
-		WindowRect.right = RenderTarget->hWin->hWnd->getPosition().x + RenderTarget->hWin->hWnd->getSize().x;
-		WindowRect.bottom = RenderTarget->hWin->hWnd->getPosition().y + RenderTarget->hWin->hWnd->getSize().y;
+		//WindowRect.left = RenderTarget->hWin->hWnd->getPosition().x;
+		//WindowRect.top = RenderTarget->hWin->hWnd->getPosition().y;
+		//WindowRect.right = RenderTarget->hWin->hWnd->getPosition().x + RenderTarget->hWin->hWnd->getSize().x;
+		//WindowRect.bottom = RenderTarget->hWin->hWnd->getPosition().y + RenderTarget->hWin->hWnd->getSize().y;
 
-		RECT AdjustedRect;
+		//Ovgl::Rect AdjustedRect;
 
-		// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
-		if( Rect.w > 0 && Rect.w < 1 )
-		{
-			AdjustedRect.left = (LONG)((WindowRect.right - WindowRect.left) * Rect.w);
-		}
-		else
-		{
-			AdjustedRect.left = (LONG)Rect.w;
-		}
+		//// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
+		//if( Rect.w > 0 && Rect.w < 1 )
+		//{
+		//	AdjustedRect.left = (LONG)((WindowRect.right - WindowRect.left) * Rect.w);
+		//}
+		//else
+		//{
+		//	AdjustedRect.left = (LONG)Rect.w;
+		//}
 
-		// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
-		if( Rect.x > 0 && Rect.x < 1 )
-		{
-			AdjustedRect.top = (LONG)((WindowRect.bottom - WindowRect.top) * Rect.x);
-		}
-		else
-		{
-			AdjustedRect.top = (LONG)Rect.x;
-		}
+		//// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
+		//if( Rect.x > 0 && Rect.x < 1 )
+		//{
+		//	AdjustedRect.top = (LONG)((WindowRect.bottom - WindowRect.top) * Rect.x);
+		//}
+		//else
+		//{
+		//	AdjustedRect.top = (LONG)Rect.x;
+		//}
 
-		// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
-		if( Rect.y > 0 && Rect.y < 1 )
-		{
-			AdjustedRect.right = (LONG)((WindowRect.right - WindowRect.left) * Rect.y);
-		}
-		else
-		{
-			AdjustedRect.right = (LONG)Rect.y;
-		}
+		//// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
+		//if( Rect.y > 0 && Rect.y < 1 )
+		//{
+		//	AdjustedRect.right = (LONG)((WindowRect.right - WindowRect.left) * Rect.y);
+		//}
+		//else
+		//{
+		//	AdjustedRect.right = (LONG)Rect.y;
+		//}
 
-		// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
-		if( Rect.z > 0 && Rect.z < 1 )
-		{
-			AdjustedRect.bottom = (LONG)((WindowRect.bottom - WindowRect.top) * Rect.z);
-		}
-		else
-		{
-			AdjustedRect.bottom = (LONG)Rect.z;
-		}
+		//// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
+		//if( Rect.z > 0 && Rect.z < 1 )
+		//{
+		//	AdjustedRect.bottom = (LONG)((WindowRect.bottom - WindowRect.top) * Rect.z);
+		//}
+		//else
+		//{
+		//	AdjustedRect.bottom = (LONG)Rect.z;
+		//}
 
-		RECT TextRect;
-		TextRect.left = 0;
-		TextRect.top = 0;
-		TextRect.right = (LONG)(AdjustedRect.right - AdjustedRect.left);
-		TextRect.bottom = (LONG)(AdjustedRect.bottom - AdjustedRect.top);
-		HDC hDC = CreateCompatibleDC(NULL);
-		GLubyte* pSrcData;
-		BITMAPINFO bmi = { sizeof( BITMAPINFOHEADER ), TextRect.right, TextRect.bottom, 1, 32, BI_RGB, 0, 0, 0, 0, 0};
-		HBITMAP hTempBmp = CreateDIBSection( hDC, &bmi, DIB_RGB_COLORS, (void**)&pSrcData, NULL, 0 );
-		HBITMAP hOldBmp = (HBITMAP)SelectObject(hDC, hTempBmp );
-		HFONT NewFont = CreateFontA( CSize, 0, 0, 0, (FW_BOLD * Bold), Italic, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, 0, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, Font.c_str() );
-		HBRUSH NewBrush = CreateSolidBrush(0);
-		SelectObject( hDC, NewFont );
-		SelectObject( hDC, NewBrush );
-		SetTextColor( hDC, RGB(255,255,255) );
-		SetBkColor( hDC, 0);
-		DrawTextA(hDC, Text.c_str(), Text.size(), &TextRect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX);
-		GdiFlush();
-		DeleteObject(NewBrush);
-		DeleteObject(NewFont);
-		DeleteObject(hTempBmp);
+		//Ovgl::Rect TextRect;
+		//TextRect.left = 0;
+		//TextRect.top = 0;
+		//TextRect.right = (LONG)(AdjustedRect.right - AdjustedRect.left);
+		//TextRect.bottom = (LONG)(AdjustedRect.bottom - AdjustedRect.top);
+		//HDC hDC = CreateCompatibleDC(NULL);
+		//GLubyte* pSrcData;
+		//BITMAPINFO bmi = { sizeof( BITMAPINFOHEADER ), TextRect.right, TextRect.bottom, 1, 32, BI_RGB, 0, 0, 0, 0, 0};
+		//HBITMAP hTempBmp = CreateDIBSection( hDC, &bmi, DIB_RGB_COLORS, (void**)&pSrcData, NULL, 0 );
+		//HBITMAP hOldBmp = (HBITMAP)SelectObject(hDC, hTempBmp );
+		//HFONT NewFont = CreateFontA( CSize, 0, 0, 0, (FW_BOLD * Bold), Italic, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, 0, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, Font.c_str() );
+		//HBRUSH NewBrush = CreateSolidBrush(0);
+		//SelectObject( hDC, NewFont );
+		//SelectObject( hDC, NewBrush );
+		//SetTextColor( hDC, RGB(255,255,255) );
+		//SetBkColor( hDC, 0);
+		//DrawTextA(hDC, Text.c_str(), Text.size(), &TextRect, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX);
+		//GdiFlush();
+		//DeleteObject(NewBrush);
+		//DeleteObject(NewFont);
+		//DeleteObject(hTempBmp);
 
-		GLubyte* pTexels = new GLubyte[TextRect.right * TextRect.bottom * 4];
-		for( LONG row = 0; row < TextRect.bottom; row++ )
-		{
-			for( LONG col = 0; col < TextRect.right; col++ )
-			{
-				pTexels[(row * (TextRect.right * 4)) + (col * 4) + 0] = 255;
-				pTexels[(row * (TextRect.right * 4)) + (col * 4) + 1] = 255;
-				pTexels[(row * (TextRect.right * 4)) + (col * 4) + 2] = 255;
-				pTexels[(row * (TextRect.right * 4)) + (col * 4) + 3] = pSrcData[ ((row * (TextRect.right * 4)) + (col * 4)) ];
-			}
-		}
+		//GLubyte* pTexels = new GLubyte[TextRect.right * TextRect.bottom * 4];
+		//for( LONG row = 0; row < TextRect.bottom; row++ )
+		//{
+		//	for( LONG col = 0; col < TextRect.right; col++ )
+		//	{
+		//		pTexels[(row * (TextRect.right * 4)) + (col * 4) + 0] = 255;
+		//		pTexels[(row * (TextRect.right * 4)) + (col * 4) + 1] = 255;
+		//		pTexels[(row * (TextRect.right * 4)) + (col * 4) + 2] = 255;
+		//		pTexels[(row * (TextRect.right * 4)) + (col * 4) + 3] = pSrcData[ ((row * (TextRect.right * 4)) + (col * 4)) ];
+		//	}
+		//}
 
-		// Create OpenGL texture
-		glGenTextures( 1, &Texture->Image );
-		glBindTexture( GL_TEXTURE_2D, Texture->Image );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, TextRect.right, TextRect.bottom, 0, GL_RGBA, GL_UNSIGNED_BYTE, pTexels );
-		glBindTexture( GL_TEXTURE_2D, NULL );
-		DeleteDC(hDC);
+		//// Create OpenGL texture
+		//glGenTextures( 1, &Texture->Image );
+		//glBindTexture( GL_TEXTURE_2D, Texture->Image );
+		//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		//glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		//glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, TextRect.right, TextRect.bottom, 0, GL_RGBA, GL_UNSIGNED_BYTE, pTexels );
+		//glBindTexture( GL_TEXTURE_2D, NULL );
+		//DeleteDC(hDC);
 	}
 
 	Interface* RenderTarget::CreateSprite( Texture* Texture, Vector4* rect )

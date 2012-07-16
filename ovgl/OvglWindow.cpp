@@ -24,171 +24,7 @@
 
 namespace Ovgl
 {
-	//LRESULT CALLBACK WinProc( HWND hWnd, uint32_t message, WPARAM wParam, LPARAM lParam )
-	//{
-	//	Window* window = (Window*)GetWindowLongPtr( hWnd, GWLP_USERDATA );
-	//	if(window != NULL)
-	//	{
-	//		switch( message )
-	//		{
-	//			case WM_KEYDOWN:
-	//			{
-	//				if(window->On_KeyDown)
-	//				{
-	//					window->On_KeyDown( (char)wParam);
-	//				}
-	//		        break;
-	//			}
-
-	//			case WM_KEYUP:
-	//			{
-	//				if(window->On_KeyUp)
-	//				{
-	//					window->On_KeyUp( (char)wParam);
-	//				}
-	//		        break;
-	//			}
-
-	//			case WM_MOUSEMOVE:
-	//			{
-	//				if(window->On_MouseMove)
-	//				{
-	//					if(!window->lockmouse)
-	//					{
-	//						window->On_MouseMove( LOWORD(lParam), HIWORD(lParam) );
-	//					}
-	//				}
-	//		        break;
-	//			}
-
-	//			case WM_LBUTTONUP:
-	//			{
-	//				if(window->On_MouseUp)
-	//				{
-	//					window->On_MouseUp( LOWORD(lParam), HIWORD(lParam), 0 );
-	//				}
-	//		        break;
-	//			}
-
-	//			case WM_RBUTTONUP:
-	//			{
-	//				if(window->On_MouseUp)
-	//				{
-	//					window->On_MouseUp( LOWORD(lParam), HIWORD(lParam), 1 );
-	//				}
-	//		        break;
-	//			}
-
-	//			case WM_MBUTTONUP:
-	//			{
-	//				if(window->On_MouseUp)
-	//				{
-	//					window->On_MouseUp( LOWORD(lParam), HIWORD(lParam), 2 );
-	//				}
-	//		        break;
-	//			}
-
-	//			case WM_LBUTTONDOWN:
-	//			{
-	//				if(window->On_MouseDown)
-	//				{
-	//					window->On_MouseUp( LOWORD(lParam), HIWORD(lParam), 0 );
-	//				}
-	//		        break;
-	//			}
-
-	//			case WM_RBUTTONDOWN:
-	//			{
-	//				if(window->On_MouseDown)
-	//				{
-	//					window->On_MouseDown( LOWORD(lParam), HIWORD(lParam), 1 );
-	//				}
-	//		        break;
-	//			}
-
-	//			case WM_MBUTTONDOWN:
-	//			{
-	//				if(window->On_MouseDown)
-	//				{
-	//					window->On_MouseDown( LOWORD(lParam), HIWORD(lParam), 2 );
-	//				}
-	//		        break;
-	//			}
-
-	//			case WM_ENTERSIZEMOVE:
-	//			{
-	//				window->sizing = true;
-	//				break;
-	//			}
-
-	//			case WM_EXITSIZEMOVE:
-	//			{
-	//				for(uint32_t i = 0; i < window->RenderTargets.size(); i++)
-	//				{
-	//					window->RenderTargets[i]->Update();
-	//				}
-	//				window->sizing = false;
-	//				break;
-	//			}
-
-	//			case WM_ACTIVATEAPP:
-	//			{
-	//				if( !window->sizing )
-	//				{
-	//					if( wParam )
-	//					{
-	//						window->active = true;
-	//					}
-	//					else
-	//					{
-	//						window->active = false;
-	//					}
-	//				}
-	//				break;
-	//			}
-
-	//			case WM_ACTIVATE:
-	//			{
-	//				if( window->fullscreen )
-	//				{
-	//					if( LOWORD(wParam) == WA_INACTIVE )
-	//					{
-	//						ShowWindow( hWnd, SW_RESTORE );
-	//						ShowWindow( hWnd, SW_MINIMIZE );
-	//						ChangeDisplaySettings( NULL, 0 );
-	//						SetWindowLong(hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
-	//					}
-	//					else if( LOWORD(wParam) == WA_ACTIVE )
-	//					{
-	//						WINDOWPLACEMENT wp;
-	//						GetWindowPlacement(hWnd, &wp);
-	//						DEVMODE dmScreenSettings				= {0};
-	//						dmScreenSettings.dmSize					= sizeof(dmScreenSettings);
-	//						dmScreenSettings.dmPelsWidth			= wp.rcNormalPosition.right - wp.rcNormalPosition.left;
-	//						dmScreenSettings.dmPelsHeight			= wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
-	//						dmScreenSettings.dmFields				= DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-	//						dmScreenSettings.dmBitsPerPel			= 32;
-	//						SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
-	//						ChangeDisplaySettings( &dmScreenSettings, CDS_FULLSCREEN );
-	//						ShowWindow( hWnd, SW_SHOWMAXIMIZED );
-	//						SetFocus(hWnd);
-	//					}
-	//				}
-	//		        break;
-	//			}
-
-	//	        case WM_DESTROY:
-	//	        {
-	//	            PostQuitMessage( 0 );
-	//	            break;
-	//	        }
-	//		}
-	//	}
-
-	//    return DefWindowProc( hWnd, message, wParam, lParam );
-	//}
-
-	char SFKeyToASCII(sf::Keyboard::Key keycode)
+	unsigned char SFKeyToASCII(sf::Keyboard::Key keycode)
 	{
 		switch (keycode)
 		{
@@ -515,16 +351,13 @@ namespace Ovgl
 		On_MouseUp = NULL;
 		LastPoint.x = 0;
 		LastPoint.y = 0;
-
 		sf::ContextSettings settings;
 		settings.depthBits = 24;
 		settings.stencilBits = 8;
 		settings.antialiasingLevel = 4;
 		settings.majorVersion = 3;
 		settings.minorVersion = 1;
-
 		hWnd = new sf::Window(sf::VideoMode(640, 480, 32), name.c_str(), sf::Style::Default, settings);
-
 		instance->Windows.push_back(this);
 	};
 
@@ -533,7 +366,7 @@ namespace Ovgl
 		if( state )
 		{
 			lockmouse = true;
-			RECT WindowRect;
+			Ovgl::Rect WindowRect;
 			WindowRect.left = hWnd->getPosition().x;
 			WindowRect.top = hWnd->getPosition().y;
 			WindowRect.right = hWnd->getPosition().x + hWnd->getSize().x;
@@ -542,13 +375,11 @@ namespace Ovgl
 			WindowRect.right = WindowRect.right - GetSystemMetrics(SM_CXSIZEFRAME);
 			WindowRect.top = WindowRect.top + GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYSIZEFRAME);
 			WindowRect.bottom = WindowRect.bottom - GetSystemMetrics(SM_CYSIZEFRAME);
-			ClipCursor( &WindowRect );
 			hWnd->setMouseCursorVisible( false );
 		}
 		else
 		{
 			lockmouse = false;
-			ClipCursor( NULL );
 			hWnd->setMouseCursorVisible( true);
 		}
 	}
@@ -615,7 +446,7 @@ namespace Ovgl
 
 		if(lockmouse)
 		{
-			RECT WindowRect;
+			Ovgl::Rect WindowRect;
 			WindowRect.left = hWnd->getPosition().x;
 			WindowRect.top = hWnd->getPosition().y;
 			WindowRect.right = hWnd->getPosition().x + hWnd->getSize().x;

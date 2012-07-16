@@ -62,7 +62,16 @@ namespace Ovgl
 		class MediaLibrary;
 		class Window;
 
-
+		class __declspec(dllexport) Rect
+		{
+		public:
+			Rect();
+			Rect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom );
+			uint32_t								left;
+			uint32_t								top;
+			uint32_t								right;
+			uint32_t								bottom;
+		};
 
 		class __declspec(dllexport) Texture
 		{
