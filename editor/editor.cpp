@@ -21,7 +21,6 @@
 #include <winnt.h>
 #include <Ovgl.h>
 
-HWND						hWnd;
 Ovgl::Instance*				Inst;
 Ovgl::RenderTarget*			RenderTarget;
 Ovgl::Window*				Window;
@@ -39,7 +38,7 @@ Ovgl::Object*				Object;
 Ovgl::Light*				Light;
 bool						g_Active;
 bool						g_Sizing;
-bool						g_Quit = false;
+
 
 void MouseMove(long x, long y)
 {
@@ -50,7 +49,7 @@ void KeyDown(char key)
 {
 	if(key == (char)27)
 	{
-		g_Quit = true;
+		Inst->g_Quit = true;
 	}
 	if( key == 'W')
 		Camera->setPose( &(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * Camera->getPose() ) );
@@ -68,7 +67,7 @@ void KeyDown(char key)
 	}
 }
 
-int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int32_t nCmdShow )
+int main()
 {
 	// Create Main Instance
 	Inst = new Ovgl::Instance( 0 );
@@ -129,18 +128,7 @@ int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 	// Set scene sky box
 	Scene->sky_box = Texture1;
 
-	uint32_t previousTime = timeGetTime();
-	
-	// Main message loop
-    while( !g_Quit )
-    {
-		uint32_t currentTime = timeGetTime();
-		uint32_t elapsedTime = currentTime - previousTime;
-		Scene->Update(elapsedTime);
-		RenderTarget->Render();
-		Window->DoEvents();
-		previousTime = currentTime;
-    }
+	Inst->Start();
 
 	// Release all
 	delete Inst;

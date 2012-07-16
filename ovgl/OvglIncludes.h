@@ -26,17 +26,8 @@
 
 #define __STDC_CONSTANT_MACROS // Enable c99 macros
 
-#ifdef WIN32
-    // Windows Headers
-
-    #include <windows.h>
-    #include <wchar.h>
-    #include <mmsystem.h>
-    #include <sys/stat.h>
-    #include <winnt.h>
-#endif
-
 // C++ Standard Library Headers
+#include <sys/stat.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
@@ -49,14 +40,19 @@
 #include <string>
 #include <set>
 
+// GLEW Headers
+#include <GL/glew.h>
+#include <GL/wglew.h>
+
+// SFML Headers
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
+#include <SFML/System.hpp>
+#include <SFML/OpenGL.hpp>
+
 // OpenAl Headers
 #include <AL/al.h>
 #include <AL/alc.h>
-
-// OpenGL Headers
-#include <GL/glew.h>
-#include <GL/wglew.h>
-#include <GL/gl.h>
 
 // FreeImage Headers
 #include <FreeImage.h>
@@ -72,9 +68,9 @@
 #include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
 
 // Assimp Headers
-#include <assimp/assimp.h>
-#include <assimp/aiPostProcess.h>
-#include <assimp/aiScene.h>
+#include <assimp/cimport.h>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 
 // FFMPEG Headers
 extern "C"

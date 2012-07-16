@@ -107,9 +107,8 @@ namespace Ovgl
 		public:
 			Instance( uint32_t flags );
 			~Instance();
-			HWND									hWnd;
-			HDC										hDC;
-			HGLRC									hRC;
+			bool									g_Quit;
+			sf::Context*							hWnd;
 			_CGcontext*								CgContext;
 			CGprofile								CgVertexProfile;
 			CGprofile								CgFragmentProfile;
@@ -122,6 +121,7 @@ namespace Ovgl
 			std::vector< MediaLibrary* >			MediaLibraries;
 			std::vector< Window* >					Windows;
 			Window*									CreateOWindow( const std::string& name );
+			void									Start();
 			RenderTarget*							CreateRenderTarget( Ovgl::Window* window, Ovgl::Vector4* rect, uint32_t flags );
 			MediaLibrary*							CreateMediaLibrary( const std::string& file );
 			void									Release();

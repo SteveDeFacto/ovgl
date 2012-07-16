@@ -27,8 +27,8 @@ namespace Ovgl
 		public:
 			Window( Ovgl::Instance* inst, const std::string& name );
 			Instance* inst;
-			HWND hWnd;
-			HDC hDC;
+			sf::Window* hWnd;
+			sf::Thread* event_thread;
 			POINT LastPoint;
 			std::vector< RenderTarget* > RenderTargets;
 			bool sizing;

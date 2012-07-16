@@ -55,7 +55,11 @@ namespace Ovgl
 	{
 		// Get the window's rect
 		RECT WindowRect;
-		GetWindowRect( window->hWnd, &WindowRect );
+
+		WindowRect.left = window->hWnd->getPosition().x;
+		WindowRect.top = window->hWnd->getPosition().y;
+		WindowRect.right = window->hWnd->getPosition().x + window->hWnd->getSize().x;
+		WindowRect.bottom = window->hWnd->getPosition().y + window->hWnd->getSize().y;
 
 		RECT adjustedrect;
 
@@ -166,7 +170,6 @@ namespace Ovgl
 	{
 		Inst = Instance;
 		hWin = hWindow;
-		hDC = hWin->hDC;
 		hTex = NULL;
 		View = NULL;
 		debugMode = false;
@@ -177,12 +180,12 @@ namespace Ovgl
 		eye_luminance = 0.0f;
 		Rect = *viewport;
 
-		RECT adjustedrect = WindowAdjustedRect( hWin, &Rect);
+		RECT adjustedrect = WindowAdjustedRect( hWin, &Rect );
 
 		int width = (int)(adjustedrect.right - adjustedrect.left);
 		int height = (int)(adjustedrect.bottom - adjustedrect.top);
 
-		wglMakeCurrent( hDC, Inst->hRC );
+		hWindow->hWnd->setActive(true);
 
 		// Multi sample framebuffer
 		glGenFramebuffers(1, &MultiSampleFrameBuffer);
@@ -267,7 +270,6 @@ namespace Ovgl
 		motionBlur = true;
 		multiSample = true;
 		eye_luminance = 0.0f;
-		hDC = Inst->hDC;
 
 		Rect = *viewport;
 
@@ -276,7 +278,7 @@ namespace Ovgl
 		int width = (int)(adjustedrect.right - adjustedrect.left);
 		int height = (int)(adjustedrect.bottom - adjustedrect.top);
 
-		wglMakeCurrent( hDC, Inst->hRC );
+		Inst->hWnd->setActive(true);
 
 		// Multi sample framebuffer
 		glGenFramebuffers(1, &MultiSampleFrameBuffer);
@@ -802,13 +804,16 @@ namespace Ovgl
 
 		if(hWin)
 		{
-			wglMakeCurrent( hDC, Inst->hRC );
-			GetWindowRect( hWin->hWnd, &WindowRect );
+			hWin->hWnd->setActive(true);
+			WindowRect.left = hWin->hWnd->getPosition().x;
+			WindowRect.top = hWin->hWnd->getPosition().y;
+			WindowRect.right = hWin->hWnd->getPosition().x + hWin->hWnd->getSize().x;
+			WindowRect.bottom = hWin->hWnd->getPosition().y + hWin->hWnd->getSize().y;
 			adjustedrect = WindowAdjustedRect( hWin, &Rect);
 		}
 		else
 		{
-			wglMakeCurrent( Inst->hDC, Inst->hRC );
+			Inst->hWnd->setActive(true);
 			WindowRect.left = 0;
 			WindowRect.top = 0;
 			glBindTexture(GL_TEXTURE_2D, hTex->Image);
@@ -1165,7 +1170,17 @@ namespace Ovgl
 		int width = (int)(adjustedrect.right - adjustedrect.left);
 		int height = (int)(adjustedrect.bottom - adjustedrect.top);
 
-		wglMakeCurrent( hWin->hDC, Inst->hRC );
+		hWin->hWnd->setActive(true);
+
+		// Delete FrameBuffers and Textures
+		glDeleteFramebuffers( 1, &MultiSampleFrameBuffer );
+		glDeleteFramebuffers( 1, &EffectFrameBuffer );
+		glDeleteFramebuffers( 1, &ColorBuffer );
+		glDeleteFramebuffers( 1, &DepthBuffer );
+		glDeleteTextures(1, &PrimaryTex);
+		glDeleteTextures(1, &SecondaryTex);
+		glDeleteTextures(1, &PrimaryBloomTex);
+		glDeleteTextures(1, &SecondaryBloomTex);
 
 		// Multi sample framebuffer
 		glGenFramebuffers(1, &MultiSampleFrameBuffer);
@@ -1193,7 +1208,7 @@ namespace Ovgl
 		glGenFramebuffers(1, &EffectFrameBuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
 
-		// Create and bind texture
+		// Create and bind textures
 		glGenTextures(1, &PrimaryTex);
 		glBindTexture(GL_TEXTURE_2D, PrimaryTex);
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, MaxLevel( width, height));
@@ -1234,12 +1249,17 @@ namespace Ovgl
 			OutputDebugString( L"Unable to create effect frame buffer" );
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		hWin->hWnd->setActive(false);
 	}
 
 	void Interface::UpdateText()
 	{
 		RECT WindowRect;
-		GetWindowRect( RenderTarget->hWin->hWnd, &WindowRect );
+
+		WindowRect.left = RenderTarget->hWin->hWnd->getPosition().x;
+		WindowRect.top = RenderTarget->hWin->hWnd->getPosition().y;
+		WindowRect.right = RenderTarget->hWin->hWnd->getPosition().x + RenderTarget->hWin->hWnd->getSize().x;
+		WindowRect.bottom = RenderTarget->hWin->hWnd->getPosition().y + RenderTarget->hWin->hWnd->getSize().y;
 
 		RECT AdjustedRect;
 

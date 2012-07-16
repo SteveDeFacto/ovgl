@@ -535,78 +535,64 @@ namespace Ovgl
 	Instance::Instance( uint32_t flags )
 	{
 		// Create a simple hidden window so we can create a GL context from it
-	    WNDCLASSEX wcex;
-		ZeroMemory( &wcex, sizeof( wcex ) );
-	    wcex.cbSize = sizeof( WNDCLASSEX );
-	    wcex.lpfnWndProc = DefWindowProc;
-		wcex.hInstance = GetModuleHandle( NULL );
-		wcex.hIcon = NULL;
-	    wcex.hCursor = NULL;
-	    wcex.lpszClassName = L"OvglWinClass";
-	    RegisterClassEx( &wcex );
-		HWND temphWindow = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
-		hWnd = temphWindow;
+	 //   WNDCLASSEX wcex;
+		//ZeroMemory( &wcex, sizeof( wcex ) );
+	 //   wcex.cbSize = sizeof( WNDCLASSEX );
+	 //   wcex.lpfnWndProc = DefWindowProc;
+		//wcex.hInstance = GetModuleHandle( NULL );
+		//wcex.hIcon = NULL;
+	 //   wcex.hCursor = NULL;
+	 //   wcex.lpszClassName = L"OvglWinClass";
+	 //   RegisterClassEx( &wcex );
+		//HWND temphWindow = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
+		//hWnd = temphWindow;
 
-		// Set window pixel format
-		hDC = GetDC( temphWindow );
-		PIXELFORMATDESCRIPTOR pfd;
-		ZeroMemory( &pfd, sizeof( pfd ) );
-		pfd.nSize = sizeof( pfd );
-		pfd.nVersion = 1;
-		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-		pfd.iPixelType = PFD_TYPE_RGBA;
-		pfd.cColorBits = 24;
-		int iFormat = ChoosePixelFormat( hDC, &pfd );
-		SetPixelFormat( hDC, iFormat, NULL );
+		//App.
+		//// Set window pixel format
+		//hDC = GetDC( temphWindow );
+		//PIXELFORMATDESCRIPTOR pfd;
+		//ZeroMemory( &pfd, sizeof( pfd ) );
+		//pfd.nSize = sizeof( pfd );
+		//pfd.nVersion = 1;
+		//pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+		//pfd.iPixelType = PFD_TYPE_RGBA;
+		//pfd.cColorBits = 24;
+		//int iFormat = ChoosePixelFormat( hDC, &pfd );
+		//SetPixelFormat( hDC, iFormat, NULL );
 
-		// Create GL context
-		HGLRC tempContext = wglCreateContext( hDC );
-		wglMakeCurrent( hDC, tempContext );
-		hRC = tempContext;
+		//// Create GL context
+		//HGLRC tempContext = wglCreateContext( hDC );
+		//wglMakeCurrent( hDC, tempContext );
+		//hRC = tempContext;
+		//glewInit();
+
+		//// Create a simple hidden window so we can create a GL context from it
+		//hWnd = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
+
+		//hDC = GetDC( hWnd );
+
+		//int pixelFormat;
+		//uint32_t numFormats;
+		//float fAttributes[] = {0,0};
+
+		//int iAttributes[] = 
+		//{
+		//	WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+		//	WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+		//	WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
+		//	WGL_COLOR_BITS_ARB, 24,
+		//	WGL_ALPHA_BITS_ARB, 0,
+		//	WGL_DEPTH_BITS_ARB, 0,
+		//	WGL_STENCIL_BITS_ARB, 0,
+		//	WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+		//	0, 0
+		//};
+		//wglChoosePixelFormatARB( hDC, iAttributes, fAttributes, 1, &pixelFormat, &numFormats);
+		//SetPixelFormat( hDC, pixelFormat, NULL );
+		g_Quit = false;
+		hWnd = new sf::Context();
 		glewInit();
 
-		// Create a simple hidden window so we can create a GL context from it
-		hWnd = CreateWindowA( "OvglWinClass", "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, wcex.hInstance, NULL );
-
-		hDC = GetDC( hWnd );
-
-		int pixelFormat;
-		uint32_t numFormats;
-		float fAttributes[] = {0,0};
-
-		int iAttributes[] = 
-		{
-			WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-			WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-			WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
-			WGL_COLOR_BITS_ARB, 24,
-			WGL_ALPHA_BITS_ARB, 0,
-			WGL_DEPTH_BITS_ARB, 0,
-			WGL_STENCIL_BITS_ARB, 0,
-			WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-			0, 0
-		};
-		wglChoosePixelFormatARB( hDC, iAttributes, fAttributes, 1, &pixelFormat, &numFormats);
-		SetPixelFormat( hDC, pixelFormat, NULL );
-
-		if( atof((const char*)glGetString(GL_VERSION)) >= 3.1 )
-		{
-			int attribs[] =
-			{
-				WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-				WGL_CONTEXT_MINOR_VERSION_ARB, 1,
-				0
-			};
-			hRC = wglCreateContextAttribsARB( hDC, 0, attribs );
-			wglMakeCurrent( NULL, NULL );
-			wglDeleteContext( tempContext );
-			DestroyWindow( temphWindow );
-			wglMakeCurrent( hDC, hRC );
-		}
-		else
-		{
-			OutputDebugString( L"OpenGL 3.1 is not supported." );
-		}
 		glEnable (GL_BLEND);
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable (GL_CULL_FACE);
@@ -759,4 +745,36 @@ namespace Ovgl
 		glDeleteTextures(1, &Image);
 		delete this;
 	}
+}
+
+void Ovgl::Instance::Start()
+{
+	sf::Clock clock;
+	uint32_t previousTime = clock.getElapsedTime().asMilliseconds();
+	
+	// Main message loop
+    while( !g_Quit )
+    {
+		uint32_t currentTime = clock.getElapsedTime().asMilliseconds();
+		uint32_t elapsedTime = currentTime - previousTime;
+		for( uint32_t ml = 0; ml < MediaLibraries.size(); ml++ )
+		{
+			for( uint32_t s = 0; s < MediaLibraries[ml]->Scenes.size(); s++ )
+			{
+				MediaLibraries[ml]->Scenes[s]->Update(elapsedTime);
+			}
+		}
+		for( uint32_t w = 0; w < Windows.size(); w++ )
+		{
+			for( uint32_t r = 0; r < Windows[w]->RenderTargets.size(); r++ )
+			{
+				Windows[w]->RenderTargets[r]->Render();
+			}
+		}
+		for( uint32_t w = 0; w < Windows.size(); w++ )
+		{
+			Windows[w]->DoEvents();
+		}
+		previousTime = currentTime;
+    }
 }
