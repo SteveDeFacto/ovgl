@@ -45,6 +45,7 @@
 #include <GL/wglew.h>
 
 // SFML Headers
+#include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/System.hpp>
@@ -71,10 +72,3 @@
 #include <assimp/cimport.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-
-// FFMPEG Headers
-extern "C"
-{
-    #include <libavcodec/avcodec.h>
-	#include <libavformat/avformat.h>
-}

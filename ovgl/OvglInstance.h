@@ -125,7 +125,8 @@ namespace Ovgl
 			btCollisionDispatcher*					PhysicsDispatcher;
 			btBroadphaseInterface*					PhysicsBroadphase;
 			btSequentialImpulseConstraintSolver*	PhysicsSolver;
-			void*									FBXManager;
+			ALCdevice*								aldevice;
+			ALCcontext*								alcontext;
 			MediaLibrary*							DefaultMedia;
 			std::vector< MediaLibrary* >			MediaLibraries;
 			std::vector< Window* >					Windows;
@@ -133,7 +134,6 @@ namespace Ovgl
 			void									Start();
 			RenderTarget*							CreateRenderTarget( Ovgl::Window* window, Ovgl::Vector4* rect, uint32_t flags );
 			MediaLibrary*							CreateMediaLibrary( const std::string& file );
-			void									Release();
 		};
 	
 		__declspec(dllexport) Instance* Create( uint32_t flags );

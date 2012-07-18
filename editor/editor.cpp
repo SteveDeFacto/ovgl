@@ -36,9 +36,6 @@ Ovgl::Mesh*					Mesh;
 Ovgl::Mesh*					Mesh2;
 Ovgl::Object*				Object;
 Ovgl::Light*				Light;
-bool						g_Active;
-bool						g_Sizing;
-
 
 void MouseMove(long x, long y)
 {

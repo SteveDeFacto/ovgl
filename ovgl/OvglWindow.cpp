@@ -482,4 +482,10 @@ namespace Ovgl
 		vsync = state;
 		hWnd->setVerticalSyncEnabled(state);
 	}
+
+	Window::~Window()
+	{
+		hWnd->close();
+		delete hWnd;
+	}
 }

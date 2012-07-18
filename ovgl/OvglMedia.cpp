@@ -992,56 +992,22 @@ namespace Ovgl
 	{
 		Ovgl::AudioBuffer* buffer = new Ovgl::AudioBuffer;
 		buffer->Inst = Inst;
-		AVFrame* frame = avcodec_alloc_frame();
-		AVFormatContext* formatContext = NULL;
-		avformat_open_input(&formatContext, file.c_str(), NULL, NULL);
-		avformat_find_stream_info(formatContext, NULL);
-		AVStream* audioStream = NULL;
-		for (unsigned int i = 0; i < formatContext->nb_streams; ++i)
+		sf::SoundBuffer sfbuffer;
+		if (sfbuffer.loadFromFile(file.c_str()))
 		{
-			if (formatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
+			if (sfbuffer.getChannelCount() == 1)
 			{
-				audioStream = formatContext->streams[i];
-			break;
+				buffer->format = AL_FORMAT_MONO16;
 			}
-		}
-		AVCodecContext* codecContext = audioStream->codec;
-		codecContext->codec = avcodec_find_decoder(codecContext->codec_id);
-		avcodec_open2(codecContext, codecContext->codec, NULL);
-
-		if (codecContext->channels == 1)
-		{
-			buffer->format = AL_FORMAT_MONO16;
-		}
-		else
-		{
-			buffer->format = AL_FORMAT_STEREO16;
-		}
-
-		buffer->frequency = codecContext->sample_rate;
-
-		AVPacket packet;
-		av_init_packet(&packet);
-		while (av_read_frame(formatContext, &packet) == 0)
-		{
-			if (packet.stream_index == audioStream->index)
+			else
 			{
-				int frameFinished = 0;
-				avcodec_decode_audio4(codecContext, frame, &frameFinished, &packet);
-				if (frameFinished)
-				{
-					int data_size = av_samples_get_buffer_size(NULL, codecContext->channels, frame->nb_samples, codecContext->sample_fmt, 1);
-					buffer->data.resize( buffer->data.size() + data_size );
-					memcpy( &buffer->data[buffer->data.size() - data_size], frame->data[0], data_size);
-				}
+				buffer->format = AL_FORMAT_STEREO16;
 			}
-			av_free_packet(&packet);
+
+			buffer->frequency = sfbuffer.getSampleRate();
+			buffer->data.resize(sfbuffer.getSampleCount() * 2);
+			memcpy( &buffer->data[0], sfbuffer.getSamples(), sfbuffer.getSampleCount());
 		}
-
-		av_free(frame);
-		avcodec_close(codecContext);
-		av_close_input_file(formatContext);
-
 		if( buffer->format == AL_FORMAT_MONO16 )
 		{
 			alGenBuffers( 1, &buffer->mono );

@@ -10,7 +10,6 @@ set(CG_DIR "${CMAKE_SOURCE_DIR}/dependencies/CG" CACHE PATH "Path to the CG libr
 set(FREEIMAGE_DIR "${CMAKE_SOURCE_DIR}/dependencies/FreeImage" CACHE PATH "Path to the FreeImage library.")
 set(BULLET_DIR "${CMAKE_SOURCE_DIR}/dependencies/Bullet" CACHE PATH "Path to the Bullet library.")
 set(ASSIMP_DIR "${CMAKE_SOURCE_DIR}/dependencies/Assimp" CACHE PATH "Path to the Assimp library.")
-set(FFMPEG_DIR "${CMAKE_SOURCE_DIR}/dependencies/FFMPEG" CACHE PATH "Path to the FFMPEG library.")
 
 add_definitions(-DUNICODE -D_UNICODE)
 set(OVGL_VERSION 0.8.0)

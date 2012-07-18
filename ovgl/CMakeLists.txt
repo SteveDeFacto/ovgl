@@ -59,6 +59,8 @@ optimized "sfml-system-s.lib"
 debug "sfml-system-s-d.lib"
 optimized "sfml-window-s.lib"
 debug "sfml-window-s-d.lib"
+optimized "sfml-main.lib"
+debug "sfml-main-d.lib"
 "opengl32.lib"
 "glew32s.lib"
 "OpenAL32.lib"
@@ -71,10 +73,7 @@ debug "FreeImaged.lib"
 "BulletCollision.lib"
 "LinearMath.lib"
 optimized "Assimp.lib"
-debug "AssimpD.lib"
-"avcodec.lib"
-"avformat.lib"
-"avutil.lib")
+debug "AssimpD.lib")
 
 add_definitions( -DNOMINMAX -DWIN32_LEAN_AND_MEAN -DFREEIMAGE_LIB -DGLEW_STATIC -DSFML_STATIC )
 

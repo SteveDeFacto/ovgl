@@ -26,6 +26,7 @@ namespace Ovgl
 		{
 		public:
 			Window( Ovgl::Instance* inst, const std::string& name );
+			~Window();
 			Instance* inst;
 			sf::Window* hWnd;
 			sf::Thread* event_thread;
