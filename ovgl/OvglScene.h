@@ -461,7 +461,7 @@ namespace Ovgl
 			* @param color The color of the light.
 			* @param type This option can be used to specify what type of light to emit. There are three types Point Light, Spot Light, and a Directional Light.
 			*/
-			Light* CreateLight( Matrix44* matirx, Vector4* color );
+			Light* CreateLight( const Matrix44& matirx, const Vector4& color );
 			/**
 			* This function adds a Ovgl::Camera to the scene.
 			* @param matrix The matrix which defines the the starting pose of the camera.

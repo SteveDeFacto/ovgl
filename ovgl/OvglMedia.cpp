@@ -324,7 +324,7 @@ namespace Ovgl
 					// Get the pose of this light.
 					Matrix44 matrix;
 					fread( &matrix, sizeof(Matrix44), 1, input );
-					scene->CreateLight( &matrix, &Vector4( 1.0f, 1.0f, 1.0f, 1.0f ) );
+					scene->CreateLight( matrix, Vector4( 1.0f, 1.0f, 1.0f, 1.0f ) );
 				}
 
 				uint32_t camera_count;
@@ -397,7 +397,7 @@ namespace Ovgl
 					if(scene->mMeshes[m]->HasBones())
 					{
 						mesh->skeleton->bones.resize(scene->mMeshes[m]->mNumBones + boffset);
-						
+
 						for( uint32_t b = 0; b < mesh->skeleton->bones.size(); b++ )
 						{
 							mesh->skeleton->bones[b + boffset] = new Bone;
@@ -405,7 +405,7 @@ namespace Ovgl
 
 						for( uint32_t b = 0; b < scene->mMeshes[m]->mNumBones; b++ )
 						{
-							
+
 							Bone* bone = mesh->skeleton->bones[b];
 							bone->length = 1.0f;
 							bone->mesh = new Mesh;

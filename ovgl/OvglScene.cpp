@@ -38,13 +38,13 @@ namespace Ovgl
 		// Create a constraint between the two bone shapes which are contacting each other.
 		btGeneric6DofConstraint* Constraint;
 		Constraint = new btGeneric6DofConstraint( *(btRigidBody*)colObj0, *(btRigidBody*)colObj1, frame, frame, true );
-			
+
 		// Set limits to be limitless.
 		Constraint->setLinearLowerLimit( btVector3(1, 1, 1 ) );
 		Constraint->setLinearUpperLimit( btVector3(0, 0, 0 ) );
 		Constraint->setAngularLowerLimit( btVector3(1, 1, 1 ) );
 		Constraint->setAngularUpperLimit( btVector3(0, 0, 0 ) );
-			
+
 		// Add constraint to scene.
 		DynamicsWorld->addConstraint(Constraint, true);
 		return 0;
@@ -60,7 +60,7 @@ namespace Ovgl
 
 		// Set default perspective for camera.
 		camera->projMat = MatrixPerspectiveLH( (((float)OvglPi) / 2.0f), (640.0f / 480.0f) , 0.01f, 100000.0f );
-		
+
 		// Build a motion state object for bullet positioned where we want the camera.
 		btTransform Transform;
 		Transform.setFromOpenGLMatrix((float*)matrix);
@@ -69,7 +69,7 @@ namespace Ovgl
 		// Create a sphere shape.
 		btSphereShape* Sphere = new btSphereShape(1.0f);
 		btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, Sphere, btVector3(0,0,0) );
-		
+
 		// Create a new collision mesh.
 		CMesh* CollisionMesh = new CMesh;
 
@@ -91,7 +91,7 @@ namespace Ovgl
 		return camera;
 	};
 
-	Light* Scene::CreateLight( Matrix44* matrix, Vector4* color )
+	Light* Scene::CreateLight( const Matrix44& matrix, const Vector4& color )
 	{
 		// Create a new light object.
 		Light* light = new Light;
@@ -101,7 +101,7 @@ namespace Ovgl
 
 		// Build a motion state object for bullet positioned where we want the light.
 		btTransform Transform;
-		Transform.setFromOpenGLMatrix((float*)matrix);
+		Transform.setFromOpenGLMatrix((float*)&matrix);
 		btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
 
 		// Create a sphere shape.
@@ -123,9 +123,9 @@ namespace Ovgl
 		DynamicsWorld->addRigidBody(CollisionMesh->actor, btBroadphaseProxy::KinematicFilter, 0);
 
 		// Set light colors.
-		light->color.x = color->x;
-		light->color.y = color->y;
-		light->color.z = color->z;
+		light->color.x = color.x;
+		light->color.y = color.y;
+		light->color.z = color.z;
 
 		// Add light to scene list of lights.
 		this->lights.push_back( light );
@@ -150,7 +150,7 @@ namespace Ovgl
 		// Create a sphere shape.
 		btSphereShape* Sphere = new btSphereShape(1.0f);
 		btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, Sphere, btVector3(0,0,0) );
-		
+
 		// Create a new collision mesh.
 		CMesh* CollisionMesh = new CMesh;
 
@@ -188,7 +188,8 @@ namespace Ovgl
 		for( uint32_t i = 0; i < mesh->skeleton->bones.size(); i++ )
 		{
 			btTransform Transform;
-			Transform.setFromOpenGLMatrix((float*)&(mesh->skeleton->bones[i]->matrix * (*matrix) ) );
+			Matrix44 mat = (mesh->skeleton->bones[i]->matrix * (*matrix) );
+			Transform.setFromOpenGLMatrix((float*)&mat );
 			btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
 			btVector3 localInertia(0,0,0);
 			mesh->skeleton->bones[i]->convex->calculateLocalInertia(1, localInertia);
@@ -322,7 +323,8 @@ namespace Ovgl
 		bodyMatA = joint->obj[0]->get_pose();
 		bodyMatB = joint->obj[1]->get_pose();
 		btTransform frameInA, frameInB;
-		frameInA.setFromOpenGLMatrix((float*)&(bodyMatB * MatrixInverse(Vector4( 0.0f, 0.0f, 0.0f, 0.0f), bodyMatA)));
+		Matrix44 diff = (bodyMatB * MatrixInverse(Vector4( 0.0f, 0.0f, 0.0f, 0.0f), bodyMatA));
+		frameInA.setFromOpenGLMatrix((float*)&diff);
 		frameInB.setIdentity();
 		joint->joint = new btGeneric6DofConstraint( *obj1->actor, *obj2->actor, frameInA, frameInB, true );
 		this->DynamicsWorld->addConstraint(joint->joint, true);
@@ -432,7 +434,8 @@ namespace Ovgl
 				bodyMatA = joint->obj[0]->get_pose();
 				bodyMatB = joint->obj[1]->get_pose();
 				btTransform frameInA, frameInB;
-				frameInA.setFromOpenGLMatrix((float*)&(bodyMatB * MatrixInverse(Vector4( 0.0f, 0.0f, 0.0f, 0.0f), bodyMatA)));
+				Matrix44 diff = (bodyMatB * MatrixInverse(Vector4( 0.0f, 0.0f, 0.0f, 0.0f), bodyMatA));
+				frameInA.setFromOpenGLMatrix((float*)&diff);
 				frameInB.setIdentity();
 				joint->joint = new btGeneric6DofConstraint( *joint->obj[0]->actor, *joint->obj[1]->actor, frameInA, frameInB, true );
 				joint->joint->setAngularLowerLimit( btVector3(DegToRad(-childBone->max.x), DegToRad(childBone->min.y), DegToRad(-childBone->max.z)) );
@@ -505,7 +508,8 @@ namespace Ovgl
 			matrix = actors[a]->getPose();
 			Matrix44 cam_mat;
 			cam_mat = MatrixTranslation( 0.0f, 0.0f, actors[a]->radius / 2 ) * MatrixRotationEuler( actors[a]->lookDirection.x, actors[a]->lookDirection.y, actors[a]->lookDirection.z) * MatrixTranslation(matrix._41, matrix._42, matrix._43) * MatrixTranslation( 0.0f, (actors[a]->height * shape->getLocalScaling().getY()) / 2, 0.0f );
-			actors[a]->camera->setPose(&(actors[a]->CameraOffset * cam_mat));
+			Matrix44 offsetedcam = (actors[a]->CameraOffset * cam_mat);
+			actors[a]->camera->setPose(&offsetedcam);
 
 			Matrix44 new_matrix = MatrixRotationY( -actors[a]->lookDirection.z) * MatrixTranslation(matrix._41, matrix._42, matrix._43);
 			actors[a]->ghostObject->getWorldTransform().setFromOpenGLMatrix((float*)&new_matrix);
@@ -556,9 +560,9 @@ namespace Ovgl
 			{
 				if( Inst->Windows[w]->RenderTargets[r]->View == cameras[c] )
 				{
-					Matrix44* cmatrix = &cameras[c]->getPose();
-					ALfloat ListenerOri[] = { -cmatrix->_21, cmatrix->_22, -cmatrix->_23, -cmatrix->_31, cmatrix->_32, -cmatrix->_33 };
-					ALfloat ListenerPos[] = { cmatrix->_41, cmatrix->_42, cmatrix->_43 };
+					Matrix44 cmatrix = cameras[c]->getPose();
+					ALfloat ListenerOri[] = { -cmatrix._21, cmatrix._22, -cmatrix._23, -cmatrix._31, cmatrix._32, -cmatrix._33 };
+					ALfloat ListenerPos[] = { cmatrix._41, cmatrix._42, cmatrix._43 };
 					ALfloat ListenerVel[] = { 0.0, 0.0, 0.0 };
 					alListenerfv(AL_POSITION,	ListenerPos);
 					alListenerfv(AL_VELOCITY,	ListenerVel);
@@ -574,9 +578,9 @@ namespace Ovgl
 								alGetSourcei(cameras[c]->voices[i]->source, AL_SOURCE_STATE, &state);
 								if(state == AL_PLAYING)
 								{
-									Matrix44* ematrix = &cameras[c]->voices[i]->instance->emitter->getPose();
-									ALfloat SourceOri[] = { ematrix->_21, ematrix->_22, ematrix->_23, ematrix->_31, ematrix->_32, ematrix->_33 };
-									ALfloat SourcePos[] = { ematrix->_41, ematrix->_42, ematrix->_43 };
+									Matrix44 ematrix = cameras[c]->voices[i]->instance->emitter->getPose();
+									ALfloat SourceOri[] = { ematrix._21, ematrix._22, ematrix._23, ematrix._31, ematrix._32, ematrix._33 };
+									ALfloat SourcePos[] = { ematrix._41, ematrix._42, ematrix._43 };
 									ALfloat SourceVel[] = { 0.0, 0.0, 0.0 };
 									alSourcefv( cameras[c]->voices[i]->source, AL_POSITION, SourcePos );
 									alSourcefv( cameras[c]->voices[i]->source, AL_VELOCITY, SourceVel );
@@ -592,7 +596,8 @@ namespace Ovgl
 		// Update prop bones.
 		for( uint32_t p = 0; p < props.size(); p++ )
 		{
-			props[p]->Update(props[p]->mesh->skeleton->root_bone, &MatrixIdentity() );
+		    Matrix44 mat = MatrixIdentity();
+			props[p]->Update(props[p]->mesh->skeleton->root_bone, &mat );
 		}
 
 		// Update physics scene.
@@ -733,7 +738,8 @@ namespace Ovgl
 
 	Prop* Actor::Kill()
 	{
-		Prop* body = scene->CreateProp(mesh, &(offset * getPose()) );
+	    Matrix44 mat = (offset * getPose());
+		Prop* body = scene->CreateProp(mesh, &mat );
 		Release();
 		return body;
 	}
