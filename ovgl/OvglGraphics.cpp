@@ -166,7 +166,7 @@ namespace Ovgl
 		return adjustedrect;
 	}
 
-	RenderTarget::RenderTarget( Instance* Instance, Window* hWindow, Vector4* viewport, uint32_t flags )
+	RenderTarget::RenderTarget( Instance* Instance, Window* hWindow, const Vector4& viewport, uint32_t flags )
 	{
 		Inst = Instance;
 		hWin = hWindow;
@@ -178,7 +178,7 @@ namespace Ovgl
 		motionBlur = true;
 		multiSample = true;
 		eye_luminance = 0.0f;
-		Rect = *viewport;
+		Rect = viewport;
 
 		Ovgl::Rect adjustedrect = WindowAdjustedRect( hWin, &Rect );
 
@@ -258,7 +258,7 @@ namespace Ovgl
 		hWin->RenderTargets.push_back(this);
 	};
 
-	RenderTarget::RenderTarget( Instance* Instance, Texture* hTexture, Vector4* viewport, uint32_t flags )
+	RenderTarget::RenderTarget( Instance* Instance, Texture* hTexture, const Vector4& viewport, uint32_t flags )
 	{
 		Inst = Instance;
 		hWin = NULL;
@@ -271,7 +271,7 @@ namespace Ovgl
 		multiSample = true;
 		eye_luminance = 0.0f;
 
-		Rect = *viewport;
+		Rect = viewport;
 
 		Ovgl::Rect adjustedrect = TextureAdjustedRect( hTex, &Rect);
 

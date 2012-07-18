@@ -293,7 +293,7 @@ namespace Ovgl
 					fread( &matrix, sizeof(Matrix44), 1, input );
 					uint32_t mesh_index;
 					fread( &mesh_index, 4, 1, input );
-					Prop* prop = scene->CreateProp( Meshes[mesh_index + mesh_offset], &matrix );
+					Prop* prop = scene->CreateProp( Meshes[mesh_index + mesh_offset], matrix );
 					for( uint32_t b = 0; b < Meshes[mesh_index + mesh_offset]->skeleton->bones.size(); b++ )
 					{
 						uint32_t bone_flags;
@@ -311,7 +311,7 @@ namespace Ovgl
 					fread( &matrix, sizeof(Matrix44), 1, input );
 					uint32_t mesh_index;
 					fread( &mesh_index, 4, 1, input );
-					Object* object = scene->CreateObject( Meshes[mesh_index + mesh_offset], &matrix );
+					Object* object = scene->CreateObject( Meshes[mesh_index + mesh_offset], matrix );
 					uint32_t bone_flags;
 					fread( &bone_flags, 4, 1, input );
 					object->CollisionMesh->set_flags(bone_flags);
@@ -334,7 +334,7 @@ namespace Ovgl
 					// Get the pose of this camera.
 					Matrix44 matrix;
 					fread( &matrix, sizeof(Matrix44), 1, input );
-					scene->CreateCamera( &matrix );
+					scene->CreateCamera( matrix );
 				}
 			}
 			// Close file.

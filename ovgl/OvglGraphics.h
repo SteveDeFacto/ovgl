@@ -33,11 +33,11 @@ namespace Ovgl
 			/**
 			* This is the constuctor for a window based render target.
 			*/
-			RenderTarget( Ovgl::Instance* Instance, Ovgl::Window* window, Ovgl::Vector4* viewport, uint32_t flags );
+			RenderTarget( Ovgl::Instance* Instance, Ovgl::Window* window, const Ovgl::Vector4& viewport, uint32_t flags );
 			/**
 			* This is the constuctor for a texture based render target.
 			*/
-			RenderTarget( Ovgl::Instance* Instance, Ovgl::Texture* texture, Ovgl::Vector4* viewport, uint32_t flags );
+			RenderTarget( Ovgl::Instance* Instance, Ovgl::Texture* texture, const Ovgl::Vector4& viewport, uint32_t flags );
 			/**
 			* This is a pointer to the instance which owns this render target.
 			*/

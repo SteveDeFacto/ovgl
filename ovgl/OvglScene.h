@@ -466,7 +466,7 @@ namespace Ovgl
 			* This function adds a Ovgl::Camera to the scene.
 			* @param matrix The matrix which defines the the starting pose of the camera.
 			*/
-			Camera* CreateCamera( Matrix44* view_matrix );
+			Camera* CreateCamera( const Matrix44& view_matrix );
 			/**
 			* This function adds a Ovgl::Actor to the scene.
 			* @param mesh The mesh object that will be displayed for the actor.
@@ -474,24 +474,24 @@ namespace Ovgl
 			* @param height The hieght of the actor's capsule within the physics scene which is the distance at which a character comes in contact with objects in the character's horizontal plane.
 			* @param matrix The matrix which defines the the starting pose of the actor.
 			*/
-			Actor* CreateActor( Mesh* mesh, float radius, float height, Matrix44* matirx, Matrix44* offset );
+			Actor* CreateActor( Mesh* mesh, float radius, float height, const Matrix44& matirx, const Matrix44& offset );
 			/**
 			* This function adds a Ovgl::Prop to the scene.
 			* @param mesh The mesh that will be displayed for the prop.
 			* @param matrix The matrix which defines the the starting pose of the prop.
 			*/
-			Prop* CreateProp( Mesh* mesh, Matrix44* matrix);
+			Prop* CreateProp( Mesh* mesh, const Matrix44& matrix);
 			/**
 			* This function adds a Ovgl::Prop to the scene.
 			* @param mesh The mesh that will be displayed for the object.
 			* @param matrix The matrix which defines the pose of the object.
 			*/
-			Object* CreateObject( Mesh* mesh, Matrix44* matrix);
+			Object* CreateObject( Mesh* mesh, const Matrix44& matrix);
 			/**
 			* This function adds a Ovgl::Emitter to the scene.
 			* @param matrix The matrix which defines the starting pose of the emitter.
 			*/
-			Emitter* CreateEmitter( Matrix44* matrix );
+			Emitter* CreateEmitter( const Matrix44& matrix );
 			/**
 			* This function creates a constraint which binds two Ovgl::CMesh together.
 			* @param obj1 First Ovgl::CMesh.

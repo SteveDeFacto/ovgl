@@ -78,7 +78,7 @@ int main()
 	Window->On_KeyDown = KeyDown;
 
 	// Create Render Target
-	RenderTarget = new Ovgl::RenderTarget(Inst, Window, &Ovgl::Vector4(0.0f, 0.0f, 0.999f, 0.999f), NULL);
+	RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::Vector4(0.0f, 0.0f, 0.999f, 0.999f), NULL);
 	RenderTarget->bloom = 4;
 	RenderTarget->motionBlur = true;
 	RenderTarget->multiSample = true;
@@ -91,10 +91,10 @@ int main()
 	Scene = MediaLibrary->CreateScene();
 
 	// Add light to scene.
-	Light = Scene->CreateLight(&Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), &Ovgl::Vector4( 1.0f, 1.0f, 1.0f, 1.0f ));
+	Light = Scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 1.0f, 1.0f, 1.0f, 1.0f ));
 	
 	// Add camera to scene
-	Camera = Scene->CreateCamera(&Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
+	Camera = Scene->CreateCamera(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
 	
 	// Set camera as view for render target
 	RenderTarget->View = Camera;
@@ -112,14 +112,14 @@ int main()
 	MediaLibrary->ImportAudio("..\\media\\audio\\glacier.ogg")->CreateAudioInstance(NULL, true);
 
 	// Add object to scene
-	Object = Scene->CreateObject(Mesh, &Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
+	Object = Scene->CreateObject(Mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
 	Object->materials[0]->setFSTexture("txDiffuse", Texture2);
 
 	// Add actor to scene
-	Actor = Scene->CreateActor(Mesh2, 0.1f, 1.0f, &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+	Actor = Scene->CreateActor(Mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
 	Actor->PlayAnimation( &Mesh2->skeleton->animations[0], 0, 10, true);
 
-	Actor2 = Scene->CreateActor(Mesh2, 0.1f, 1.0f, &Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), &Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+	Actor2 = Scene->CreateActor(Mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
 	Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
 
 	// Set scene sky box

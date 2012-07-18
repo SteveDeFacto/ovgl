@@ -50,7 +50,7 @@ namespace Ovgl
 		return 0;
 	}
 
-	Camera* Scene::CreateCamera( Matrix44* matrix )
+	Camera* Scene::CreateCamera( const Matrix44& matrix )
 	{
 		// Create a new camera object.
 		Camera* camera = new Camera;
@@ -63,7 +63,7 @@ namespace Ovgl
 
 		// Build a motion state object for bullet positioned where we want the camera.
 		btTransform Transform;
-		Transform.setFromOpenGLMatrix((float*)matrix);
+		Transform.setFromOpenGLMatrix((float*)&matrix);
 		btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
 
 		// Create a sphere shape.
@@ -134,7 +134,7 @@ namespace Ovgl
 		return light;
 	};
 
-	Emitter* Scene::CreateEmitter( Matrix44* matrix )
+	Emitter* Scene::CreateEmitter( const Matrix44& matrix )
 	{
 		// Create a new emitter object.
 		Emitter* emitter = new Emitter;
@@ -144,7 +144,7 @@ namespace Ovgl
 
 		// Build a motion state object for bullet positioned where we want the emitter.
 		btTransform Transform;
-		Transform.setFromOpenGLMatrix((float*)matrix);
+		Transform.setFromOpenGLMatrix((float*)&matrix);
 		btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
 
 		// Create a sphere shape.
@@ -172,7 +172,7 @@ namespace Ovgl
 		return emitter;
 	};
 
-	Prop* Scene::CreateProp( Mesh* mesh, Matrix44* matrix )
+	Prop* Scene::CreateProp( Mesh* mesh, const Matrix44& matrix )
 	{
 		// Create a new prop object.
 		Prop* prop = new Prop;
@@ -188,7 +188,7 @@ namespace Ovgl
 		for( uint32_t i = 0; i < mesh->skeleton->bones.size(); i++ )
 		{
 			btTransform Transform;
-			Matrix44 mat = (mesh->skeleton->bones[i]->matrix * (*matrix) );
+			Matrix44 mat = (mesh->skeleton->bones[i]->matrix * matrix );
 			Transform.setFromOpenGLMatrix((float*)&mat );
 			btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
 			btVector3 localInertia(0,0,0);
@@ -219,7 +219,7 @@ namespace Ovgl
 		return prop;
 	};
 
-	Object* Scene::CreateObject( Mesh* mesh, Matrix44* matrix )
+	Object* Scene::CreateObject( Mesh* mesh, const Matrix44& matrix )
 	{
 		Object* object = new Object;
 		object->scene = this;
@@ -230,7 +230,7 @@ namespace Ovgl
 			object->materials[s] = Inst->DefaultMedia->Materials[0];
 		}
 		btTransform Transform;
-		Transform.setFromOpenGLMatrix((float*)matrix);
+		Transform.setFromOpenGLMatrix((float*)&matrix);
 		btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
 		btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, mesh->triangle_mesh, btVector3(0,0,0) );
 		CMesh* CollisionMesh = new CMesh;
@@ -243,7 +243,7 @@ namespace Ovgl
 		return object;
 	};
 
-	Actor* Scene::CreateActor( Mesh* mesh, float radius, float height, Matrix44* matrix, Matrix44* offset )
+	Actor* Scene::CreateActor( Mesh* mesh, float radius, float height, const Matrix44& matrix, const Matrix44& offset )
 	{
 		Actor* actor = new Actor;
 		actor->mesh = mesh;
@@ -283,7 +283,7 @@ namespace Ovgl
 		}
 		actor->crouch = false;
 		actor->onGround = false;
-		actor->offset = *offset;
+		actor->offset = offset;
 		actor->CameraOffset = MatrixIdentity();
 		actor->lookDirection = Vector3( 0.0f, 0.0f, 0.0f );
 		actor->velocity = Vector3( 0.0f, 0.0f, 0.0f );
@@ -294,7 +294,7 @@ namespace Ovgl
 		actor->scene = this;
 		btTransform startTransform;
 		startTransform.setIdentity ();
-		startTransform.setFromOpenGLMatrix((float*)matrix);
+		startTransform.setFromOpenGLMatrix((float*)&matrix);
 		actor->ghostObject = new btPairCachingGhostObject();
 		actor->ghostObject->setWorldTransform(startTransform);
 		Inst->PhysicsBroadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
@@ -307,8 +307,8 @@ namespace Ovgl
 		DynamicsWorld->addCollisionObject(actor->ghostObject, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
 		DynamicsWorld->addAction(actor->controller);
 		Matrix44 camera_matrix;
-		camera_matrix = *matrix * MatrixTranslation( 0.0f, height, 0.0f );
-		actor->camera = CreateCamera( &camera_matrix );
+		camera_matrix = matrix * MatrixTranslation( 0.0f, height, 0.0f );
+		actor->camera = CreateCamera( camera_matrix );
 		actors.push_back(actor);
 		return actor;
 	};
@@ -739,7 +739,7 @@ namespace Ovgl
 	Prop* Actor::Kill()
 	{
 	    Matrix44 mat = (offset * getPose());
-		Prop* body = scene->CreateProp(mesh, &mat );
+		Prop* body = scene->CreateProp(mesh, mat );
 		Release();
 		return body;
 	}
