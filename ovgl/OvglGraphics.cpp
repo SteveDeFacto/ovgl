@@ -204,10 +204,6 @@ namespace Ovgl
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, DepthBuffer);
 
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if(status != GL_FRAMEBUFFER_COMPLETE)
-		{
-			OutputDebugString( L"Unable to create multi sample frame buffer" );
-		}
 
 		// Effect framebuffer
 		glGenFramebuffers(1, &EffectFrameBuffer);
@@ -249,10 +245,6 @@ namespace Ovgl
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width/4, height/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if(status != GL_FRAMEBUFFER_COMPLETE)
-		{
-			OutputDebugString( L"Unable to create effect frame buffer" );
-		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		wglSwapIntervalEXT(hWin->vsync);
 		hWin->RenderTargets.push_back(this);
@@ -297,10 +289,6 @@ namespace Ovgl
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, DepthBuffer);
 
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if(status != GL_FRAMEBUFFER_COMPLETE)
-		{
-			OutputDebugString( L"Unable to create multi sample frame buffer" );
-		}
 
 		// Effect framebuffer
 		glGenFramebuffers(1, &EffectFrameBuffer);
@@ -342,10 +330,7 @@ namespace Ovgl
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width/4, height/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if(status != GL_FRAMEBUFFER_COMPLETE)
-		{
-			OutputDebugString( L"Unable to create effect frame buffer" );
-		}
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	};
 
@@ -1206,10 +1191,6 @@ namespace Ovgl
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, DepthBuffer);
 
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if(status != GL_FRAMEBUFFER_COMPLETE)
-		{
-			OutputDebugString( L"Unable to create multi sample frame buffer" );
-		}
 
 		// Effect framebuffer
 		glGenFramebuffers(1, &EffectFrameBuffer);
@@ -1251,10 +1232,6 @@ namespace Ovgl
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width/4, height/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if(status != GL_FRAMEBUFFER_COMPLETE)
-		{
-			OutputDebugString( L"Unable to create effect frame buffer" );
-		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		hWin->hWnd->setActive(false);
 	}

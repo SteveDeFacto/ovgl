@@ -338,22 +338,22 @@ namespace Ovgl
 		controller->jump();
 	}
 
-	void Prop::setPose( Matrix44* matrix )
+    void Prop::setPose( const Matrix44& matrix )
 	{
-		bones[mesh->skeleton->root_bone->index]->set_pose(matrix);
+        bones[mesh->skeleton->root_bone->index]->set_pose(matrix);
 	}
 
-	void Object::setPose( Matrix44* matrix )
+    void Object::setPose( const Matrix44& matrix )
 	{
 		btTransform Transform;
-		Transform.setFromOpenGLMatrix( (float*)matrix );
+        Transform.setFromOpenGLMatrix( (float*)&matrix );
 		CollisionMesh->actor->setWorldTransform(Transform);
 	}
 
-	void Camera::setPose( Matrix44* matrix )
+    void Camera::setPose( const Matrix44& matrix )
 	{
 		btTransform Transform;
-		Transform.setFromOpenGLMatrix( (float*)matrix );
+        Transform.setFromOpenGLMatrix( (float*)&matrix );
 		CollisionMesh->actor->setWorldTransform(Transform);
 	}
 
@@ -509,7 +509,7 @@ namespace Ovgl
 			Matrix44 cam_mat;
 			cam_mat = MatrixTranslation( 0.0f, 0.0f, actors[a]->radius / 2 ) * MatrixRotationEuler( actors[a]->lookDirection.x, actors[a]->lookDirection.y, actors[a]->lookDirection.z) * MatrixTranslation(matrix._41, matrix._42, matrix._43) * MatrixTranslation( 0.0f, (actors[a]->height * shape->getLocalScaling().getY()) / 2, 0.0f );
 			Matrix44 offsetedcam = (actors[a]->CameraOffset * cam_mat);
-			actors[a]->camera->setPose(&offsetedcam);
+            actors[a]->camera->setPose(offsetedcam);
 
 			Matrix44 new_matrix = MatrixRotationY( -actors[a]->lookDirection.z) * MatrixTranslation(matrix._41, matrix._42, matrix._43);
 			actors[a]->ghostObject->getWorldTransform().setFromOpenGLMatrix((float*)&new_matrix);

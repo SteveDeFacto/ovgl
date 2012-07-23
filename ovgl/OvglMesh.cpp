@@ -167,9 +167,9 @@ namespace Ovgl
 		}
 	}
 
-	void CMesh::set_pose( Matrix44* matrix )
+    void CMesh::set_pose( const Matrix44& matrix )
 	{
-		actor->getWorldTransform().setFromOpenGLMatrix((float*)matrix);
+        actor->getWorldTransform().setFromOpenGLMatrix((float*)&matrix);
 	}
 
 	Matrix44 CMesh::get_pose()

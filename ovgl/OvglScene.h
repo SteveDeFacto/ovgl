@@ -113,7 +113,7 @@ namespace Ovgl
 			* Sets the pose of this camera.
 			* @param matrix The matrix which defines the new pose for this camera.
 			*/
-			void setPose( Matrix44* matrix );
+            void setPose( const Matrix44& matrix );
 			/**
 			* Returns the current pose of the camera.
 			*/
@@ -150,7 +150,7 @@ namespace Ovgl
 			* Sets the pose of this light.
 			* @param matrix The matrix which defines the new pose for this light.
 			*/
-			void setPose( Matrix44* matrix );
+            void setPose( const Matrix44& matrix );
 			/**
 			* Returns the current pose of this light.
 			*/
@@ -218,7 +218,7 @@ namespace Ovgl
 			* Sets the pose of this prop.
 			* @param matrix The matrix which defines the new pose for this prop.
 			*/
-			void setPose( Matrix44* matrix );
+            void setPose( const Matrix44& matrix );
 			/**
 			* Returns the current pose of this prop.
 			*/
@@ -256,7 +256,7 @@ namespace Ovgl
 			* Sets the pose of this object.
 			* @param matrix The matrix which defines the new pose for this object.
 			*/
-			void setPose( Matrix44* matrix );
+            void setPose( const Matrix44& matrix );
 			/**
 			* Returns the current pose of this object.
 			*/

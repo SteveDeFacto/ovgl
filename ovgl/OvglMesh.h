@@ -69,7 +69,7 @@ namespace Ovgl
 			~CMesh();
 			Scene* scene;
 			btRigidBody* actor;
-			void set_pose( Matrix44* matrix );
+            void set_pose( const Matrix44& matrix );
 			Matrix44 get_pose();
 			void set_flags( uint32_t flags );
 			uint32_t get_flags();

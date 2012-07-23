@@ -201,16 +201,6 @@ namespace Ovgl
 			FILE *input = NULL;
 			input = fopen( file.c_str(),"rb" );
 
-			// If file was unable to be opened present error message to debug output and end function
-			if ( input == NULL )
-			{
-				std::wstring wfile;
-				wfile = L"Unable to open the file ";
-				wfile.append(file.begin(), file.end());
-				OutputDebugString( wfile.c_str() );
-				return;
-			}
-
 			//Get number of meshes.
 			uint32_t mesh_count;
 			fread( &mesh_count, 4, 1, input );
