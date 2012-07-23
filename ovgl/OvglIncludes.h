@@ -54,9 +54,6 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
-// FreeImage Headers
-#include <FreeImage.h>
-
 // Cg Headers
 #include <Cg/cg.h>
 #include <Cg/cgGL.h>

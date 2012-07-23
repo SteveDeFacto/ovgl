@@ -668,52 +668,12 @@ namespace Ovgl
 		glBindTexture(GL_TEXTURE_CUBE_MAP, texture->Image);
 		for (int i = 0; i < 6; i++)
 		{
-			// Image format
-			FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
-
-			// Check the file signature and deduce its format
-			fif = FreeImage_GetFileType( CubeFaces[i].c_str(), 0 );
-
-			// If still unknown, try to guess the file format from the file extension
-			if( fif == FIF_UNKNOWN )
-			{
-				fif = FreeImage_GetFIFFromFilename( CubeFaces[i].c_str() );
-			}
-
-			// If still unkown, return NULL
-			if( fif == FIF_UNKNOWN )
-			{
-				return NULL;
-			}
-
-			// Load texture
-			FIBITMAP* dib = FreeImage_Load( fif, CubeFaces[i].c_str() );
-
-			// Convert to RGB format
-			dib = FreeImage_ConvertTo32Bits( dib );
-
-			// Get raw data and dimensions
-			uint32_t w = FreeImage_GetWidth( dib );
-			uint32_t h = FreeImage_GetHeight( dib );
-			BYTE* pixeles = FreeImage_GetBits( dib );
-			GLubyte* textura = new GLubyte[4*w*h];
-
-			for( uint32_t j = 0; j < w * h; j++ )
-			{
-				textura[j*4+0] = pixeles[j*4+2];
-				textura[j*4+1] = pixeles[j*4+1];
-				textura[j*4+2] = pixeles[j*4+0];
-				textura[j*4+3] = pixeles[j*4+3];
-			}
+			sf::Image Image;
+			Image.loadFromFile(CubeFaces[i].c_str());
+			Image.flipVertically();
 
 			// Create texture.
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura);
-
-			// Release FreeImage's copy of the image
-			FreeImage_Unload( dib );
-
-			// delete our converted copy of the texture pixels
-			delete [] textura;
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, Image.getSize().x, Image.getSize().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, Image.getPixelsPtr());
 		}
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -731,98 +691,34 @@ namespace Ovgl
 
 	Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
 	{
-		struct stat stFileInfo;
-		int intStat = stat(file.c_str(), &stFileInfo);
-		if(intStat == 0)
-		{
-			// Image format
-			FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+		sf::Image Image;
+		Image.loadFromFile(file.c_str());
 
-			// Check the file signature and deduce its format
-			fif = FreeImage_GetFileType( file.c_str(), 0 );
+		// Create new texture
+		Ovgl::Texture* texture = new Ovgl::Texture;
 
-			// If still unknown, try to guess the file format from the file extension
-			if( fif == FIF_UNKNOWN )
-			{
-				fif = FreeImage_GetFIFFromFilename( file.c_str() );
-			}
+		// Set the texture's media library handle to this media library
+		texture->MLibrary = this;
 
-			// If still unkown, return NULL
-			if( fif == FIF_UNKNOWN )
-			{
-				return NULL;
-			}
+		// Set the texture's file name.
+		texture->File = file;
 
-			// Load texture
-			FIBITMAP* dib = FreeImage_Load( fif, file.c_str() );
+		texture->HasAlpha = false;
 
-			// Check if file was loaded
-			if(dib == NULL)
-			{
-				return NULL;
-			}
+		// Create OpenGL texture
+		glGenTextures( 1, &texture->Image );
+		glBindTexture( GL_TEXTURE_2D, texture->Image );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, Image.getSize().x, Image.getSize().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, Image.getPixelsPtr() );
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture( GL_TEXTURE_2D, NULL );
 
-			// Get raw data and dimensions
-			uint32_t w = FreeImage_GetWidth( dib );
-			uint32_t h = FreeImage_GetHeight( dib );
+		// Add texture to media library
+		Textures.push_back( texture );
 
-			// Check if texture is valid.
-			if( w == 0 && h == 0 )
-			{
-				return NULL;
-			}
-
-			// Create new texture
-			Ovgl::Texture* texture = new Ovgl::Texture;
-
-			// Set the texture's media library handle to this media library
-			texture->MLibrary = this;
-
-			// Set the texture's file name.
-			texture->File = file;
-
-			texture->HasAlpha = !!FreeImage_IsTransparent( dib );
-
-			// Convert to RGB format
-			dib = FreeImage_ConvertTo32Bits( dib );
-
-			BYTE* pixeles = FreeImage_GetBits( dib );
-			GLubyte* textura = new GLubyte[4*w*h];
-
-			for( uint32_t j = 0; j < w * h; j++ )
-			{
-				textura[j*4+0] = pixeles[j*4+2];
-				textura[j*4+1] = pixeles[j*4+1];
-				textura[j*4+2] = pixeles[j*4+0];
-				textura[j*4+3] = pixeles[j*4+3];
-			}
-
-			// Create OpenGL texture
-			glGenTextures( 1, &texture->Image );
-			glBindTexture( GL_TEXTURE_2D, texture->Image );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
-			glGenerateMipmap(GL_TEXTURE_2D);
-			glBindTexture( GL_TEXTURE_2D, NULL );
-
-			// Release FreeImage's copy of the image
-			FreeImage_Unload( dib );
-
-			// delete our converted copy of the texture pixels
-			delete [] textura;
-
-			// Add texture to media library
-			Textures.push_back( texture );
-
-			// Return texture pointer
-			return texture;
-		}
-		else
-		{
-			// File does not exist!
-			return NULL;
-		}
+		// Return texture pointer
+		return texture;
 	}
 
 	Ovgl::Shader* Ovgl::MediaLibrary::ImportShader( const std::string& file )

@@ -32,7 +32,7 @@ namespace Ovgl
 	void BuildDefaultMedia( Instance* inst )
 	{
 		inst->DefaultMedia = new MediaLibrary(inst, "");
-	
+
 		Shader* DefaultEffect = new Shader;
 		Shader* SkyboxEffect = new Shader;
 		Shader* BlurEffect = new Shader;
@@ -163,13 +163,13 @@ namespace Ovgl
 		"	float4 bw				: ATTR3;"
 		"	float4 bi				: ATTR4;"
 		"};"
-	
+
 		"struct FS_INPUT"
 		"{"
 		"  float4 pos				: POSITION;"
 		"  float3 tex				: TEXCOORD0;"
 		"};"
-	
+
 		"struct FS_OUTPUT"
 		"{"
 		"  float4 color				: COLOR;"
@@ -314,9 +314,9 @@ namespace Ovgl
 		"};"
 
 		"float Luminance = 1.0f;"
-	
+
 		"uniform sampler2D txDiffuse;"
-	
+
 		"FS_OUTPUT FS( FS_INPUT In)"
 		"{"
 		"	FS_OUTPUT Out;"
@@ -431,10 +431,10 @@ namespace Ovgl
 		inst->DefaultMedia->Shaders.push_back( BloomEffect );
 		inst->DefaultMedia->Shaders.push_back( AddEffect );
 		inst->DefaultMedia->Shaders.push_back( BrightnessEffect );
-	
+
 		// Create Default Material
 		Material* DefaultMaterial = new Material;
-	
+
 		DefaultMaterial->ShaderProgram = DefaultEffect;
 		DefaultMaterial->MLibrary = inst->DefaultMedia;
 		DefaultMaterial->setFSTexture("txDiffuse", DefaultMaterial->MLibrary->CreateTexture( 256, 256) );
@@ -543,9 +543,6 @@ namespace Ovgl
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable (GL_CULL_FACE);
 
-		// Initialize FreeImage
-		FreeImage_Initialise();
-
 		// Initialize CG
 		CgContext = cgCreateContext();
 		CgVertexProfile = cgGLGetLatestProfile(CG_GL_VERTEX);
@@ -587,7 +584,7 @@ namespace Ovgl
 		bool Found = false;
 		for( uint32_t i = 0; i < Variables.size(); i++ )
 		{
-			
+
 			if(Variables[i].first == CgVariable)
 			{
 				Variables[i].second = data;
@@ -693,7 +690,7 @@ namespace Ovgl
 	{
 		sf::Clock clock;
 		uint32_t previousTime = clock.getElapsedTime().asMilliseconds();
-	
+
 		// Main message loop
 		while( !g_Quit )
 		{

@@ -30,7 +30,6 @@ namespace Ovgl
 			Instance* inst;
 			sf::Window* hWnd;
 			sf::Thread* event_thread;
-			POINT LastPoint;
 			std::vector< RenderTarget* > RenderTargets;
 			bool sizing;
 			bool active;

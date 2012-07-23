@@ -131,10 +131,6 @@ namespace Ovgl
 			*/
 			bool motionBlur;
 			/**
-			* Handle to draw context.
-			*/
-			HDC hDC;
-			/**
 			* Render auto luminance effect.
 			*/
 			void AutoLuminance();

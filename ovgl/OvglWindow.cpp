@@ -349,8 +349,6 @@ namespace Ovgl
 		On_MouseMove = NULL;
 		On_MouseDown = NULL;
 		On_MouseUp = NULL;
-		LastPoint.x = 0;
-		LastPoint.y = 0;
 		sf::ContextSettings settings;
 		settings.depthBits = 24;
 		settings.stencilBits = 8;
@@ -467,12 +465,12 @@ namespace Ovgl
 	{
 		if(state)
 		{
-			
+
 			fullscreen = true;
 		}
 		else
 		{
-			
+
 			fullscreen = false;
 		}
 	}

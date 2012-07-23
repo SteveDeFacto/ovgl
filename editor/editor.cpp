@@ -39,7 +39,7 @@ Ovgl::Light*				Light;
 
 void MouseMove(long x, long y)
 {
-	Camera->setPose( &((Ovgl::MatrixRotationY(x / 1000.0f ) * Ovgl::MatrixRotationX( -y / 1000.0f)) * Camera->getPose() ) );
+	Camera->setPose( ((Ovgl::MatrixRotationY(x / 1000.0f ) * Ovgl::MatrixRotationX( -y / 1000.0f)) * Camera->getPose() ) );
 }
 
 void KeyDown(char key)
@@ -49,18 +49,18 @@ void KeyDown(char key)
 		Inst->g_Quit = true;
 	}
 	if( key == 'W')
-		Camera->setPose( &(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * Camera->getPose() ) );
+		Camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * Camera->getPose() ) );
 	if( key == 'S')
-		Camera->setPose( &(Ovgl::MatrixTranslation( 0.0f, 0.0f, -0.1f ) * Camera->getPose() ) );
+		Camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, -0.1f ) * Camera->getPose() ) );
 	if( key == 'A')
 	{
 		Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 1, 6, false);
-		Camera->setPose( &(Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
+		Camera->setPose( (Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
 	}
 	if( key == 'D')
 	{
 		Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
-		Camera->setPose( &(Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
+		Camera->setPose( (Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
 	}
 }
 
@@ -92,19 +92,19 @@ int main()
 
 	// Add light to scene.
 	Light = Scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 1.0f, 1.0f, 1.0f, 1.0f ));
-	
+
 	// Add camera to scene
 	Camera = Scene->CreateCamera(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
-	
+
 	// Set camera as view for render target
 	RenderTarget->View = Camera;
-	
+
 	// Create cubemap texture
 	Texture1 = MediaLibrary->ImportCubeMap( "..\\media\\textures\\skybox\\front.png", "..\\media\\textures\\skybox\\back.png", "..\\media\\textures\\skybox\\top.png",
 											"..\\media\\textures\\skybox\\bottom.png", "..\\media\\textures\\skybox\\left.png", "..\\media\\textures\\skybox\\right.png");
 	// Create 2D texture
 	Texture2 = MediaLibrary->ImportTexture("..\\media\\textures\\Grass.png");
-	
+
 	// Import mesh
 	Mesh = MediaLibrary->ImportModel( "..\\media\\meshes\\plane.dae", true );
 	Mesh2 = MediaLibrary->ImportModel( "..\\media\\meshes\\test.dae", true );
