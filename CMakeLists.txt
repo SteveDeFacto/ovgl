@@ -8,7 +8,7 @@ option(OVGL_BUILD_DOC "Auto build documentation evertime Ovgl is compiled?" OFF)
 option(OVGL_BUILD_EDITOR "Build Ovgl examples" ON)
 option(OVGL_BUILD_EXAMPLES "Build Ovgl examples" ON)
 
-add_subdirectory(ovgl)
+add_subdirectory(src)
 
 if(OVGL_BUILD_EDITOR)
 	add_subdirectory(editor)

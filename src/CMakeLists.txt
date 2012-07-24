@@ -33,7 +33,7 @@ link_directories(
 "${BULLET_DIR}/lib"
 "${GLEW_DIR}/lib")
 
-add_executable( Ovgl WIN32
+add_library( Ovgl SHARED
 "OvglAudio.h"
 "OvglGraphics.h"
 "OvglIncludes.h"

@@ -16,9 +16,6 @@
 * @brief None.
 */
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <winnt.h>
 #include <Ovgl.h>
 
 Ovgl::Instance*				Inst;
