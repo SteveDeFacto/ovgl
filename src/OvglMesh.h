@@ -40,7 +40,7 @@ namespace Ovgl
 		* Vertices represent points in a mesh that faces connect to form polygons.
 		* @brief Mesh vertex class.
 		*/
-		class __declspec(dllexport) Vertex
+        class DLLEXPORT Vertex
 		{
 		public:
 			Ovgl::Vector3 position;
@@ -55,14 +55,14 @@ namespace Ovgl
 		* Faces are a list of 3 vertex indices that make up a triangle.
 		* @brief Mesh face class.
 		*/
-		class __declspec(dllexport) Face
+        class DLLEXPORT Face
 		{
 		public:
 			uint32_t indices[3];
 			Face Flip();
 		};
 
-		class __declspec(dllexport) CMesh
+        class DLLEXPORT CMesh
 		{
 		public:
 			CMesh();
@@ -75,7 +75,7 @@ namespace Ovgl
 			uint32_t get_flags();
 		};
 
-		class __declspec(dllexport) Mesh
+        class DLLEXPORT Mesh
 		{
 		public:
 			Mesh();

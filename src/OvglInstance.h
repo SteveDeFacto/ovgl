@@ -62,7 +62,7 @@ namespace Ovgl
 		class MediaLibrary;
 		class Window;
 
-		class __declspec(dllexport) Rect
+        class DLLEXPORT Rect
 		{
 		public:
 			Rect();
@@ -73,7 +73,7 @@ namespace Ovgl
 			uint32_t								bottom;
 		};
 
-		class __declspec(dllexport) Texture
+        class DLLEXPORT Texture
 		{
 		public:
 			MediaLibrary*							MLibrary;
@@ -83,7 +83,7 @@ namespace Ovgl
 			void Release();
 		};
 
-		class __declspec(dllexport) Shader
+        class DLLEXPORT Shader
 		{
 		public:
 			MediaLibrary*							MLibrary;
@@ -93,7 +93,7 @@ namespace Ovgl
 			void Release();
 		};
 
-		class __declspec(dllexport) Material
+        class DLLEXPORT Material
 		{
 		public:
 			MediaLibrary*							MLibrary;
@@ -111,7 +111,7 @@ namespace Ovgl
 		};
 
 		// Instance Class
-		class __declspec(dllexport) Instance
+        class DLLEXPORT Instance
 		{
 		public:
 			Instance( uint32_t flags );
@@ -136,6 +136,6 @@ namespace Ovgl
 			MediaLibrary*							CreateMediaLibrary( const std::string& file );
 		};
 	
-		__declspec(dllexport) Instance* Create( uint32_t flags );
+        DLLEXPORT Instance* Create( uint32_t flags );
 	}
 }

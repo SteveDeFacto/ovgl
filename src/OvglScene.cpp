@@ -29,26 +29,26 @@
 
 namespace Ovgl
 {
-	btScalar DisablePairCollision::addSingleResult(btManifoldPoint& cp, const btCollisionObject* colObj0, int32_t partId0, int32_t index0, const btCollisionObject* colObj1, int32_t partId1, int32_t index1)
-	{
-		// Create an identity matrix.
-		btTransform frame;
-		frame.setIdentity();
+    btScalar DisablePairCollision::addSingleResult(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1)
+    {
+        // Create an identity matrix.
+        btTransform frame;
+        frame.setIdentity();
 
-		// Create a constraint between the two bone shapes which are contacting each other.
-		btGeneric6DofConstraint* Constraint;
-		Constraint = new btGeneric6DofConstraint( *(btRigidBody*)colObj0, *(btRigidBody*)colObj1, frame, frame, true );
+        // Create a constraint between the two bone shapes which are contacting each other.
+        btGeneric6DofConstraint* Constraint;
+        Constraint = new btGeneric6DofConstraint( *(btRigidBody*)colObj0Wrap, *(btRigidBody*)colObj1Wrap, frame, frame, true );
 
-		// Set limits to be limitless.
-		Constraint->setLinearLowerLimit( btVector3(1, 1, 1 ) );
-		Constraint->setLinearUpperLimit( btVector3(0, 0, 0 ) );
-		Constraint->setAngularLowerLimit( btVector3(1, 1, 1 ) );
-		Constraint->setAngularUpperLimit( btVector3(0, 0, 0 ) );
+        // Set limits to be limitless.
+        Constraint->setLinearLowerLimit( btVector3(1, 1, 1 ) );
+        Constraint->setLinearUpperLimit( btVector3(0, 0, 0 ) );
+        Constraint->setAngularLowerLimit( btVector3(1, 1, 1 ) );
+        Constraint->setAngularUpperLimit( btVector3(0, 0, 0 ) );
 
-		// Add constraint to scene.
-		DynamicsWorld->addConstraint(Constraint, true);
-		return 0;
-	}
+        // Add constraint to scene.
+        DynamicsWorld->addConstraint(Constraint, true);
+        return 0;
+    }
 
 	Camera* Scene::CreateCamera( const Matrix44& matrix )
 	{
@@ -208,7 +208,7 @@ namespace Ovgl
 			{
 				if( np!=nq )
 				{
-					DisablePairCollision Callback;
+                    DisablePairCollision Callback;
 					Callback.DynamicsWorld = DynamicsWorld;
 					DynamicsWorld->contactPairTest(prop->bones[np]->actor, prop->bones[nq]->actor, Callback);
 				}

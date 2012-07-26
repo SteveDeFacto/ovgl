@@ -35,9 +35,9 @@ namespace Ovgl
 	class DisablePairCollision : public btCollisionWorld::ContactResultCallback
 	{
 	public:
-		virtual	btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObject* colObj0, int32_t partId0, int32_t index0, const btCollisionObject* colObj1, int32_t partId1, int32_t index1);
+        virtual	btScalar addSingleResult(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1);
 
-		btDiscreteDynamicsWorld*	DynamicsWorld;
+        btDiscreteDynamicsWorld* DynamicsWorld;
 	};
 
 	extern "C"
@@ -62,7 +62,7 @@ namespace Ovgl
 		* This class can be used to get the object that a ray is cast onto, the world space point of collision, and the local space point of collision.
 		* @brief Used to return ray collision information.
 		*/
-		class __declspec(dllexport) RayHit
+        class DLLEXPORT RayHit
 		{
 		public:
 			uint32_t type;
@@ -77,7 +77,7 @@ namespace Ovgl
 		* Constraint form bounds between objects in the physics scene.
 		* @brief Scene constraint class.
 		*/
-		class __declspec(dllexport) Constraint
+        class DLLEXPORT Constraint
 		{
 		public:
 			Scene* scene;
@@ -90,7 +90,7 @@ namespace Ovgl
 		* By setting it as the viewport of a Ovgl::RenderTarget you can render what this camera sees to the render target.
 		* @brief This class represents a camera within a Ovgl::Scene.
 		*/
-		class __declspec(dllexport) Camera
+        class DLLEXPORT Camera
 		{
 		public:
 			/**
@@ -127,7 +127,7 @@ namespace Ovgl
 		/**
 		* @brief This class represents a light within a Ovgl::Scene.
 		*/
-		class __declspec(dllexport) Light
+        class DLLEXPORT Light
 		{
 		public:
 			/**
@@ -165,7 +165,7 @@ namespace Ovgl
 		* Props are dynamic objects such as vehicles, rag dolls, and any other objects that react to kinetic forces within the scene.
 		* @brief This class represents a prop within a Ovgl::Scene.
 		*/
-		class __declspec(dllexport) Prop
+        class DLLEXPORT Prop
 		{
 		public:
 			/**
@@ -233,7 +233,7 @@ namespace Ovgl
 		* Objects are static and cannot react to kinetic forces within the scene.
 		* @brief This class represents a object within a Ovgl::Scene.
 		*/
-		class __declspec(dllexport) Object
+        class DLLEXPORT Object
 		{
 		public:
 			/**
@@ -271,7 +271,7 @@ namespace Ovgl
 		* Emitters act as a reference points that provides the location and oriantation of the source of an emission for other classes such as Ovgl::AudioInstance and Ovgl::ParticleInstance.
 		* @brief This class represents a emitter within a Ovgl::Scene.
 		*/
-		class __declspec(dllexport) Emitter
+        class DLLEXPORT Emitter
 		{
 		public:
 			/**
@@ -297,7 +297,7 @@ namespace Ovgl
 			void Release();
 		};
 
-		class __declspec(dllexport) Actor
+        class DLLEXPORT Actor
 		{
 		public:
 			std::vector< Ovgl::AnimationInstance* > animations;
@@ -408,7 +408,7 @@ namespace Ovgl
 		* Scenes contain all the 3D objects that you will see on the screen such as lights, cameras, props, and actors. They also maintain the physics scene and objects.
 		* @brief This class contains a set of objects that make up a 3D scene.
 		*/
-		class __declspec(dllexport) Scene
+        class DLLEXPORT Scene
 		{
 		public:
 			/**

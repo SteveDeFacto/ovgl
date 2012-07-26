@@ -46,7 +46,7 @@ namespace Ovgl
 		if( !emitter )
 		{
 			alSourcei( voice->source, AL_SOURCE_RELATIVE, AL_TRUE );
-		}	
+        }
 		alSourcef( voice->source, AL_PITCH,	1.0f );
 		alSourcef( voice->source, AL_GAIN, 1.0f );
 		alSourcei( voice->source, AL_LOOPING, loop );

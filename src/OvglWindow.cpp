@@ -97,7 +97,7 @@ namespace Ovgl
 		case sf::Keyboard::Return:
 			return 13;
 			break;
-		case sf::Keyboard::Back:
+        case sf::Keyboard::BackSpace:
 			return 8;
 			break;
 		case sf::Keyboard::Tab:
@@ -344,35 +344,31 @@ namespace Ovgl
 		sizing = false;
 		active = true;
 		lockmouse = false;
+        title = name.c_str();
 		On_KeyDown = NULL;
 		On_KeyUp = NULL;
 		On_MouseMove = NULL;
 		On_MouseDown = NULL;
 		On_MouseUp = NULL;
 		sf::ContextSettings settings;
-		settings.depthBits = 24;
-		settings.stencilBits = 8;
-		settings.antialiasingLevel = 4;
+        settings.depthBits = 32;
+        settings.stencilBits = 0;
+        settings.antialiasingLevel = 0;
 		settings.majorVersion = 3;
 		settings.minorVersion = 1;
-		hWnd = new sf::Window(sf::VideoMode(640, 480, 32), name.c_str(), sf::Style::Default, settings);
+        hWnd = new sf::Window(sf::VideoMode(640, 480, 32), name.c_str(), sf::Style::Default, settings);
+        hWnd->setActive( true );
+        glEnable (GL_BLEND);
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable (GL_CULL_FACE);
 		instance->Windows.push_back(this);
 	};
 
 	void Window::LockMouse( bool state )
-	{
+    {
 		if( state )
 		{
 			lockmouse = true;
-			Ovgl::Rect WindowRect;
-			WindowRect.left = hWnd->getPosition().x;
-			WindowRect.top = hWnd->getPosition().y;
-			WindowRect.right = hWnd->getPosition().x + hWnd->getSize().x;
-			WindowRect.bottom = hWnd->getPosition().y + hWnd->getSize().y;
-			WindowRect.left = WindowRect.left + GetSystemMetrics(SM_CXSIZEFRAME);
-			WindowRect.right = WindowRect.right - GetSystemMetrics(SM_CXSIZEFRAME);
-			WindowRect.top = WindowRect.top + GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYSIZEFRAME);
-			WindowRect.bottom = WindowRect.bottom - GetSystemMetrics(SM_CYSIZEFRAME);
 			hWnd->setMouseCursorVisible( false );
 		}
 		else
@@ -382,95 +378,105 @@ namespace Ovgl
 		}
 	}
 
-	void Window::DoEvents()
-	{
-		sf::Event Event;
-		hWnd->pollEvent(Event);
-		switch (Event.type)
-		{
-			case sf::Event::KeyPressed:
-				if(On_KeyDown)
-				{
-					On_KeyDown( SFKeyToASCII(Event.key.code) );
-				}
-				break;
+    void Window::DoEvents()
+    {
+        sf::Event Event;
+        while(hWnd->pollEvent(Event))
+        {
+            switch (Event.type)
+            {
+            case sf::Event::KeyPressed:
+                if(On_KeyDown)
+                {
+                    On_KeyDown( SFKeyToASCII(Event.key.code) );
+                }
+                break;
 
-			case sf::Event::KeyReleased:
-				if(On_KeyUp)
-				{
-					On_KeyUp( SFKeyToASCII(Event.key.code) );
-				}
-				break;
-			case sf::Event::MouseMoved:
-				if(On_MouseMove)
-				{
-					if(!lockmouse)
-					{
-						On_MouseMove( Event.mouseMove.x, Event.mouseMove.y );
-					}
-				}
-				break;
-			case sf::Event::MouseButtonPressed:
-				if(On_MouseDown)
-				{
-					On_MouseDown( Event.mouseButton.x, Event.mouseButton.y, Event.mouseButton.button );
-				}
-				break;
-			case sf::Event::MouseButtonReleased:
-				if(On_MouseUp)
-				{
-					On_MouseUp( Event.mouseButton.x, Event.mouseButton.y, Event.mouseButton.button );
-				}
-				break;
-			case sf::Event::Resized:
-				for(uint32_t i = 0; i < RenderTargets.size(); i++)
-				{
-					RenderTargets[i]->Update();
-				}
-				while(hWnd->pollEvent(Event)){}
-				break;
+            case sf::Event::KeyReleased:
+                if(On_KeyUp)
+                {
+                    On_KeyUp( SFKeyToASCII(Event.key.code) );
+                }
+                break;
+            case sf::Event::MouseMoved:
+                if(On_MouseMove)
+                {
+                    if(!lockmouse)
+                    {
+                        On_MouseMove( Event.mouseMove.x, Event.mouseMove.y );
+                    }
+                }
+                break;
+            case sf::Event::MouseButtonPressed:
+                if(On_MouseDown)
+                {
+                    On_MouseDown( Event.mouseButton.x, Event.mouseButton.y, Event.mouseButton.button );
+                }
+                break;
+            case sf::Event::MouseButtonReleased:
+                if(On_MouseUp)
+                {
+                    On_MouseUp( Event.mouseButton.x, Event.mouseButton.y, Event.mouseButton.button );
+                }
+                break;
+            case sf::Event::Resized:
+                for(uint32_t i = 0; i < RenderTargets.size(); i++)
+                {
+                    RenderTargets[i]->Update();
+                }
+                while(hWnd->pollEvent(Event)){}
+                break;
 
-			case sf::Event::GainedFocus:
-				active = true;
-				break;
+            case sf::Event::GainedFocus:
+                active = true;
+                break;
 
-			case sf::Event::LostFocus:
-				active = false;
-				break;
+            case sf::Event::LostFocus:
+                active = false;
+                break;
 
-			default:
-				break;
-		}
-
-		if(lockmouse)
-		{
-			Ovgl::Rect WindowRect;
-			WindowRect.left = hWnd->getPosition().x;
-			WindowRect.top = hWnd->getPosition().y;
-			WindowRect.right = hWnd->getPosition().x + hWnd->getSize().x;
-			WindowRect.bottom = hWnd->getPosition().y + hWnd->getSize().y;
-			long cx = WindowRect.left + ((WindowRect.right - WindowRect.left) / 2);
-			long cy = WindowRect.top + ((WindowRect.bottom - WindowRect.top) / 2);
-			sf::Vector2i Point = sf::Mouse::getPosition();
-			On_MouseMove( Point.x - cx, Point.y - cy );
-			sf::Mouse::setPosition( sf::Vector2i(cx, cy) );
-		}
-
-		hWnd->display();
-		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
-		glClear( GL_COLOR_BUFFER_BIT );
-	}
+            default:
+                break;
+            }
+        }
+        if(lockmouse)
+        {
+            long cx = hWnd->getSize().x / 2;
+            long cy = hWnd->getSize().y / 2;
+            sf::Vector2i Point = sf::Mouse::getPosition(*hWnd);
+            On_MouseMove( Point.x - cx, Point.y - cy );
+            sf::Mouse::setPosition( sf::Vector2i(cx, cy), *hWnd );
+            while(hWnd->pollEvent(Event)){}
+        }
+        hWnd->display();
+    }
 
 	void Window::SetFullscreen( bool state )
 	{
 		if(state)
 		{
-
+            sf::ContextSettings settings = hWnd->getSettings();
+            sf::Vector2u winsz = hWnd->getSize();
+            delete hWnd;
+            hWnd = new sf::Window(sf::VideoMode(winsz.x, winsz.y, 32), title.c_str(), sf::Style::Fullscreen, settings);
+            hWnd->setActive( true );
+            glEnable (GL_BLEND);
+            glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable (GL_CULL_FACE);
+            hWnd->setMouseCursorVisible( !lockmouse );
 			fullscreen = true;
 		}
 		else
 		{
-
+            sf::ContextSettings settings = hWnd->getSettings();
+            sf::Vector2u winsz = hWnd->getSize();
+            delete hWnd;
+            hWnd = new sf::Window(sf::VideoMode(winsz.x, winsz.y, 32), title.c_str(), sf::Style::Default, settings);
+            hWnd->setActive( true );
+            glEnable (GL_BLEND);
+            glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable (GL_CULL_FACE);
+            hWnd->setMouseCursorVisible( !lockmouse );
 			fullscreen = false;
 		}
 	}

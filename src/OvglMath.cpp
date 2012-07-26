@@ -260,7 +260,7 @@ namespace Ovgl
 	Matrix44 Matrix33::to4x4()
 	{
 		Matrix44 out = {0};
-		CopyMemory( &out, this, sizeof(Matrix33) );
+        memcpy( &out, this, sizeof(Matrix33) );
 		out._44 = 1;
 		return out;
 	}
@@ -323,7 +323,7 @@ namespace Ovgl
 	Matrix33 Matrix44::to3x3()
 	{
 		Matrix33 out = {0};
-		CopyMemory( &out, this, sizeof(Matrix33) );
+        memcpy( &out, this, sizeof(Matrix33) );
 		return out;
 	}
 

@@ -56,7 +56,7 @@ namespace Ovgl
 		// Get the window's rect
 		Ovgl::Rect WindowRect;
 
-		WindowRect.left = window->hWnd->getPosition().x;
+        WindowRect.left = window->hWnd->getPosition().x;
 		WindowRect.top = window->hWnd->getPosition().y;
 		WindowRect.right = window->hWnd->getPosition().x + window->hWnd->getSize().x;
 		WindowRect.bottom = window->hWnd->getPosition().y + window->hWnd->getSize().y;
@@ -66,41 +66,41 @@ namespace Ovgl
 		// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
 		if( rect->x > 0 && rect->x < 1 )
 		{
-			adjustedrect.left = (LONG)((WindowRect.right - WindowRect.left) * rect->x);
+            adjustedrect.left = (uint32_t)((WindowRect.right - WindowRect.left) * rect->x);
 		}
 		else
 		{
-			adjustedrect.left = (LONG)rect->x;
+            adjustedrect.left = (uint32_t)rect->x;
 		}
 
 		// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
 		if( rect->y > 0 && rect->y < 1 )
 		{
-			adjustedrect.top = (LONG)((WindowRect.bottom - WindowRect.top) * rect->y);
+            adjustedrect.top = (uint32_t)((WindowRect.bottom - WindowRect.top) * rect->y);
 		}
 		else
 		{
-			adjustedrect.top = (LONG)rect->y;
+            adjustedrect.top = (uint32_t)rect->y;
 		}
 
 		// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
 		if( rect->z > 0 && rect->z < 1 )
 		{
-			adjustedrect.right = (LONG)((WindowRect.right - WindowRect.left) * rect->z);
+            adjustedrect.right = (uint32_t)((WindowRect.right - WindowRect.left) * rect->z);
 		}
 		else
 		{
-			adjustedrect.right = (LONG)rect->z;
+            adjustedrect.right = (uint32_t)rect->z;
 		}
 
 		// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
 		if( rect->w > 0 && rect->w < 1 )
 		{
-			adjustedrect.bottom = (LONG)((WindowRect.bottom - WindowRect.top) * rect->w);
+            adjustedrect.bottom = (uint32_t)((WindowRect.bottom - WindowRect.top) * rect->w);
 		}
 		else
 		{
-			adjustedrect.bottom = (LONG)rect->w;
+            adjustedrect.bottom = (uint32_t)rect->w;
 		}
 
 		return adjustedrect;
@@ -126,41 +126,41 @@ namespace Ovgl
 		// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
 		if( rect->x > 0 && rect->x < 1 )
 		{
-			adjustedrect.left = (LONG)((WindowRect.right - WindowRect.left) * rect->x);
+            adjustedrect.left = (uint32_t)((WindowRect.right - WindowRect.left) * rect->x);
 		}
 		else
 		{
-			adjustedrect.left = (LONG)rect->x;
+            adjustedrect.left = (uint32_t)rect->x;
 		}
 
 		// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
 		if( rect->y > 0 && rect->y < 1 )
 		{
-			adjustedrect.top = (LONG)((WindowRect.bottom - WindowRect.top) * rect->y);
+            adjustedrect.top = (uint32_t)((WindowRect.bottom - WindowRect.top) * rect->y);
 		}
 		else
 		{
-			adjustedrect.top = (LONG)rect->y;
+            adjustedrect.top = (uint32_t)rect->y;
 		}
 
 		// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
 		if( rect->z > 0 && rect->z < 1 )
 		{
-			adjustedrect.right = (LONG)((WindowRect.right - WindowRect.left) * rect->z);
+            adjustedrect.right = (uint32_t)((WindowRect.right - WindowRect.left) * rect->z);
 		}
 		else
 		{
-			adjustedrect.right = (LONG)rect->z;
+            adjustedrect.right = (uint32_t)rect->z;
 		}
 
 		// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
 		if( rect->w > 0 && rect->w < 1 )
 		{
-			adjustedrect.bottom = (LONG)((WindowRect.bottom - WindowRect.top) * rect->w);
+            adjustedrect.bottom = (uint32_t)((WindowRect.bottom - WindowRect.top) * rect->w);
 		}
 		else
 		{
-			adjustedrect.bottom = (LONG)rect->w;
+            adjustedrect.bottom = (uint32_t)rect->w;
 		}
 
 		return adjustedrect;
@@ -173,10 +173,10 @@ namespace Ovgl
 		hTex = NULL;
 		View = NULL;
 		debugMode = false;
-		autoLuminance = true;
-		bloom = 4;
-		motionBlur = true;
-		multiSample = true;
+        autoLuminance = false;
+        bloom = 0;
+        motionBlur = false;
+        multiSample = false;
 		eye_luminance = 0.0f;
 		Rect = viewport;
 
@@ -246,7 +246,7 @@ namespace Ovgl
 
 		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		wglSwapIntervalEXT(hWin->vsync);
+        hWindow->hWnd->setVerticalSyncEnabled(hWin->vsync);
 		hWin->RenderTargets.push_back(this);
 	};
 
@@ -966,192 +966,192 @@ namespace Ovgl
 			glMatrixMode( GL_PROJECTION );
 			glLoadIdentity();
 
-			// Blit MultiSampleTexture to BaseTexture to apply effects.
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, MultiSampleFrameBuffer);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, EffectFrameBuffer);
-			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
-			glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            // Blit MultiSampleTexture to BaseTexture to apply effects.
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, MultiSampleFrameBuffer);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, EffectFrameBuffer);
+            glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+            glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-			if( autoLuminance )
-			{
-				AutoLuminance();
-			}
+            if( autoLuminance )
+            {
+                AutoLuminance();
+            }
 
-			if(bloom)
-			{
-				Bloom();
-			}
+            if(bloom)
+            {
+                Bloom();
+            }
 
-			if(motionBlur)
-			{
-				Matrix44 CamMat = View->getPose();
-				Vector2 CamVec = Vector2(sin(CamMat._11*(float)OvglPi) * abs(CamMat._22), sin(CamMat._22*(float)OvglPi) );
-				Vector2 CurCamVec = (CamVec - LastCamVec)/30;
-				if( CurCamVec.x > 0.001f || CurCamVec.x < -0.001f || CurCamVec.y > 0.001f || CurCamVec.y < -0.001f )
-				{
-					MotionBlur( CurCamVec.x, CurCamVec.y );
-				}
-				LastCamVec = CamVec;
-			}
+            if(motionBlur)
+            {
+                Matrix44 CamMat = View->getPose();
+                Vector2 CamVec = Vector2(sin(CamMat._11*(float)OvglPi) * abs(CamMat._22), sin(CamMat._22*(float)OvglPi) );
+                Vector2 CurCamVec = (CamVec - LastCamVec)/30;
+                if( CurCamVec.x > 0.001f || CurCamVec.x < -0.001f || CurCamVec.y > 0.001f || CurCamVec.y < -0.001f )
+                {
+                    MotionBlur( CurCamVec.x, CurCamVec.y );
+                }
+                LastCamVec = CamVec;
+            }
 
-			glViewport( 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top );
+            glViewport( 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top );
 
-			// Get viewport
-			GLint iViewport[4];
-			glGetIntegerv( GL_VIEWPORT, iViewport );
+            // Get viewport
+            GLint iViewport[4];
+            glGetIntegerv( GL_VIEWPORT, iViewport );
 
-			glMatrixMode( GL_MODELVIEW );
-			glLoadIdentity();
-			glMatrixMode( GL_PROJECTION );
-			glLoadIdentity();
+            glMatrixMode( GL_MODELVIEW );
+            glLoadIdentity();
+            glMatrixMode( GL_PROJECTION );
+            glLoadIdentity();
 
-			// Set up the orthographic projection
-			glOrtho( iViewport[0], iViewport[0] + iViewport[2], iViewport[1] + iViewport[3], iViewport[1], -1, 1 );
+            // Set up the orthographic projection
+            glOrtho( iViewport[0], iViewport[0] + iViewport[2], iViewport[1] + iViewport[3], iViewport[1], -1, 1 );
 
-			if(hTex)
-			{
-				glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hTex->Image, 0);
-			}
+            if(hTex)
+            {
+                glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, hTex->Image, 0);
+            }
 
-			// Render to screen
-			glBindTexture(GL_TEXTURE_2D, PrimaryTex);
-			glBegin( GL_QUADS );
-				glTexCoord2i( 1, 1 );
-				glVertex2i( adjustedrect.right, adjustedrect.top );
-				glTexCoord2i( 0, 1 );
-				glVertex2i( adjustedrect.left, adjustedrect.top );
-				glTexCoord2i( 0, 0 );
-				glVertex2i( adjustedrect.left, adjustedrect.bottom );
-				glTexCoord2i( 1, 0 );
-				glVertex2i( adjustedrect.right, adjustedrect.bottom );
-			glEnd();
+            // Render to screen
+            glBindTexture(GL_TEXTURE_2D, PrimaryTex);
+            glBegin( GL_QUADS );
+                glTexCoord2i( 1, 1 );
+                glVertex2i( adjustedrect.right, adjustedrect.top );
+                glTexCoord2i( 0, 1 );
+                glVertex2i( adjustedrect.left, adjustedrect.top );
+                glTexCoord2i( 0, 0 );
+                glVertex2i( adjustedrect.left, adjustedrect.bottom );
+                glTexCoord2i( 1, 0 );
+                glVertex2i( adjustedrect.right, adjustedrect.bottom );
+            glEnd();
 
-			if(hTex)
-			{
-				glBindFramebuffer(GL_FRAMEBUFFER, 0);
-				glBindTexture(GL_TEXTURE_2D, hTex->Image);
-				glGenerateMipmap(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, 0);
-			}
+//			if(hTex)
+//			{
+//				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//				glBindTexture(GL_TEXTURE_2D, hTex->Image);
+//				glGenerateMipmap(GL_TEXTURE_2D);
+//				glBindTexture(GL_TEXTURE_2D, 0);
+//			}
 
-			glColor3f(1.0f, 1.0f, 1.0f);
-			glDisable(GL_MULTISAMPLE_ARB);
-			glDisable (GL_DEPTH_TEST);
-			glDepthMask (GL_FALSE);
-			glDisable( GL_LIGHTING );
-			glDisable( GL_TEXTURE_2D );
-			glDisable (GL_BLEND);
-			glMatrixMode( GL_MODELVIEW );
-			glLoadIdentity();
-			glMatrixMode( GL_PROJECTION );
-			glLoadIdentity();
+//			glColor3f(1.0f, 1.0f, 1.0f);
+//			glDisable(GL_MULTISAMPLE_ARB);
+//			glDisable (GL_DEPTH_TEST);
+//			glDepthMask (GL_FALSE);
+//			glDisable( GL_LIGHTING );
+//			glDisable( GL_TEXTURE_2D );
+//			glDisable (GL_BLEND);
+//			glMatrixMode( GL_MODELVIEW );
+//			glLoadIdentity();
+//			glMatrixMode( GL_PROJECTION );
+//			glLoadIdentity();
 
-			if(debugMode)
-			{
-				glDisable (GL_DEPTH_TEST);
-				glDepthMask (GL_FALSE);
-				glDisable(GL_TEXTURE_2D);
-				glMatrixMode(GL_MODELVIEW);
-				glLoadIdentity();
-				Matrix44 invview = (MatrixInverse( Vector4(0.0f, 0.0f, 0.0f, 0.0f), View->getPose()));
-				glLoadMatrixf((float*)&invview);
-				glMatrixMode(GL_PROJECTION);
-				glLoadIdentity();
-				glLoadMatrixf((float*)&View->projMat);
-				View->scene->DynamicsWorld->debugDrawWorld();
-			}
+//			if(debugMode)
+//			{
+//				glDisable (GL_DEPTH_TEST);
+//				glDepthMask (GL_FALSE);
+//				glDisable(GL_TEXTURE_2D);
+//				glMatrixMode(GL_MODELVIEW);
+//				glLoadIdentity();
+//				Matrix44 invview = (MatrixInverse( Vector4(0.0f, 0.0f, 0.0f, 0.0f), View->getPose()));
+//				glLoadMatrixf((float*)&invview);
+//				glMatrixMode(GL_PROJECTION);
+//				glLoadIdentity();
+//				glLoadMatrixf((float*)&View->projMat);
+//				View->scene->DynamicsWorld->debugDrawWorld();
+//			}
 
-			for( uint32_t i = 0; i < scene->actors.size(); i++ )
-			{
-				for( uint32_t m = 0; m < scene->actors[i]->matrices.size(); m++ )
-				{
-					DrawMarker( MatrixScaling( 0.1f, 0.1f, 0.1f ) * scene->actors[i]->mesh->skeleton->bones[m]->matrix * scene->actors[i]->matrices[m]);
-				}
-			}
-		}
+//			for( uint32_t i = 0; i < scene->actors.size(); i++ )
+//			{
+//				for( uint32_t m = 0; m < scene->actors[i]->matrices.size(); m++ )
+//				{
+//					DrawMarker( MatrixScaling( 0.1f, 0.1f, 0.1f ) * scene->actors[i]->mesh->skeleton->bones[m]->matrix * scene->actors[i]->matrices[m]);
+//				}
+//			}
+//		}
 
-		glEnable (GL_BLEND);
-		glDisable (GL_DEPTH_TEST);
-		glDepthMask (GL_FALSE);
-		glDisable( GL_LIGHTING );
-		glEnable(GL_TEXTURE_2D);
-		glColor3f(1.0f, 1.0f, 1.0f);
+//		glEnable (GL_BLEND);
+//		glDisable (GL_DEPTH_TEST);
+//		glDepthMask (GL_FALSE);
+//		glDisable( GL_LIGHTING );
+//		glEnable(GL_TEXTURE_2D);
+//		glColor3f(1.0f, 1.0f, 1.0f);
 
-		// Get viewport
-		GLint iViewport[4];
-		glGetIntegerv( GL_VIEWPORT, iViewport );
+//		// Get viewport
+//		GLint iViewport[4];
+//		glGetIntegerv( GL_VIEWPORT, iViewport );
 
-		glMatrixMode( GL_MODELVIEW );
-		glLoadIdentity();
-		glMatrixMode( GL_PROJECTION );
-		glLoadIdentity();
+//		glMatrixMode( GL_MODELVIEW );
+//		glLoadIdentity();
+//		glMatrixMode( GL_PROJECTION );
+//		glLoadIdentity();
 
-		// Set up the orthographic projection
-		glOrtho( iViewport[0], iViewport[0] + iViewport[2], iViewport[1] + iViewport[3], iViewport[1], -1, 1 );
+//		// Set up the orthographic projection
+//		glOrtho( iViewport[0], iViewport[0] + iViewport[2], iViewport[1] + iViewport[3], iViewport[1], -1, 1 );
 
-		for(uint32_t i = 0; i < Interfaces.size(); i++)
-		{
-			if(Interfaces[i]->Enabled)
-			{
-				Ovgl::Rect AdjustedRect;
+//		for(uint32_t i = 0; i < Interfaces.size(); i++)
+//		{
+//			if(Interfaces[i]->Enabled)
+//			{
+//				Ovgl::Rect AdjustedRect;
 
-				// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
-				if( Interfaces[i]->Rect.w > 0 && Interfaces[i]->Rect.w < 1 )
-				{
-					AdjustedRect.left = (LONG)((iViewport[0] + iViewport[2]) * Interfaces[i]->Rect.w);
-				}
-				else
-				{
-					AdjustedRect.left = (LONG)Interfaces[i]->Rect.w;
-				}
+//				// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
+//				if( Interfaces[i]->Rect.w > 0 && Interfaces[i]->Rect.w < 1 )
+//				{
+//                    AdjustedRect.left = (uint32_t)((iViewport[0] + iViewport[2]) * Interfaces[i]->Rect.w);
+//				}
+//				else
+//				{
+//                    AdjustedRect.left = (uint32_t)Interfaces[i]->Rect.w;
+//				}
 
-				// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
-				if( Interfaces[i]->Rect.x > 0 && Interfaces[i]->Rect.x < 1 )
-				{
-					AdjustedRect.top = (LONG)((iViewport[1] + iViewport[3]) * Interfaces[i]->Rect.x);
-				}
-				else
-				{
-					AdjustedRect.top = (LONG)Interfaces[i]->Rect.x;
-				}
+//				// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
+//				if( Interfaces[i]->Rect.x > 0 && Interfaces[i]->Rect.x < 1 )
+//				{
+//                    AdjustedRect.top = (uint32_t)((iViewport[1] + iViewport[3]) * Interfaces[i]->Rect.x);
+//				}
+//				else
+//				{
+//                    AdjustedRect.top = (uint32_t)Interfaces[i]->Rect.x;
+//				}
 
-				// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
-				if( Interfaces[i]->Rect.y > 0 && Interfaces[i]->Rect.y < 1 )
-				{
-					AdjustedRect.right = (LONG)((iViewport[0] + iViewport[2]) * Interfaces[i]->Rect.y);
-				}
-				else
-				{
-					AdjustedRect.right = (LONG)Interfaces[i]->Rect.y;
-				}
+//				// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
+//				if( Interfaces[i]->Rect.y > 0 && Interfaces[i]->Rect.y < 1 )
+//				{
+//                    AdjustedRect.right = (uint32_t)((iViewport[0] + iViewport[2]) * Interfaces[i]->Rect.y);
+//				}
+//				else
+//				{
+//                    AdjustedRect.right = (uint32_t)Interfaces[i]->Rect.y;
+//				}
 
-				// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
-				if( Interfaces[i]->Rect.z > 0 && Interfaces[i]->Rect.z < 1 )
-				{
-					AdjustedRect.bottom = (LONG)((iViewport[1] + iViewport[3]) * Interfaces[i]->Rect.z);
-				}
-				else
-				{
-					AdjustedRect.bottom = (LONG)Interfaces[i]->Rect.z;
-				}
+//				// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
+//				if( Interfaces[i]->Rect.z > 0 && Interfaces[i]->Rect.z < 1 )
+//				{
+//                    AdjustedRect.bottom = (uint32_t)((iViewport[1] + iViewport[3]) * Interfaces[i]->Rect.z);
+//				}
+//				else
+//				{
+//                    AdjustedRect.bottom = (uint32_t)Interfaces[i]->Rect.z;
+//				}
 
-				glBindTexture( GL_TEXTURE_2D, Interfaces[i]->Texture->Image );
+//				glBindTexture( GL_TEXTURE_2D, Interfaces[i]->Texture->Image );
 
-				// Draw Interface
-				glBegin( GL_QUADS );
-					glTexCoord2i( 1, 1 );
-					glVertex2i( AdjustedRect.right, AdjustedRect.top );
-					glTexCoord2i( 0, 1 );
-					glVertex2i( AdjustedRect.left, AdjustedRect.top );
-					glTexCoord2i( 0, 0 );
-					glVertex2i( AdjustedRect.left, AdjustedRect.bottom );
-					glTexCoord2i( 1, 0 );
-					glVertex2i( AdjustedRect.right, AdjustedRect.bottom );
-				glEnd();
-			}
+//				// Draw Interface
+//				glBegin( GL_QUADS );
+//					glTexCoord2i( 1, 1 );
+//					glVertex2i( AdjustedRect.right, AdjustedRect.top );
+//					glTexCoord2i( 0, 1 );
+//					glVertex2i( AdjustedRect.left, AdjustedRect.top );
+//					glTexCoord2i( 0, 0 );
+//					glVertex2i( AdjustedRect.left, AdjustedRect.bottom );
+//					glTexCoord2i( 1, 0 );
+//					glVertex2i( AdjustedRect.right, AdjustedRect.bottom );
+//				glEnd();
+//			}
 		}
 	}
 
@@ -1250,48 +1250,48 @@ namespace Ovgl
 		//// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
 		//if( Rect.w > 0 && Rect.w < 1 )
 		//{
-		//	AdjustedRect.left = (LONG)((WindowRect.right - WindowRect.left) * Rect.w);
+        //	AdjustedRect.left = (uint32_t)((WindowRect.right - WindowRect.left) * Rect.w);
 		//}
 		//else
 		//{
-		//	AdjustedRect.left = (LONG)Rect.w;
+        //	AdjustedRect.left = (uint32_t)Rect.w;
 		//}
 
 		//// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
 		//if( Rect.x > 0 && Rect.x < 1 )
 		//{
-		//	AdjustedRect.top = (LONG)((WindowRect.bottom - WindowRect.top) * Rect.x);
+        //	AdjustedRect.top = (uint32_t)((WindowRect.bottom - WindowRect.top) * Rect.x);
 		//}
 		//else
 		//{
-		//	AdjustedRect.top = (LONG)Rect.x;
+        //	AdjustedRect.top = (uint32_t)Rect.x;
 		//}
 
 		//// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
 		//if( Rect.y > 0 && Rect.y < 1 )
 		//{
-		//	AdjustedRect.right = (LONG)((WindowRect.right - WindowRect.left) * Rect.y);
+        //	AdjustedRect.right = (uint32_t)((WindowRect.right - WindowRect.left) * Rect.y);
 		//}
 		//else
 		//{
-		//	AdjustedRect.right = (LONG)Rect.y;
+        //	AdjustedRect.right = (uint32_t)Rect.y;
 		//}
 
 		//// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
 		//if( Rect.z > 0 && Rect.z < 1 )
 		//{
-		//	AdjustedRect.bottom = (LONG)((WindowRect.bottom - WindowRect.top) * Rect.z);
+        //	AdjustedRect.bottom = (uint32_t)((WindowRect.bottom - WindowRect.top) * Rect.z);
 		//}
 		//else
 		//{
-		//	AdjustedRect.bottom = (LONG)Rect.z;
+        //	AdjustedRect.bottom = (uint32_t)Rect.z;
 		//}
 
 		//Ovgl::Rect TextRect;
 		//TextRect.left = 0;
 		//TextRect.top = 0;
-		//TextRect.right = (LONG)(AdjustedRect.right - AdjustedRect.left);
-		//TextRect.bottom = (LONG)(AdjustedRect.bottom - AdjustedRect.top);
+        //TextRect.right = (uint32_t)(AdjustedRect.right - AdjustedRect.left);
+        //TextRect.bottom = (uint32_t)(AdjustedRect.bottom - AdjustedRect.top);
 		//HDC hDC = CreateCompatibleDC(NULL);
 		//GLubyte* pSrcData;
 		//BITMAPINFO bmi = { sizeof( BITMAPINFOHEADER ), TextRect.right, TextRect.bottom, 1, 32, BI_RGB, 0, 0, 0, 0, 0};
@@ -1310,9 +1310,9 @@ namespace Ovgl
 		//DeleteObject(hTempBmp);
 
 		//GLubyte* pTexels = new GLubyte[TextRect.right * TextRect.bottom * 4];
-		//for( LONG row = 0; row < TextRect.bottom; row++ )
+        //for( uint32_t row = 0; row < TextRect.bottom; row++ )
 		//{
-		//	for( LONG col = 0; col < TextRect.right; col++ )
+        //	for( uint32_t col = 0; col < TextRect.right; col++ )
 		//	{
 		//		pTexels[(row * (TextRect.right * 4)) + (col * 4) + 0] = 255;
 		//		pTexels[(row * (TextRect.right * 4)) + (col * 4) + 1] = 255;

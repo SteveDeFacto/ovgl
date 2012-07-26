@@ -37,21 +37,21 @@ namespace Ovgl
 
 	extern "C"
 	{
-		class __declspec(dllexport) VectorKey
+        class DLLEXPORT VectorKey
 		{
 		public:
 			double time;
 			Vector3 value;
 		};
 
-		class __declspec(dllexport) QuatKey
+        class DLLEXPORT QuatKey
 		{
 		public:
 			double time;
 			Vector4 value;
 		};
 
-		class __declspec(dllexport) Channel
+        class DLLEXPORT Channel
 		{
 		public:
 			uint32_t index;
@@ -60,7 +60,7 @@ namespace Ovgl
 			std::vector< VectorKey	>						scaling_keys;
 		};
 
-		class __declspec(dllexport) Animation
+        class DLLEXPORT Animation
 		{
 		public:
 			std::vector< Channel >							channels;
@@ -68,7 +68,7 @@ namespace Ovgl
 			double											end_time;
 		};
 
-		class __declspec(dllexport) AnimationInstance
+        class DLLEXPORT AnimationInstance
 		{
 		public:
 			Animation*										animation;
@@ -83,7 +83,7 @@ namespace Ovgl
 			void set( float time );
 		};
 
-		class __declspec(dllexport) Bone
+        class DLLEXPORT Bone
 		{
 		public:
 			uint32_t										index;
@@ -100,7 +100,7 @@ namespace Ovgl
 			std::vector< Bone* >							children;
 		};
 
-		class __declspec(dllexport) Joint
+        class DLLEXPORT Joint
 		{
 		public:
 			Joint*											parent;
@@ -110,7 +110,7 @@ namespace Ovgl
 			Matrix44 										global_transform;
 		};	
 		
-		class __declspec(dllexport) Pose
+        class DLLEXPORT Pose
 		{
 		public:
 			std::vector< Matrix44 >							matrices;
@@ -121,7 +121,7 @@ namespace Ovgl
 			void Evaluate( Animation* anim, float pTime );
 		};
 
-		class __declspec(dllexport) Skeleton
+        class DLLEXPORT Skeleton
 		{
 		public:
 			Skeleton();

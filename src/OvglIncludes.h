@@ -26,6 +26,12 @@
 
 #define __STDC_CONSTANT_MACROS // Enable c99 macros
 
+#ifdef _WIN32
+#  define DLLEXPORT __declspec( dllexport )
+#else
+#  define DLLEXPORT
+#endif
+
 // C++ Standard Library Headers
 #include <sys/stat.h>
 #include <stdint.h>
@@ -41,7 +47,6 @@
 
 // GLEW Headers
 #include <GL/glew.h>
-#include <GL/wglew.h>
 
 // SFML Headers
 #include <SFML/Audio.hpp>

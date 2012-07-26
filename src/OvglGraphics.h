@@ -27,7 +27,7 @@ namespace Ovgl
 		class Interface;
 		class Vector4;
 
-		class __declspec(dllexport) RenderTarget
+        class DLLEXPORT RenderTarget
 		{
 		public:
 			/**

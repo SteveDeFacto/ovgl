@@ -22,7 +22,7 @@ namespace Ovgl
 	{
 		class RenderTarget;
 
-		class __declspec(dllexport) Window
+        class DLLEXPORT Window
 		{
 		public:
 			Window( Ovgl::Instance* inst, const std::string& name );
@@ -31,6 +31,7 @@ namespace Ovgl
 			sf::Window* hWnd;
 			sf::Thread* event_thread;
 			std::vector< RenderTarget* > RenderTargets;
+            std::string title;
 			bool sizing;
 			bool active;
 			bool fullscreen;

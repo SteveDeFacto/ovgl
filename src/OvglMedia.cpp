@@ -680,7 +680,7 @@ namespace Ovgl
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-		glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
 		// Add texture to media library
 		Textures.push_back( texture );
@@ -712,7 +712,7 @@ namespace Ovgl
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, Image.getSize().x, Image.getSize().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, Image.getPixelsPtr() );
 		glGenerateMipmap(GL_TEXTURE_2D);
-		glBindTexture( GL_TEXTURE_2D, NULL );
+        glBindTexture( GL_TEXTURE_2D, 0 );
 
 		// Add texture to media library
 		Textures.push_back( texture );
@@ -733,34 +733,18 @@ namespace Ovgl
 		// Create vertex program
 		shader->VertexProgram = cgCreateProgramFromFile( Inst->CgContext, CG_SOURCE, file.c_str(), Inst->CgVertexProfile, "VS", NULL );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		// Load vertex program
 		cgGLLoadProgram( shader->VertexProgram );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		// Create fragment program
 		shader->FragmentProgram = cgCreateProgram( Inst->CgContext, CG_SOURCE, file.c_str(), Inst->CgFragmentProfile, "FS", NULL );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		// Load vertex program
 		cgGLLoadProgram( shader->FragmentProgram );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		shader->GeometryProgram = NULL;
 
@@ -827,7 +811,7 @@ namespace Ovgl
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
 		glGenerateMipmap( GL_TEXTURE_2D );
-		glBindTexture( GL_TEXTURE_2D, NULL );
+        glBindTexture( GL_TEXTURE_2D, 0 );
 
 		// Add texture to media library
 		Textures.push_back( texture );
@@ -866,7 +850,7 @@ namespace Ovgl
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-		glBindTexture(GL_TEXTURE_CUBE_MAP, NULL);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
 		// Add texture to media library
 		Textures.push_back( texture );
@@ -891,25 +875,25 @@ namespace Ovgl
 			}
 
 			buffer->frequency = sfbuffer.getSampleRate();
-			buffer->data.resize(sfbuffer.getSampleCount() * 2);
-			memcpy( &buffer->data[0], sfbuffer.getSamples(), sfbuffer.getSampleCount());
+            buffer->data.resize(sfbuffer.getSampleCount() * 2);
+            memcpy( &buffer->data[0], sfbuffer.getSamples(), sfbuffer.getSampleCount() * 2);
 		}
 		if( buffer->format == AL_FORMAT_MONO16 )
 		{
 			alGenBuffers( 1, &buffer->mono );
-			alBufferData( buffer->mono, AL_FORMAT_MONO16, (ALvoid*)&buffer->data[0], buffer->data.size() * 2, buffer->frequency );
+            alBufferData( buffer->mono, AL_FORMAT_MONO16, (ALvoid*)&buffer->data[0], buffer->data.size(), buffer->frequency );
 		}
 		else
 		{
-			alGenBuffers( 1, &buffer->stereo );
-			alBufferData( buffer->stereo, AL_FORMAT_STEREO16, (ALvoid*)&buffer->data[0], buffer->data.size(), buffer->frequency );
-			std::vector< signed short > mono(buffer->data.size() / 2);
-			for (uint32_t i = 0; i < mono.size(); i++)
-			{
-				mono[i] = (buffer->data[2*i] + buffer->data[2*i+1]) / 2;
-			}
-			alGenBuffers( 1, &buffer->mono );
-			alBufferData( buffer->mono, AL_FORMAT_MONO16, (ALvoid*)&mono[0], mono.size()*2, buffer->frequency );
+            alGenBuffers( 1, &buffer->stereo );
+            alBufferData( buffer->stereo, AL_FORMAT_STEREO16, (ALvoid*)&buffer->data[0], buffer->data.size(), buffer->frequency );
+            std::vector< signed short > mono(buffer->data.size() / 2);
+            for (uint32_t i = 0; i < mono.size(); i++)
+            {
+                mono[i] = (buffer->data[2*i] + buffer->data[2*i+1]) / 2;
+            }
+            alGenBuffers( 1, &buffer->mono );
+            alBufferData( buffer->mono, AL_FORMAT_MONO16, (ALvoid*)&mono[0], mono.size(), buffer->frequency );
 		}
 		AudioBuffers.push_back(buffer);
 		return buffer;

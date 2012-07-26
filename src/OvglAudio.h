@@ -28,7 +28,7 @@ namespace Ovgl
 		class AudioVoice;
 		class Emitter;
 
-		class __declspec(dllexport) AudioBuffer
+        class DLLEXPORT AudioBuffer
 		{
 		public:
 			Instance*							Inst;
@@ -36,12 +36,12 @@ namespace Ovgl
 			int									frequency;
 			uint32_t							stereo;
 			uint32_t							mono;
-			std::vector< int8_t >				data;
+            std::vector< int16_t >				data;
 			AudioInstance* CreateAudioInstance( Emitter* emitter, bool loop );
 			void Release();
 		};
 
-		class __declspec(dllexport) AudioInstance
+        class DLLEXPORT AudioInstance
 		{
 		public:
 			Emitter*							emitter;
@@ -54,7 +54,7 @@ namespace Ovgl
 			void Release();
 		};
 
-		class __declspec(dllexport) AudioVoice
+        class DLLEXPORT AudioVoice
 		{
 		public:
 			AudioInstance*						instance;

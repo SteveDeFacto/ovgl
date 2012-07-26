@@ -28,7 +28,7 @@ namespace Ovgl
 		class Shader;
 		class Texture;
 
-		class __declspec(dllexport) MediaLibrary
+        class DLLEXPORT MediaLibrary
 		{
 		public:
 			MediaLibrary( Ovgl::Instance* instance, const std::string& file );

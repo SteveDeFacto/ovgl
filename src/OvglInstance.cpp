@@ -128,29 +128,13 @@ namespace Ovgl
 		CGerror error;
 		const char* string;
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 		cgGLLoadProgram( DefaultEffect->VertexProgram );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		DefaultEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 		cgGLLoadProgram( DefaultEffect->FragmentProgram );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		DefaultEffect->GeometryProgram = NULL;
 
@@ -196,29 +180,15 @@ namespace Ovgl
 
 		SkyboxEffect->VertexProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgVertexProfile, "VS", NULL );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
+
 		cgGLLoadProgram( SkyboxEffect->VertexProgram );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		SkyboxEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
+
 		cgGLLoadProgram( SkyboxEffect->FragmentProgram );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		SkyboxEffect->GeometryProgram = NULL;
 
@@ -288,16 +258,9 @@ namespace Ovgl
 
 		BlurEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
+
 		cgGLLoadProgram( BlurEffect->FragmentProgram );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		BlurEffect->GeometryProgram = NULL;
 
@@ -330,16 +293,9 @@ namespace Ovgl
 
 		BloomEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
+
 		cgGLLoadProgram( BloomEffect->FragmentProgram );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		BloomEffect->GeometryProgram = NULL;
 
@@ -371,16 +327,9 @@ namespace Ovgl
 
 		AddEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
+
 		cgGLLoadProgram( AddEffect->FragmentProgram );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		AddEffect->GeometryProgram = NULL;
 
@@ -412,16 +361,9 @@ namespace Ovgl
 
 		BrightnessEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
+
 		cgGLLoadProgram( BrightnessEffect->FragmentProgram );
 		string = cgGetLastErrorString(&error);
-		if (error != CG_NO_ERROR)
-		{
-			OutputDebugStringA( string );
-		}
 
 		BrightnessEffect->GeometryProgram = NULL;
 
@@ -520,8 +462,8 @@ namespace Ovgl
 		mesh->vertices = vertices;
 		mesh->faces = faces;
 		mesh->attributes = attributes;
-		mesh->index_buffers = NULL;
-		mesh->vertex_buffer = NULL;
+        mesh->index_buffers = 0;
+        mesh->vertex_buffer = 0;
 		Bone* bone = new Bone;
 		bone->matrix = MatrixIdentity();
 		bone->length = 1.0f;
@@ -539,9 +481,6 @@ namespace Ovgl
 		// Create GL context.
 		hWnd = new sf::Context();
 		glewInit();
-		glEnable (GL_BLEND);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable (GL_CULL_FACE);
 
 		// Initialize CG
 		CgContext = cgCreateContext();
