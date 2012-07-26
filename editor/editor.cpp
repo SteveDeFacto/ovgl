@@ -16,7 +16,7 @@
 * @brief None.
 */
 
-#include <Ovgl.h>
+#include <../include/Ovgl.h>
 
 Ovgl::Instance*				Inst;
 Ovgl::RenderTarget*			RenderTarget;
@@ -77,6 +77,7 @@ int main()
 	// Create Render Target
 	RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::Vector4(0.0f, 0.0f, 0.999f, 0.999f), NULL);
 	RenderTarget->bloom = 4;
+	RenderTarget->autoLuminance = true;
 	RenderTarget->motionBlur = true;
 	RenderTarget->multiSample = true;
 	RenderTarget->debugMode = false;
@@ -97,16 +98,16 @@ int main()
 	RenderTarget->View = Camera;
 
 	// Create cubemap texture
-	Texture1 = MediaLibrary->ImportCubeMap( "..\\media\\textures\\skybox\\front.png", "..\\media\\textures\\skybox\\back.png", "..\\media\\textures\\skybox\\top.png",
-											"..\\media\\textures\\skybox\\bottom.png", "..\\media\\textures\\skybox\\left.png", "..\\media\\textures\\skybox\\right.png");
+	Texture1 = MediaLibrary->ImportCubeMap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
+											"../media/textures/skybox/bottom.png", "../media/textures/skybox/left.png", "../media/textures/skybox/right.png");
 	// Create 2D texture
-	Texture2 = MediaLibrary->ImportTexture("..\\media\\textures\\Grass.png");
+	Texture2 = MediaLibrary->ImportTexture("../media/textures/Grass.png");
 
 	// Import mesh
-	Mesh = MediaLibrary->ImportModel( "..\\media\\meshes\\plane.dae", true );
-	Mesh2 = MediaLibrary->ImportModel( "..\\media\\meshes\\test.dae", true );
+	Mesh = MediaLibrary->ImportModel( "../media/meshes/plane.dae", true );
+	Mesh2 = MediaLibrary->ImportModel( "../media/meshes/test.dae", true );
 
-	MediaLibrary->ImportAudio("..\\media\\audio\\glacier.ogg")->CreateAudioInstance(NULL, true);
+	MediaLibrary->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);
 
 	// Add object to scene
 	Object = Scene->CreateObject(Mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
