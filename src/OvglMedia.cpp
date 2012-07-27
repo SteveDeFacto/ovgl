@@ -730,23 +730,9 @@ namespace Ovgl
 		CGerror error;
 		const char* string;
 
-		// Create vertex program
-		shader->VertexProgram = cgCreateProgramFromFile( Inst->CgContext, CG_SOURCE, file.c_str(), Inst->CgVertexProfile, "VS", NULL );
+        // Create effect
+        shader->effect = cgCreateEffectFromFile( Inst->CgContext, file.c_str(), NULL );
 		string = cgGetLastErrorString(&error);
-
-		// Load vertex program
-		cgGLLoadProgram( shader->VertexProgram );
-		string = cgGetLastErrorString(&error);
-
-		// Create fragment program
-		shader->FragmentProgram = cgCreateProgram( Inst->CgContext, CG_SOURCE, file.c_str(), Inst->CgFragmentProfile, "FS", NULL );
-		string = cgGetLastErrorString(&error);
-
-		// Load vertex program
-		cgGLLoadProgram( shader->FragmentProgram );
-		string = cgGetLastErrorString(&error);
-
-		shader->GeometryProgram = NULL;
 
 		//Add Effect to array
 		Shaders.push_back( shader );
@@ -780,8 +766,8 @@ namespace Ovgl
 		material->NoZBuffer = false;
 		material->NoZWrite = false;
 		material->PostRender = false;
-		material->setFSTexture("txDiffuse", Inst->DefaultMedia->Textures[0] );
-		material->setFSTexture("txEnvironment", Inst->DefaultMedia->Textures[1] );
+        material->setEffectTexture("txDiffuse", Inst->DefaultMedia->Textures[0] );
+        material->setEffectTexture("txEnvironment", Inst->DefaultMedia->Textures[1] );
 		Materials.push_back(material);
 		return material;
 	};

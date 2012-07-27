@@ -388,16 +388,16 @@ namespace Ovgl
 				glDepthMask (GL_TRUE);
 			}
 
-			CGparameter CgWorldMatrix = cgGetNamedParameter( materials[s]->ShaderProgram->VertexProgram, "World" );
+            CGparameter CgWorldMatrix = cgGetNamedEffectParameter( materials[s]->ShaderProgram->effect, "World" );
 			Matrix44 tWorldMat = MatrixTranspose(worldMat);
 			cgGLSetMatrixParameterfc( CgWorldMatrix, (float*)&tWorldMat );
-			CGparameter CgViewProjMatrix = cgGetNamedParameter( materials[s]->ShaderProgram->VertexProgram, "ViewProj" );
+            CGparameter CgViewProjMatrix = cgGetNamedEffectParameter( materials[s]->ShaderProgram->effect, "ViewProj" );
 			Matrix44 tViewProj = MatrixTranspose(viewProj);
 			cgGLSetMatrixParameterfc( CgViewProjMatrix, (float*)&tViewProj );
-			CGparameter CgViewPos= cgGetNamedParameter( materials[s]->ShaderProgram->FragmentProgram, "ViewPos" );
+            CGparameter CgViewPos= cgGetNamedEffectParameter( materials[s]->ShaderProgram->effect, "ViewPos" );
 			cgGLSetParameter4f( CgViewPos, View->getPose()._41, View->getPose()._42, View->getPose()._43, View->getPose()._44 );
 
-			CGparameter CgBoneMatrices = cgGetNamedParameter( materials[s]->ShaderProgram->VertexProgram, "Bones" );
+            CGparameter CgBoneMatrices = cgGetNamedEffectParameter( materials[s]->ShaderProgram->effect, "Bones" );
 			for( uint32_t v = 0; v < pose.size(); v++)
 			{
 				CGparameter CgBone = cgGetArrayParameter( CgBoneMatrices, v );
@@ -405,10 +405,10 @@ namespace Ovgl
 				cgGLSetMatrixParameterfc(CgBone, (float*)&tPose);
 			}
 
-			CGparameter CgLightCount = cgGetNamedParameter( materials[s]->ShaderProgram->FragmentProgram, "LightCount" );
+            CGparameter CgLightCount = cgGetNamedEffectParameter( materials[s]->ShaderProgram->effect, "LightCount" );
 			cgGLSetParameter1f( CgLightCount, LightCount );
 
-			CGparameter CgLights = cgGetNamedParameter( materials[s]->ShaderProgram->FragmentProgram, "Lights" );
+            CGparameter CgLights = cgGetNamedEffectParameter( materials[s]->ShaderProgram->effect, "Lights" );
 			CGparameter CgLight;
 			for( uint32_t v = 0; v < mLights.size() / 4; v++)
 			{
@@ -416,7 +416,7 @@ namespace Ovgl
 				cgGLSetParameter4fv(CgLight, (float*)&mLights[v * 4]);
 			}
 
-			CGparameter CgLightColors = cgGetNamedParameter( materials[s]->ShaderProgram->FragmentProgram, "LightColors" );
+            CGparameter CgLightColors = cgGetNamedEffectParameter( materials[s]->ShaderProgram->effect, "LightColors" );
 			CGparameter CgLightColor;
 			for( uint32_t v = 0; v < LightColors.size() / 4; v++)
 			{
@@ -454,19 +454,18 @@ namespace Ovgl
 			glEnableVertexAttribArrayARB( 3 );
 			glEnableVertexAttribArrayARB( 4 );
 
-			// Bind vertex and fragment programs
-			cgGLBindProgram( materials[s]->ShaderProgram->VertexProgram );
-			cgGLBindProgram( materials[s]->ShaderProgram->FragmentProgram );
-
-			cgGLEnableProfile( Inst->CgVertexProfile );
-			cgGLEnableProfile( Inst->CgFragmentProfile );
-
-			int BufferSize;
-			glGetBufferParameteriv( GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &BufferSize);
-			glDrawElements( GL_TRIANGLES, BufferSize / sizeof(uint32_t), GL_UNSIGNED_INT, 0 );
-
-			cgGLDisableProfile( Inst->CgVertexProfile );
-			cgGLDisableProfile( Inst->CgFragmentProfile );
+            CGtechnique tech = cgGetFirstTechnique( materials[s]->ShaderProgram->effect );
+            CGpass pass;
+            pass = cgGetFirstPass(tech);
+            while (pass)
+            {
+                cgSetPassState(pass);
+                int BufferSize;
+                glGetBufferParameteriv( GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &BufferSize);
+                glDrawElements( GL_TRIANGLES, BufferSize / sizeof(uint32_t), GL_UNSIGNED_INT, 0 );
+                cgResetPassState(pass);
+                pass = cgGetNextPass(pass);
+            }
 
 			// Disable vertex attributes
 			glDisableVertexAttribArrayARB( 0 );
@@ -485,66 +484,60 @@ namespace Ovgl
 
 	void RenderTarget::AutoLuminance()
 	{
-		glBindTexture(GL_TEXTURE_2D, PrimaryTex);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		float luminance;
+        glBindTexture(GL_TEXTURE_2D, PrimaryTex);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        float luminance;
 
-		GLint width, height;
-		glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-		glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+        GLint width, height;
+        glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
 
-		glGetTexImage(GL_TEXTURE_2D, MaxLevel( width, height), GL_LUMINANCE, GL_FLOAT, &luminance);
-		eye_luminance = eye_luminance + ((( luminance + 0.5f ) - eye_luminance ) * 0.01f);
-		eye_luminance = std::max( 0.5f, std::min( 1.0f, eye_luminance) );
+        glGetTexImage(GL_TEXTURE_2D, MaxLevel( width, height), GL_LUMINANCE, GL_FLOAT, &luminance);
+        eye_luminance = eye_luminance + ((( luminance + 0.5f ) - eye_luminance ) * 0.01f);
+        eye_luminance = std::max( 0.5f, std::min( 1.0f, eye_luminance) );
 
-		// Auto luminance effect
-		glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+        // Auto luminance effect
+        glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
 
-		// Set texture
-		CGparameter CgFSTexture4 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "txDiffuse" );
-		cgGLSetTextureParameter( CgFSTexture4, PrimaryTex );
-		cgGLEnableTextureParameter( CgFSTexture4 );
+        // Set texture
+        CGparameter CgFSTexture = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[5]->effect, "txDiffuse" );
+        cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
+        cgGLEnableTextureParameter( CgFSTexture );
 
-		// Set brightness
-		CGparameter CgBrightness = cgGetNamedParameter( Inst->DefaultMedia->Shaders[5]->FragmentProgram, "Brightness" );
-		cgGLSetParameter1f( CgBrightness, 1.0f / eye_luminance );
+        // Set brightness
+        CGparameter CgBrightness = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[5]->effect, "Brightness" );
+        cgGLSetParameter1f( CgBrightness, 1.0f / eye_luminance );
 
-		// Set vertex attributes
-		glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
-		glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
+        CGtechnique tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[5]->effect );
+        CGpass pass;
+        pass = cgGetFirstPass(tech);
+        while (pass)
+        {
+            cgSetPassState(pass);
+            glBegin(GL_QUADS);
+                glTexCoord2f( 0.0f, 0.0f );
+                glVertex3f(-1.0f,-1.0f, -1.0f);
+                glTexCoord2f( 1.0f, 0.0f );
+                glVertex3f(1.0f,-1.0f, -1.0f);
+                glTexCoord2f( 1.0f, 1.0f );
+                glVertex3f(1.0f, 1.0f, -1.0f);
+                glTexCoord2f( 0.0f, 1.0f );
+                glVertex3f(-1.0f, 1.0f, -1.0f);
+            glEnd();
+            cgResetPassState(pass);
+            pass = cgGetNextPass(pass);
+        }
 
-		// Enable vertex attributes
-		glEnableVertexAttribArrayARB( 0 );
-		glEnableVertexAttribArrayARB( 1 );
-
-		// Bind vertex and fragment programs
-		cgGLBindProgram( Inst->DefaultMedia->Shaders[5]->FragmentProgram );
-
-		cgGLEnableProfile( Inst->CgFragmentProfile );
-
-		glBegin(GL_QUADS);
-			glTexCoord2f( 0.0f, 0.0f );
-			glVertex3f(-1.0f,-1.0f, -1.0f);
-			glTexCoord2f( 1.0f, 0.0f );
-			glVertex3f(1.0f,-1.0f, -1.0f);
-			glTexCoord2f( 1.0f, 1.0f );
-			glVertex3f(1.0f, 1.0f, -1.0f);
-			glTexCoord2f( 0.0f, 1.0f );
-			glVertex3f(-1.0f, 1.0f, -1.0f);
-		glEnd();
-
-		cgGLDisableProfile( Inst->CgFragmentProfile );
-
-		// Disable vertex attributes
-		glDisableVertexAttribArrayARB( 0 );
-		glDisableVertexAttribArrayARB( 1 );
-
+        cgGLDisableTextureParameter( CgFSTexture );
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	void RenderTarget::Bloom()
 	{
+        CGtechnique tech;
+        CGpass pass;
+
 		// Render bloom effect
 		glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryBloomTex, 0);
@@ -557,35 +550,55 @@ namespace Ovgl
 
 		glViewport( 0, 0, width, height );
 
-		CGparameter CgFSTexture = cgGetNamedParameter( Inst->DefaultMedia->Shaders[3]->FragmentProgram, "txDiffuse" );
+        CGparameter CgFSTexture = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[3]->effect, "txDiffuse" );
 		cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
 		cgGLEnableTextureParameter( CgFSTexture );
 
 		// Set vertex attributes
-		glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
+        glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
 		glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
 
 		// Enable vertex attributes
 		glEnableVertexAttribArrayARB( 0 );
 		glEnableVertexAttribArrayARB( 1 );
 
-		// Bind vertex and fragment programs
-		cgGLBindProgram( Inst->DefaultMedia->Shaders[3]->FragmentProgram );
+        tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[3]->effect );
+        pass = cgGetFirstPass(tech);
+        while (pass)
+        {
+            cgSetPassState(pass);
+            glBegin(GL_QUADS);
+                glTexCoord2f( 0.0f, 0.0f );
+                glVertex3f(-1.0f,-1.0f, -1.0f);
+                glTexCoord2f( 1.0f, 0.0f );
+                glVertex3f(1.0f,-1.0f, -1.0f);
+                glTexCoord2f( 1.0f, 1.0f );
+                glVertex3f(1.0f, 1.0f, -1.0f);
+                glTexCoord2f( 0.0f, 1.0f );
+                glVertex3f(-1.0f, 1.0f, -1.0f);
+            glEnd();
+            cgResetPassState(pass);
+            pass = cgGetNextPass(pass);
+        }
 
-		cgGLEnableProfile( Inst->CgFragmentProfile );
-
-		glBegin(GL_QUADS);
-			glTexCoord2f( 0.0f, 0.0f );
-			glVertex3f(-1.0f,-1.0f, -1.0f);
-			glTexCoord2f( 1.0f, 0.0f );
-			glVertex3f(1.0f,-1.0f, -1.0f);
-			glTexCoord2f( 1.0f, 1.0f );
-			glVertex3f(1.0f, 1.0f, -1.0f);
-			glTexCoord2f( 0.0f, 1.0f );
-			glVertex3f(-1.0f, 1.0f, -1.0f);
-		glEnd();
-
-		cgGLDisableProfile( Inst->CgFragmentProfile );
+        tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[3]->effect );
+        pass = cgGetFirstPass(tech);
+        while (pass)
+        {
+            cgSetPassState(pass);
+            glBegin(GL_QUADS);
+                glTexCoord2f( 0.0f, 0.0f );
+                glVertex3f(-1.0f,-1.0f, -1.0f);
+                glTexCoord2f( 1.0f, 0.0f );
+                glVertex3f(1.0f,-1.0f, -1.0f);
+                glTexCoord2f( 1.0f, 1.0f );
+                glVertex3f(1.0f, 1.0f, -1.0f);
+                glTexCoord2f( 0.0f, 1.0f );
+                glVertex3f(-1.0f, 1.0f, -1.0f);
+            glEnd();
+            cgResetPassState(pass);
+            pass = cgGetNextPass(pass);
+        }
 
 		// Disable vertex attributes
 		glDisableVertexAttribArrayARB( 0 );
@@ -600,18 +613,18 @@ namespace Ovgl
 			if( flipflop )
 			{
 				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, SecondaryBloomTex, 0);
-				CGparameter CgFSTexture2 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "txDiffuse" );
+                CGparameter CgFSTexture2 = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[2]->effect, "txDiffuse" );
 				cgGLSetTextureParameter( CgFSTexture2, PrimaryBloomTex );
 				cgGLEnableTextureParameter( CgFSTexture2 );
 			}
 			else
 			{
 				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryBloomTex, 0);
-				CGparameter CgFSTexture2 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "txDiffuse" );
+                CGparameter CgFSTexture2 = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[2]->effect, "txDiffuse" );
 				cgGLSetTextureParameter( CgFSTexture2, SecondaryBloomTex );
 				cgGLEnableTextureParameter( CgFSTexture2 );
 			}
-			CGparameter CgDirection2 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "direction" );
+            CGparameter CgDirection2 = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[2]->effect, "direction" );
 			cgGLSetParameter2f( CgDirection2, x, y );
 
 			// Set vertex attributes
@@ -622,23 +635,24 @@ namespace Ovgl
 			glEnableVertexAttribArrayARB( 0 );
 			glEnableVertexAttribArrayARB( 1 );
 
-			// Bind vertex and fragment programs
-			cgGLBindProgram( Inst->DefaultMedia->Shaders[2]->FragmentProgram );
-
-			cgGLEnableProfile( Inst->CgFragmentProfile );
-
-			glBegin(GL_QUADS);
-				glTexCoord2f( 0.0f, 0.0f );
-				glVertex3f(-1.0f,-1.0f, -1.0f);
-				glTexCoord2f( 1.0f, 0.0f );
-				glVertex3f(1.0f,-1.0f, -1.0f);
-				glTexCoord2f( 1.0f, 1.0f );
-				glVertex3f(1.0f, 1.0f, -1.0f);
-				glTexCoord2f( 0.0f, 1.0f );
-				glVertex3f(-1.0f, 1.0f, -1.0f);
-			glEnd();
-
-			cgGLDisableProfile( Inst->CgFragmentProfile );
+            tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[2]->effect );
+            pass = cgGetFirstPass(tech);
+            while (pass)
+            {
+                cgSetPassState(pass);
+                glBegin(GL_QUADS);
+                    glTexCoord2f( 0.0f, 0.0f );
+                    glVertex3f(-1.0f,-1.0f, -1.0f);
+                    glTexCoord2f( 1.0f, 0.0f );
+                    glVertex3f(1.0f,-1.0f, -1.0f);
+                    glTexCoord2f( 1.0f, 1.0f );
+                    glVertex3f(1.0f, 1.0f, -1.0f);
+                    glTexCoord2f( 0.0f, 1.0f );
+                    glVertex3f(-1.0f, 1.0f, -1.0f);
+                glEnd();
+                cgResetPassState(pass);
+                pass = cgGetNextPass(pass);
+            }
 
 			// Disable vertex attributes
 			glDisableVertexAttribArrayARB( 0 );
@@ -654,11 +668,11 @@ namespace Ovgl
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
 		glViewport( 0, 0, width, height );
-		CGparameter CgFSTextureA = cgGetNamedParameter( Inst->DefaultMedia->Shaders[4]->FragmentProgram, "txDiffuse1" );
+        CGparameter CgFSTextureA = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[4]->effect, "txDiffuse1" );
 		cgGLSetTextureParameter( CgFSTextureA, PrimaryTex);
 		cgGLEnableTextureParameter( CgFSTextureA );
 
-		CGparameter CgFSTextureB = cgGetNamedParameter( Inst->DefaultMedia->Shaders[4]->FragmentProgram, "txDiffuse2" );
+        CGparameter CgFSTextureB = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[4]->effect, "txDiffuse2" );
 		cgGLSetTextureParameter( CgFSTextureB, PrimaryBloomTex );
 		cgGLEnableTextureParameter( CgFSTextureB );
 
@@ -670,23 +684,24 @@ namespace Ovgl
 		glEnableVertexAttribArrayARB( 0 );
 		glEnableVertexAttribArrayARB( 1 );
 
-		// Bind vertex and fragment programs
-		cgGLBindProgram( Inst->DefaultMedia->Shaders[4]->FragmentProgram );
-
-		cgGLEnableProfile( Inst->CgFragmentProfile );
-
-		glBegin(GL_QUADS);
-			glTexCoord2f( 0.0f, 0.0f );
-			glVertex3f(-1.0f,-1.0f, -1.0f);
-			glTexCoord2f( 1.0f, 0.0f );
-			glVertex3f(1.0f,-1.0f, -1.0f);
-			glTexCoord2f( 1.0f, 1.0f );
-			glVertex3f(1.0f, 1.0f, -1.0f);
-			glTexCoord2f( 0.0f, 1.0f );
-			glVertex3f(-1.0f, 1.0f, -1.0f);
-		glEnd();
-
-		cgGLDisableProfile( Inst->CgFragmentProfile );
+        tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[4]->effect );
+        pass = cgGetFirstPass(tech);
+        while (pass)
+        {
+            cgSetPassState(pass);
+            glBegin(GL_QUADS);
+                glTexCoord2f( 0.0f, 0.0f );
+                glVertex3f(-1.0f,-1.0f, -1.0f);
+                glTexCoord2f( 1.0f, 0.0f );
+                glVertex3f(1.0f,-1.0f, -1.0f);
+                glTexCoord2f( 1.0f, 1.0f );
+                glVertex3f(1.0f, 1.0f, -1.0f);
+                glTexCoord2f( 0.0f, 1.0f );
+                glVertex3f(-1.0f, 1.0f, -1.0f);
+            glEnd();
+            cgResetPassState(pass);
+            pass = cgGetNextPass(pass);
+        }
 
 		// Disable vertex attributes
 		glDisableVertexAttribArrayARB( 0 );
@@ -700,43 +715,33 @@ namespace Ovgl
 		glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, SecondaryTex, 0);
 
-		CGparameter CgFSTexture2 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "txDiffuse" );
-		cgGLSetTextureParameter( CgFSTexture2, PrimaryTex );
-		cgGLEnableTextureParameter( CgFSTexture2 );
+        CGparameter CgFSTexture = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[2]->effect, "txDiffuse" );
+        cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
+        cgGLEnableTextureParameter( CgFSTexture );
 
-		CGparameter CgDirection2 = cgGetNamedParameter( Inst->DefaultMedia->Shaders[2]->FragmentProgram, "direction" );
+        CGparameter CgDirection = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[2]->effect, "direction" );
 
-		// Set vertex attributes
-		glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
-		glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
+        cgGLSetParameter2f( CgDirection, x, y );
 
-		// Enable vertex attributes
-		glEnableVertexAttribArrayARB( 0 );
-		glEnableVertexAttribArrayARB( 1 );
-
-		// Bind vertex and fragment programs
-		cgGLBindProgram( Inst->DefaultMedia->Shaders[2]->FragmentProgram );
-
-		cgGLEnableProfile( Inst->CgFragmentProfile );
-
-		cgGLSetParameter2f( CgDirection2, x, y );
 		// Render a full screen quad
-		glBegin(GL_QUADS);
-			glTexCoord2f( 0.0f, 0.0f );
-			glVertex3f(-1.0f,-1.0f, -1.0f);
-			glTexCoord2f( 1.0f, 0.0f );
-			glVertex3f(1.0f,-1.0f, -1.0f);
-			glTexCoord2f( 1.0f, 1.0f );
-			glVertex3f(1.0f, 1.0f, -1.0f);
-			glTexCoord2f( 0.0f, 1.0f );
-			glVertex3f(-1.0f, 1.0f, -1.0f);
-		glEnd();
-
-		cgGLDisableProfile( Inst->CgFragmentProfile );
-
-		// Disable vertex attributes
-		glDisableVertexAttribArrayARB( 0 );
-		glDisableVertexAttribArrayARB( 1 );
+        CGtechnique tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[2]->effect );
+        CGpass pass = cgGetFirstPass(tech);
+        while (pass)
+        {
+            cgSetPassState(pass);
+            glBegin(GL_QUADS);
+                glTexCoord2f( 0.0f, 0.0f );
+                glVertex3f(-1.0f,-1.0f, -1.0f);
+                glTexCoord2f( 1.0f, 0.0f );
+                glVertex3f(1.0f,-1.0f, -1.0f);
+                glTexCoord2f( 1.0f, 1.0f );
+                glVertex3f(1.0f, 1.0f, -1.0f);
+                glTexCoord2f( 0.0f, 1.0f );
+                glVertex3f(-1.0f, 1.0f, -1.0f);
+            glEnd();
+            cgResetPassState(pass);
+            pass = cgGetNextPass(pass);
+        }
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
 		glBindTexture(GL_TEXTURE_2D, SecondaryTex);
@@ -752,6 +757,8 @@ namespace Ovgl
 			glTexCoord2f( 0.0f, 1.0f );
 			glVertex3f(-1.0f, 1.0f, -1.0f);
 		glEnd();
+
+        cgGLDisableTextureParameter( CgFSTexture );
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -856,17 +863,17 @@ namespace Ovgl
 				glDisable(GL_MULTISAMPLE_ARB);
 
 				// Set skybox shader View variable
-				CGparameter CgView = cgGetNamedParameter( Inst->DefaultMedia->Shaders[1]->VertexProgram, "View" );
+                CGparameter CgView = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[1]->effect, "View" );
 				Matrix44 tinvView = MatrixTranspose( MatrixInverse( Vector4(0,0,0,0), View->getPose()) );
 				cgGLSetMatrixParameterfc( CgView, (float*)&tinvView );
 
 				// Set skybox shader Projection variable
-				CGparameter CgProjection = cgGetNamedParameter( Inst->DefaultMedia->Shaders[1]->VertexProgram, "Projection" );
+                CGparameter CgProjection = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[1]->effect, "Projection" );
 				Matrix44 tView = MatrixTranspose( View->projMat);
 				cgGLSetMatrixParameterfc( CgProjection, (float*)&tView );
 
 				// Set skybox texture
-				CGparameter CgFSTexture = cgGetNamedParameter( Inst->DefaultMedia->Shaders[1]->FragmentProgram, "txSkybox" );
+                CGparameter CgFSTexture = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[1]->effect, "txSkybox" );
 				cgGLSetTextureParameter( CgFSTexture, scene->sky_box->Image );
 				cgGLEnableTextureParameter( CgFSTexture );
 
@@ -888,19 +895,16 @@ namespace Ovgl
 				glEnableVertexAttribArrayARB( 3 );
 				glEnableVertexAttribArrayARB( 4 );
 
-				// Bind vertex and fragment programs
-				cgGLBindProgram( Inst->DefaultMedia->Shaders[1]->VertexProgram );
-				cgGLBindProgram( Inst->DefaultMedia->Shaders[1]->FragmentProgram );
-
-				cgGLEnableProfile( Inst->CgVertexProfile );
-				cgGLEnableProfile( Inst->CgFragmentProfile );
-
 				// Draw skybox
-				glDrawElements( GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0 );
-
-				// Disable profiles
-				cgGLDisableProfile( Inst->CgVertexProfile );
-				cgGLDisableProfile( Inst->CgFragmentProfile );
+                CGtechnique tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[1]->effect );
+                CGpass pass = cgGetFirstPass(tech);
+                while (pass)
+                {
+                    cgSetPassState(pass);
+                    glDrawElements( GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0 );
+                    cgResetPassState(pass);
+                    pass = cgGetNextPass(pass);
+                }
 
 				// Disable vertex attributes
 				glDisableVertexAttribArrayARB( 0 );
@@ -988,7 +992,7 @@ namespace Ovgl
             {
                 Matrix44 CamMat = View->getPose();
                 Vector2 CamVec = Vector2(sin(CamMat._11*(float)OvglPi) * abs(CamMat._22), sin(CamMat._22*(float)OvglPi) );
-                Vector2 CurCamVec = (CamVec - LastCamVec)/30;
+                Vector2 CurCamVec = (CamVec - LastCamVec)/20;
                 if( CurCamVec.x > 0.001f || CurCamVec.x < -0.001f || CurCamVec.y > 0.001f || CurCamVec.y < -0.001f )
                 {
                     MotionBlur( CurCamVec.x, CurCamVec.y );

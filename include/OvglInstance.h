@@ -102,9 +102,7 @@ namespace Ovgl
 		{
 		public:
 			MediaLibrary*							MLibrary;
-			_CGprogram*								VertexProgram;
-			_CGprogram*								FragmentProgram;
-			_CGprogram*								GeometryProgram;
+            CGeffect                                effect;
 			void Release();
 		};
 
@@ -118,10 +116,8 @@ namespace Ovgl
 			bool									NoZWrite;
 			std::vector< std::pair< CGparameter, std::vector< float > > > Variables;
 			std::vector< std::pair< CGparameter, Ovgl::Texture* > > Textures;
-			void setVSVariable(const std::string& variable, const std::vector< float >& data);
-			void setFSVariable(const std::string& variable, const std::vector< float >& data);
-			void setVSTexture(const std::string& variable, Texture* texture);
-			void setFSTexture(const std::string& variable, Texture* texture);
+            void setEffectVariable(const std::string& variable, const std::vector< float >& data);
+            void setEffectTexture(const std::string& variable, Texture* texture);
 			void Release();
 		};
 
@@ -134,8 +130,6 @@ namespace Ovgl
 			bool									g_Quit;
 			sf::Context*							hWnd;
 			_CGcontext*								CgContext;
-			CGprofile								CgVertexProfile;
-			CGprofile								CgFragmentProfile;
 			btDefaultCollisionConfiguration*		PhysicsConfiguration;
 			btCollisionDispatcher*					PhysicsDispatcher;
 			btBroadphaseInterface*					PhysicsBroadphase;

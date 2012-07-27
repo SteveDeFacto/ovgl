@@ -89,7 +89,7 @@ int main()
 	Scene = MediaLibrary->CreateScene();
 
 	// Add light to scene.
-	Light = Scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 1.0f, 1.0f, 1.0f, 1.0f ));
+    Light = Scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 10.0f, 10.0f, 10.0f, 10.0f ));
 
 	// Add camera to scene
 	Camera = Scene->CreateCamera(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
@@ -111,7 +111,7 @@ int main()
 
 	// Add object to scene
 	Object = Scene->CreateObject(Mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
-	Object->materials[0]->setFSTexture("txDiffuse", Texture2);
+    Object->materials[0]->setEffectTexture("txDiffuse", Texture2);
 
 	// Add actor to scene
 	Actor = Scene->CreateActor(Mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));

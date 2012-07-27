@@ -49,338 +49,340 @@ namespace Ovgl
 
 		std::string shader;
 
-		// Create shader string.
-		shader =
-		"struct VS_INPUT"
-		"{"
-		"	float3 pos					: ATTR0;"
-		"	float3 norm					: ATTR1;"
-		"	float2 tex					: ATTR2;"
-		"	float4 bw					: ATTR3;"
-		"	float4 bi					: ATTR4;"
-		"};"
+        // Create shader string.
+        shader =
+                "struct VS_INPUT"
+                "{"
+                "	float3 pos					: ATTR0;"
+                "	float3 norm					: ATTR1;"
+                "	float2 tex					: ATTR2;"
+                "	float4 bw					: ATTR3;"
+                "	float4 bi					: ATTR4;"
+                "};"
 
-		"struct FS_INPUT"
-		"{"
-		"	float4 posVS				: POSITION;"
-		"	float4 posWS				: TEXCOORD0;"
-		"	float2 tex					: TEXCOORD1;"
-		"	float4 norm					: TEXCOORD2;"
-		"};"
+                "struct FS_INPUT"
+                "{"
+                "	float4 posVS				: POSITION;"
+                "	float4 posWS				: TEXCOORD0;"
+                "	float2 tex					: TEXCOORD1;"
+                "	float4 norm					: TEXCOORD2;"
+                "};"
 
-		"struct FS_OUTPUT"
-		"{"
-		"	float4 color				: COLOR;"
-		"};"
+                "struct FS_OUTPUT"
+                "{"
+                "	float4 color				: COLOR;"
+                "};"
 
-		"float4 Ambient = float4( 0.0f, 0.0f, 0.0f, 1.0f );"
-		"float4 Diffuse = float4( 0.75f, 0.75f, 0.75f, 1.0f );"
-		"float EMI = 0.1f;"
-		"float LightCount				: LIGHTCOUNT;"
-		"float4 ViewPos					: VIEWPOS;"
-		"float4 Lights[16]				: LIGHTS;"
-		"float4 LightColors[16]			: LIGHTCOLORS;"
-		"float4x4 World					: WORLD;"
-		"float4x4 ViewProj				: VIEWPROJ;"
-		"float4x4 Bones[64]				: BONES;"
-		"uniform sampler2D txDiffuse;"
-		"uniform samplerCUBE txEnvironment;"
+                "float4 Ambient = float4( 0.0f, 0.0f, 0.0f, 1.0f );"
+                "float4 Diffuse = float4( 0.75f, 0.75f, 0.75f, 1.0f );"
+                "float EMI = 0.1f;"
+                "float LightCount				: LIGHTCOUNT;"
+                "float4 ViewPos					: VIEWPOS;"
+                "float4 Lights[16]				: LIGHTS;"
+                "float4 LightColors[16]			: LIGHTCOLORS;"
+                "float4x4 World					: WORLD;"
+                "float4x4 ViewProj				: VIEWPROJ;"
+                "float4x4 Bones[64]				: BONES;"
+                "uniform sampler2D txDiffuse;"
+                "uniform samplerCUBE txEnvironment;"
 
-		"FS_INPUT VS( VS_INPUT In )"
-		"{"
-		"	FS_INPUT Out;"
-		"	float4x4 skinTransform = 0;"
-		"	float4x4 normTransform = 0;"
-		"	skinTransform += Bones[In.bi.x] * In.bw.x;"
-		"	skinTransform += Bones[In.bi.y] * In.bw.y;"
-		"	skinTransform += Bones[In.bi.z] * In.bw.z;"
-		"	skinTransform += Bones[In.bi.w] * In.bw.w;"
-		"	normTransform = skinTransform;"
-		"	normTransform[3].x = 0;"
-		"	normTransform[3].y = 0;"
-		"	normTransform[3].z = 0;"
-		"	Out.posVS = mul(float4(In.pos, 1), skinTransform);"
-		"	Out.posWS = Out.posVS;"
-		"	Out.norm = mul(float4(In.norm, 1), normTransform);"
-		"	Out.tex = In.tex;"
-		"	Out.posVS = mul(Out.posVS, ViewProj);"
-		"	return Out;"
-		"}"
+                "FS_INPUT VS( VS_INPUT In )"
+                "{"
+                "	FS_INPUT Out;"
+                "	float4x4 skinTransform = 0;"
+                "	float4x4 normTransform = 0;"
+                "	skinTransform += Bones[In.bi.x] * In.bw.x;"
+                "	skinTransform += Bones[In.bi.y] * In.bw.y;"
+                "	skinTransform += Bones[In.bi.z] * In.bw.z;"
+                "	skinTransform += Bones[In.bi.w] * In.bw.w;"
+                "	normTransform = skinTransform;"
+                "	normTransform[3].x = 0;"
+                "	normTransform[3].y = 0;"
+                "	normTransform[3].z = 0;"
+                "	Out.posVS = mul(float4(In.pos, 1), skinTransform);"
+                "	Out.posWS = Out.posVS;"
+                "	Out.norm = mul(float4(In.norm, 1), normTransform);"
+                "	Out.tex = In.tex;"
+                "	Out.posVS = mul(Out.posVS, ViewProj);"
+                "	return Out;"
+                "}"
 
-		"FS_OUTPUT FS( FS_INPUT In )"
-		"{"
-		"	FS_OUTPUT Out;"
-		"	float4 light = float4( 0, 0, 0, 0 );"
-		"	for(float i = 0; i < LightCount; i++)"
-		"	{"
-		"		float4 lightDir = Lights[i] - In.posWS;"
-		"		float4 NdotL = saturate(dot(In.norm, normalize(lightDir)));"
-		"		float4 attenuation = 1 / length(lightDir);"
-		"		light += LightColors[i] * NdotL * attenuation * 10;"
-		"	}"
-		"	float4 envColor = texCUBE( txEnvironment, reflect( normalize( In.posWS.xyz - ViewPos.xyz ), In.norm.xyz ) ) * EMI;"
-		"	float4 texColor = tex2D( txDiffuse, In.tex );"
-		"	Out.color = ( (texColor + envColor) * Diffuse) * (light + Ambient);"
-		"	Out.color.w = min(1.0, Out.color.w);"
-		"	return Out;"
-		"}";
-		DefaultEffect->VertexProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgVertexProfile, "VS", NULL );
-		CGerror error;
-		const char* string;
-		string = cgGetLastErrorString(&error);
-		cgGLLoadProgram( DefaultEffect->VertexProgram );
-		string = cgGetLastErrorString(&error);
+                "FS_OUTPUT FS( FS_INPUT In )"
+                "{"
+                "	FS_OUTPUT Out;"
+                "	float4 light = float4( 0, 0, 0, 0 );"
+                "	for(float i = 0; i < LightCount; i++)"
+                "	{"
+                "		float4 lightDir = Lights[i] - In.posWS;"
+                "		float4 NdotL = saturate(dot(In.norm, normalize(lightDir)));"
+                "		float4 attenuation = 1 / length(lightDir);"
+                "		light += LightColors[i] * NdotL * attenuation * 10;"
+                "	}"
+                "	float4 envColor = texCUBE( txEnvironment, reflect( normalize( In.posWS.xyz - ViewPos.xyz ), In.norm.xyz ) ) * EMI;"
+                "	float4 texColor = tex2D( txDiffuse, In.tex );"
+                "	Out.color = ( (texColor + envColor) * Diffuse) * (light + Ambient);"
+                "	Out.color.w = min(1.0, Out.color.w);"
+                "	return Out;"
+                "}"
 
-		DefaultEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
-		string = cgGetLastErrorString(&error);
-		cgGLLoadProgram( DefaultEffect->FragmentProgram );
-		string = cgGetLastErrorString(&error);
+                "technique t0"
+                "{"
+                "   pass p0"
+                "   {"
+                "      VertexProgram = compile gp4vp VS();"
+                "      FragmentProgram = compile gp4fp FS();"
+                "   }"
+                "}";
 
-		DefaultEffect->GeometryProgram = NULL;
+        DefaultEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
 
-		shader =
-		"struct VS_INPUT"
-		"{"
-		"	float3 pos				: ATTR0;"
-		"	float3 norm				: ATTR1;"
-		"	float2 tex				: ATTR2;"
-		"	float4 bw				: ATTR3;"
-		"	float4 bi				: ATTR4;"
-		"};"
+        shader =
+                "struct VS_INPUT"
+                "{"
+                "	float3 pos				: ATTR0;"
+                "	float3 norm				: ATTR1;"
+                "	float2 tex				: ATTR2;"
+                "	float4 bw				: ATTR3;"
+                "	float4 bi				: ATTR4;"
+                "};"
 
-		"struct FS_INPUT"
-		"{"
-		"  float4 pos				: POSITION;"
-		"  float3 tex				: TEXCOORD0;"
-		"};"
+                "struct FS_INPUT"
+                "{"
+                "  float4 pos				: POSITION;"
+                "  float3 tex				: TEXCOORD0;"
+                "};"
 
-		"struct FS_OUTPUT"
-		"{"
-		"  float4 color				: COLOR;"
-		"};"
+                "struct FS_OUTPUT"
+                "{"
+                "  float4 color				: COLOR;"
+                "};"
 
-		"uniform samplerCUBE txSkybox;"
-		"float4x4 View;"
-		"float4x4 Projection;"
+                "uniform samplerCUBE txSkybox;"
+                "float4x4 View;"
+                "float4x4 Projection;"
 
-		"FS_INPUT VS( VS_INPUT In )"
-		"{"
-		"	FS_INPUT Out;"
-		"	Out.pos = mul( float4( mul( In.pos.xyz, (float3x3)View), 1 ), Projection );"
-		"	Out.tex = In.pos.xyz;"
-		"	return Out;"
-		"}"
+                "FS_INPUT VS( VS_INPUT In )"
+                "{"
+                "	FS_INPUT Out;"
+                "	Out.pos = mul( float4( mul( In.pos.xyz, (float3x3)View), 1 ), Projection );"
+                "	Out.tex = In.pos.xyz;"
+                "	return Out;"
+                "}"
 
-		"FS_OUTPUT FS( FS_INPUT In)"
-		"{"
-		"	FS_OUTPUT Out;"
-		"	Out.color = texCUBE(txSkybox, In.tex);"
-		"	return Out;"
-		"}";
+                "FS_OUTPUT FS( FS_INPUT In)"
+                "{"
+                "	FS_OUTPUT Out;"
+                "	Out.color = texCUBE(txSkybox, In.tex);"
+                "	return Out;"
+                "}"
 
-		SkyboxEffect->VertexProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgVertexProfile, "VS", NULL );
-		string = cgGetLastErrorString(&error);
+                "technique t0"
+                "{"
+                "   pass p0"
+                "   {"
+                "      VertexProgram = compile gp4vp VS();"
+                "      FragmentProgram = compile gp4fp FS();"
+                "   }"
+                "}";
 
-		cgGLLoadProgram( SkyboxEffect->VertexProgram );
-		string = cgGetLastErrorString(&error);
+        SkyboxEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
 
-		SkyboxEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
-		string = cgGetLastErrorString(&error);
+        shader =
+                "struct FS_INPUT"
+                "{"
+                "  float3 pos				: POSITION;"
+                "  float2 tex				: TEXCOORD0;"
+                "};"
 
-		cgGLLoadProgram( SkyboxEffect->FragmentProgram );
-		string = cgGetLastErrorString(&error);
+                "struct FS_OUTPUT"
+                "{"
+                "  float4 color				: COLOR;"
+                "};"
 
-		SkyboxEffect->GeometryProgram = NULL;
+                "float PixelKernel[13] ="
+                "{"
+                "	-6,"
+                "	-5,"
+                "	-4,"
+                "	-3,"
+                "	-2,"
+                "	-1,"
+                "	0,"
+                "	1,"
+                "	2,"
+                "	3,"
+                "	4,"
+                "	5,"
+                "	6,"
+                "};"
 
-		shader =
-		"struct FS_INPUT"
-		"{"
-		"  float4 pos				: POSITION;"
-		"  float2 tex				: TEXCOORD0;"
-		"};"
+                "static const float BlurWeights[13] ="
+                "{"
+                "	0.002216,"
+                "	0.008764,"
+                "	0.026995,"
+                "	0.064759,"
+                "	0.120985,"
+                "	0.176033,"
+                "	0.199471,"
+                "	0.176033,"
+                "	0.120985,"
+                "	0.064759,"
+                "	0.026995,"
+                "	0.008764,"
+                "	0.002216,"
+                "};"
 
-		"struct FS_OUTPUT"
-		"{"
-		"  float4 color				: COLOR;"
-		"};"
+                "float2 direction;"
 
-		"float PixelKernel[13] ="
-		"{"
-		"	-6,"
-		"	-5,"
-		"	-4,"
-		"	-3,"
-		"	-2,"
-		"	-1,"
-		"	0,"
-		"	1,"
-		"	2,"
-		"	3,"
-		"	4,"
-		"	5,"
-		"	6,"
-		"};"
+                "uniform sampler2D txDiffuse;"
 
-		"static const float BlurWeights[13] ="
-		"{"
-		"	0.002216,"
-		"	0.008764,"
-		"	0.026995,"
-		"	0.064759,"
-		"	0.120985,"
-		"	0.176033,"
-		"	0.199471,"
-		"	0.176033,"
-		"	0.120985,"
-		"	0.064759,"
-		"	0.026995,"
-		"	0.008764,"
-		"	0.002216,"
-		"};"
+                "FS_OUTPUT FS( FS_INPUT In)"
+                "{"
+                "	FS_OUTPUT Out;"
+                "	float2 samp = In.tex;"
+                "	for (int i = 0; i < 13; i++)"
+                "	{"
+                "		samp = In.tex + (direction * PixelKernel[i]);"
+                "		Out.color += tex2D(txDiffuse, samp) * BlurWeights[i];"
+                "	}"
+                "	return Out;"
+                "}"
 
-		"float2 direction;"
+                "technique t0"
+                "{"
+                "   pass p0"
+                "   {"
+                "      FragmentProgram = compile gp4fp FS();"
+                "   }"
+                "}";
 
-		"uniform sampler2D txDiffuse;"
+        BlurEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
 
-		"FS_OUTPUT FS( FS_INPUT In)"
-		"{"
-		"	FS_OUTPUT Out;"
-		"	float2 samp = In.tex;"
-		"	for (int i = 0; i < 13; i++)"
-		"	{"
-		"		samp = In.tex + (direction * PixelKernel[i]);"
-		"		Out.color += tex2D(txDiffuse, samp) * BlurWeights[i];"
-		"	}"
-		"	return Out;"
-		"}";
+        shader =
+                "struct FS_INPUT"
+                "{"
+                "  float3 pos				: POSITION;"
+                "  float2 tex				: TEXCOORD0;"
+                "};"
 
-		BlurEffect->VertexProgram = NULL;
+                "struct FS_OUTPUT"
+                "{"
+                "  float4 color				: COLOR;"
+                "};"
 
-		BlurEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
-		string = cgGetLastErrorString(&error);
+                "float Luminance = 1.0f;"
 
-		cgGLLoadProgram( BlurEffect->FragmentProgram );
-		string = cgGetLastErrorString(&error);
+                "uniform sampler2D txDiffuse;"
 
-		BlurEffect->GeometryProgram = NULL;
+                "FS_OUTPUT FS( FS_INPUT In)"
+                "{"
+                "	FS_OUTPUT Out;"
+                "	Out.color = tex2D(txDiffuse, In.tex);"
+                "	Out.color = Out.color - Luminance;"
+                "	Out.color = max(float4(0.0, 0.0, 0.0, 0.0), Out.color);"
+                "	return Out;"
+                "}"
 
-		shader =
-		"struct FS_INPUT"
-		"{"
-		"  float4 pos				: POSITION;"
-		"  float2 tex				: TEXCOORD0;"
-		"};"
+                "technique t0"
+                "{"
+                "   pass p0"
+                "   {"
+                "      FragmentProgram = compile gp4fp FS();"
+                "   }"
+                "}";
 
-		"struct FS_OUTPUT"
-		"{"
-		"  float4 color				: COLOR;"
-		"};"
+        BloomEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
 
-		"float Luminance = 1.0f;"
+        shader =
+                "struct FS_INPUT"
+                "{"
+                "  float3 pos				: POSITION;"
+                "  float2 tex				: TEXCOORD0;"
+                "};"
 
-		"uniform sampler2D txDiffuse;"
+                "struct FS_OUTPUT"
+                "{"
+                "  float4 color				: COLOR;"
+                "};"
 
-		"FS_OUTPUT FS( FS_INPUT In)"
-		"{"
-		"	FS_OUTPUT Out;"
-	    "	Out.color = tex2D(txDiffuse, In.tex);"
-		"	Out.color = Out.color - Luminance;"
-		"	Out.color = max(float4(0.0, 0.0, 0.0, 0.0), Out.color);"
-	    "	return Out;"
-		"}";
+                "uniform sampler2D txDiffuse1;"
+                "uniform sampler2D txDiffuse2;"
 
-		BloomEffect->VertexProgram = NULL;
+                "FS_OUTPUT FS( FS_INPUT In)"
+                "{"
+                "	FS_OUTPUT Out;"
+                "	Out.color = tex2D(txDiffuse1, In.tex);"
+                "	Out.color += tex2D(txDiffuse2, In.tex);"
+                "	Out.color.w = 1.0;"
+                "	return Out;"
+                "}"
 
-		BloomEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
-		string = cgGetLastErrorString(&error);
+                "technique t0"
+                "{"
+                "   pass p0"
+                "   {"
+                "      FragmentProgram = compile gp4fp FS();"
+                "   }"
+                "}";
 
-		cgGLLoadProgram( BloomEffect->FragmentProgram );
-		string = cgGetLastErrorString(&error);
+        AddEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
 
-		BloomEffect->GeometryProgram = NULL;
+        shader =
+                "struct FS_INPUT"
+                "{"
+                "  float3 pos				: POSITION;"
+                "  float2 tex				: TEXCOORD0;"
+                "};"
 
-		shader =
-		"struct FS_INPUT"
-		"{"
-		"  float4 pos				: POSITION;"
-		"  float2 tex				: TEXCOORD0;"
-		"};"
+                "struct FS_OUTPUT"
+                "{"
+                "  float4 color				: COLOR;"
+                "};"
 
-		"struct FS_OUTPUT"
-		"{"
-		"  float4 color				: COLOR;"
-		"};"
+                "uniform sampler2D txDiffuse;"
+                "float Brightness;"
 
-		"uniform sampler2D txDiffuse1;"
-		"uniform sampler2D txDiffuse2;"
+                "FS_OUTPUT FS( FS_INPUT In)"
+                "{"
+                "	FS_OUTPUT Out;"
+                "	Out.color = tex2D(txDiffuse, In.tex);"
+                "	Out.color = Out.color * Brightness;"
+                "	Out.color.w = 1.0;"
+                "	return Out;"
+                "}"
 
-		"FS_OUTPUT FS( FS_INPUT In)"
-		"{"
-		"	FS_OUTPUT Out;"
-	    "	Out.color = tex2D(txDiffuse1, In.tex);"
-		"	Out.color += tex2D(txDiffuse2, In.tex);"
-		"	Out.color.w = 1.0;"
-	    "	return Out;"
-		"}";
+                "technique t0"
+                "{"
+                "   pass p0"
+                "   {"
+                "      FragmentProgram = compile gp4fp FS();"
+                "   }"
+                "}";
 
-		AddEffect->VertexProgram = NULL;
+        BrightnessEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
 
-		AddEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
-		string = cgGetLastErrorString(&error);
+//                std::string errorString = cgGetErrorString(cgGetError());
+//                errorString.append("\n");
+//                fprintf(stderr, "%s", errorString.c_str());
+//                std::string shaderErrorString = cgGetLastListing(inst->CgContext);
+//                shaderErrorString.append("\n");
+//                fprintf(stderr, "%s", shaderErrorString.c_str());
 
-		cgGLLoadProgram( AddEffect->FragmentProgram );
-		string = cgGetLastErrorString(&error);
-
-		AddEffect->GeometryProgram = NULL;
-
-		shader =
-		"struct FS_INPUT"
-		"{"
-		"  float4 pos				: POSITION;"
-		"  float2 tex				: TEXCOORD0;"
-		"};"
-
-		"struct FS_OUTPUT"
-		"{"
-		"  float4 color				: COLOR;"
-		"};"
-
-		"uniform sampler2D txDiffuse;"
-		"float Brightness;"
-
-		"FS_OUTPUT FS( FS_INPUT In)"
-		"{"
-		"	FS_OUTPUT Out;"
-	    "	Out.color = tex2D(txDiffuse, In.tex);"
-		"	Out.color = Out.color * Brightness;"
-		"	Out.color.w = 1.0;"
-	    "	return Out;"
-		"}";
-
-		BrightnessEffect->VertexProgram = NULL;
-
-		BrightnessEffect->FragmentProgram = cgCreateProgram( inst->CgContext, CG_SOURCE, shader.c_str(), inst->CgFragmentProfile, "FS", NULL );
-		string = cgGetLastErrorString(&error);
-
-		cgGLLoadProgram( BrightnessEffect->FragmentProgram );
-		string = cgGetLastErrorString(&error);
-
-		BrightnessEffect->GeometryProgram = NULL;
-
-		inst->DefaultMedia->Shaders.push_back( DefaultEffect );
-		inst->DefaultMedia->Shaders.push_back( SkyboxEffect );
-		inst->DefaultMedia->Shaders.push_back( BlurEffect );
-		inst->DefaultMedia->Shaders.push_back( BloomEffect );
-		inst->DefaultMedia->Shaders.push_back( AddEffect );
-		inst->DefaultMedia->Shaders.push_back( BrightnessEffect );
+        inst->DefaultMedia->Shaders.push_back( DefaultEffect );
+        inst->DefaultMedia->Shaders.push_back( SkyboxEffect );
+        inst->DefaultMedia->Shaders.push_back( BlurEffect );
+        inst->DefaultMedia->Shaders.push_back( BloomEffect );
+        inst->DefaultMedia->Shaders.push_back( AddEffect );
+        inst->DefaultMedia->Shaders.push_back( BrightnessEffect );
 
 		// Create Default Material
 		Material* DefaultMaterial = new Material;
 
 		DefaultMaterial->ShaderProgram = DefaultEffect;
 		DefaultMaterial->MLibrary = inst->DefaultMedia;
-		DefaultMaterial->setFSTexture("txDiffuse", DefaultMaterial->MLibrary->CreateTexture( 256, 256) );
-		DefaultMaterial->setFSTexture("txEnvironment", DefaultMaterial->MLibrary->CreateCubemap( 256, 256) );
+        DefaultMaterial->setEffectTexture("txDiffuse", DefaultMaterial->MLibrary->CreateTexture( 256, 256) );
+        DefaultMaterial->setEffectTexture("txEnvironment", DefaultMaterial->MLibrary->CreateCubemap( 256, 256) );
 		DefaultMaterial->NoZBuffer = false;
 		DefaultMaterial->NoZWrite = false;
 		DefaultMaterial->PostRender = false;
@@ -484,8 +486,7 @@ namespace Ovgl
 
 		// Initialize CG
 		CgContext = cgCreateContext();
-		CgVertexProfile = cgGLGetLatestProfile(CG_GL_VERTEX);
-		CgFragmentProfile = cgGLGetLatestProfile(CG_GL_FRAGMENT);
+        cgGLRegisterStates(CgContext);
 
 		// Initialize Bullet
 		PhysicsConfiguration = new btDefaultCollisionConfiguration();
@@ -517,9 +518,9 @@ namespace Ovgl
 		cgDestroyContext(CgContext);
 	}
 
-	void Material::setVSVariable(const std::string& variable, const std::vector< float >& data )
+    void Material::setEffectVariable(const std::string& variable, const std::vector< float >& data )
 	{
-		CGparameter CgVariable = cgGetNamedParameter( this->ShaderProgram->VertexProgram, variable.c_str() );
+        CGparameter CgVariable = cgGetNamedEffectParameter( this->ShaderProgram->effect, variable.c_str() );
 		bool Found = false;
 		for( uint32_t i = 0; i < Variables.size(); i++ )
 		{
@@ -536,45 +537,9 @@ namespace Ovgl
 		}
 	}
 
-	void Material::setFSVariable(const std::string& variable, const std::vector< float >& data )
+    void Material::setEffectTexture(const std::string& variable, Texture* texture)
 	{
-		CGparameter CgVariable = cgGetNamedParameter( this->ShaderProgram->FragmentProgram, variable.c_str() );
-		bool Found = false;
-		for( uint32_t i = 0; i < Variables.size(); i++ )
-		{
-			if(Variables[i].first == CgVariable)
-			{
-				Variables[i].second = data;
-				Found = true;
-			}
-		}
-		if(!Found)
-		{
-			Variables.push_back( std::make_pair( CgVariable, data ) );
-		}
-	}
-
-	void Material::setVSTexture(const std::string& variable, Texture* texture)
-	{
-		CGparameter CgVariable = cgGetNamedParameter( this->ShaderProgram->VertexProgram, variable.c_str() );
-		bool Found = false;
-		for( uint32_t i = 0; i < Textures.size(); i++ )
-		{
-			if(Textures[i].first == CgVariable )
-			{
-				Textures[i].second = texture;
-				Found = true;
-			}
-		}
-		if(!Found)
-		{
-			Textures.push_back( std::make_pair( CgVariable, texture ) );
-		}
-	}
-
-	void Material::setFSTexture(const std::string& variable, Texture* texture)
-	{
-		CGparameter CgVariable = cgGetNamedParameter( this->ShaderProgram->FragmentProgram, variable.c_str() );
+        CGparameter CgVariable = cgGetNamedEffectParameter( this->ShaderProgram->effect, variable.c_str() );
 		bool Found = false;
 		for( uint32_t i = 0; i < Textures.size(); i++ )
 		{
@@ -606,9 +571,7 @@ namespace Ovgl
 				MLibrary->Shaders.erase( MLibrary->Shaders.begin() + e );
 			}
 		}
-		cgDestroyProgram( VertexProgram );
-		cgDestroyProgram( FragmentProgram );
-		cgDestroyProgram( GeometryProgram );
+        cgDestroyEffect( effect );
 		delete this;
 	}
 
