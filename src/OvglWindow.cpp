@@ -439,7 +439,7 @@ namespace Ovgl
                 break;
             }
         }
-        if(lockmouse)
+        if(lockmouse && active)
         {
             long cx = hWnd->getSize().x / 2;
             long cy = hWnd->getSize().y / 2;

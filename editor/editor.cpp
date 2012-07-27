@@ -69,8 +69,8 @@ int main()
 	// Create Window
 	Window = new Ovgl::Window( Inst, "Test");
 	Window->LockMouse(true);
-	Window->SetFullscreen( false );
-	Window->SetVSync( false );
+    Window->SetFullscreen( false );
+    Window->SetVSync( true );
 	Window->On_MouseMove = MouseMove;
 	Window->On_KeyDown = KeyDown;
 
