@@ -16,14 +16,29 @@
 * @brief None.
 */
 
+#ifdef _WIN32
+#  define DLLEXPORT __declspec( dllexport )
+#else
+#  define DLLEXPORT
+#endif
+
+#include <Cg/cg.h>
+#include <SFML/Audio.hpp>
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
+#include <SFML/System.hpp>
+#include <SFML/OpenGL.hpp>
+
 // Forward declare external classes
-struct _CGprogram;
-struct _CGcontext;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btConvexHullShape;
+struct ALCdevice_struct;
+struct ALCcontext_struct;
+typedef struct ALCdevice_struct ALCdevice;
+typedef struct ALCcontext_struct ALCcontext;
 
 namespace Ovgl
 {

@@ -16,6 +16,12 @@
 * @brief  This Header defines each class that makes up the Ovgl::Audio class.
 */
 
+#ifdef _WIN32
+#  define DLLEXPORT __declspec( dllexport )
+#else
+#  define DLLEXPORT
+#endif
+
 // Forward declare external classes
 
 namespace Ovgl

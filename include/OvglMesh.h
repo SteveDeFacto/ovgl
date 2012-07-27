@@ -16,8 +16,15 @@
 * @brief None.
 */
 
+#ifdef _WIN32
+#  define DLLEXPORT __declspec( dllexport )
+#else
+#  define DLLEXPORT
+#endif
+
 // Forward declare external classes
 class btRigidBody;
+class btBvhTriangleMeshShape;
 
 namespace Ovgl
 {

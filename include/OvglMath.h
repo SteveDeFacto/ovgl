@@ -16,6 +16,12 @@
 * @brief This header defines all math functions used in Ovgl.
 */
 
+#ifdef _WIN32
+#  define DLLEXPORT __declspec( dllexport )
+#else
+#  define DLLEXPORT
+#endif
+
 namespace Ovgl
 {
 	// Define pi

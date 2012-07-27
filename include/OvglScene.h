@@ -16,10 +16,22 @@
 * @brief This Header defines each class that makes up the Ovgl::Scene class.
 */
 
+#ifdef _WIN32
+#  define DLLEXPORT __declspec( dllexport )
+#else
+#  define DLLEXPORT
+#endif
+
 // Forward declare external classes
 class btGeneric6DofConstraint;
 class btKinematicCharacterController;
 class btDiscreteDynamicsWorld;
+class btPairCachingGhostObject;
+class btManifoldPoint;
+class btCollisionObjectWrapper;
+class btBroadphaseProxy;
+typedef float btScalar;
+#include <bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
 namespace Ovgl
 {
