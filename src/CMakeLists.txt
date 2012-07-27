@@ -2,11 +2,8 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(Ovgl)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "./../lib")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "./../lib")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "./../lib")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "./../lib")
-set(CMAKE_DEBUG_POSTFIX "d")
+set(LIBRARY_OUTPUT_PATH "./../lib")
+set(CMAKE_DEBUG_POSTFIX "_d")
 
 IF(WIN32)
 
@@ -35,21 +32,21 @@ IF(WIN32)
     "${BULLET_DIR}/lib"
     "${GLEW_DIR}/lib")
 ELSEIF(UNIX)
-    include_directories("/usr/local/include/bullet")
+    include_directories( "./../include" "/usr/local/include/bullet")
 ENDIF(WIN32)
 
 
 add_library( Ovgl SHARED
-"OvglAudio.h"
-"OvglGraphics.h"
-"OvglIncludes.h"
-"OvglInstance.h"
-"OvglMath.h"
-"OvglMedia.h"
-"OvglMesh.h"
-"OvglScene.h"
-"OvglWindow.h"
-"OvglSkeleton.h"
+"../include/OvglAudio.h"
+"../include/OvglGraphics.h"
+"../include/OvglIncludes.h"
+"../include/OvglInstance.h"
+"../include/OvglMath.h"
+"../include/OvglMedia.h"
+"../include/OvglMesh.h"
+"../include/OvglScene.h"
+"../include/OvglWindow.h"
+"../include/OvglSkeleton.h"
 "OvglAudio.cpp"
 "OvglGraphics.cpp"
 "OvglInstance.cpp"

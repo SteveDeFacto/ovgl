@@ -354,8 +354,8 @@ namespace Ovgl
         settings.depthBits = 32;
         settings.stencilBits = 0;
         settings.antialiasingLevel = 0;
-		settings.majorVersion = 3;
-		settings.minorVersion = 1;
+        settings.majorVersion = 3;
+        settings.minorVersion = 3;
         hWnd = new sf::Window(sf::VideoMode(640, 480, 32), name.c_str(), sf::Style::Default, settings);
         hWnd->setActive( true );
         glEnable (GL_BLEND);
