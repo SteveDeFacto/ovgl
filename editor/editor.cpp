@@ -16,7 +16,7 @@
 * @brief None.
 */
 
-#include <../include/Ovgl.h>
+#include <Ovgl.h>
 
 Ovgl::Instance*				Inst;
 Ovgl::RenderTarget*			RenderTarget;
@@ -75,14 +75,14 @@ int main()
 	Window->On_KeyDown = KeyDown;
 
 	// Create Render Target
-	RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::Vector4(0.0f, 0.0f, 0.999f, 0.999f), NULL);
+    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::Vector4(0.0f, 0.0f, 0.999f, 0.999f), 0);
 	RenderTarget->bloom = 4;
 	RenderTarget->autoLuminance = true;
 	RenderTarget->motionBlur = true;
 	RenderTarget->multiSample = true;
 	RenderTarget->debugMode = false;
 
-	// Create Media Library
+    // Create Media Library
 	MediaLibrary = new Ovgl::MediaLibrary(Inst, "");
 
 	// Create empty scene

@@ -2,25 +2,13 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(editor)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "./../bin/editor")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "./../bin/editor")
-set(CMAKE_DEBUG_POSTFIX "d")
+set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/../bin")
+set(CMAKE_DEBUG_POSTFIX "_d")
 
-include_directories( "${CMAKE_SOURCE_DIR}/ovgl" )
+include_directories( "./../include" "/usr/local/include/bullet")
 
-link_directories( "${CMAKE_SOURCE_DIR}/lib" )
+link_directories( "./../lib" )
 
 add_executable( editor WIN32 editor.cpp)
 
-target_link_libraries( editor debug "ovgld.lib" optimized "ovgl.lib")
-
-add_custom_command(
-TARGET
-editor 
-POST_BUILD
-COMMAND
-copy "..\\lib\\ovgl.dll" "..\\bin\\editor\\ovgl.dll";
-COMMAND
-copy "..\\lib\\ovgld.dll" "..\\bin\\editor\\ovgld.dll";
-VERBATIM
-)
+target_link_libraries( editor debug "Ovgl_d" optimized "Ovgl")
