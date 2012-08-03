@@ -39,7 +39,6 @@ ENDIF(WIN32)
 add_library( Ovgl SHARED
 "../include/OvglAudio.h"
 "../include/OvglGraphics.h"
-"../include/OvglIncludes.h"
 "../include/OvglInstance.h"
 "../include/OvglMath.h"
 "../include/OvglMedia.h"
@@ -57,6 +56,8 @@ add_library( Ovgl SHARED
 "OvglWindow.cpp"
 "OvglSkeleton.cpp")
 
+
+IF(WIN32)
 target_link_libraries( Ovgl
 optimized "sfml-graphics"
 debug "sfml-graphics-d"
@@ -68,6 +69,9 @@ optimized "sfml-audio"
 debug "sfml-audio-d"
 optimized "sfml-network"
 debug "sfml-network-d"
+optimized "sfml-main"
+debug "sfml-main-d"
+"sfgui"
 "GL"
 "openal"
 "Cg"
@@ -80,14 +84,28 @@ debug "BulletCollision_d"
 optimized "LinearMath"
 debug "LinearMath_d"
 optimized "assimp")
-
-IF(WIN32)
+ELSEIF(UNIX)
 target_link_libraries( Ovgl
-optimized "sfml-main"
-debug "sfml-main-d")
+"sfml-graphics"
+"sfml-window"
+"sfml-system"
+"sfml-audio"
+"sfml-network"
+"sfgui"
+"GL"
+"openal"
+"Cg"
+"CgGL"
+"GLEW"
+"BulletDynamics"
+"BulletCollision"
+"LinearMath"
+"assimp"
+"CEGUIBase"
+"CEGUIOpenGLRenderer")
 ENDIF(WIN32)
 
-add_definitions( -DNOMINMAX -DGLEW_STATIC -DSFML_STATIC  )
+add_definitions( -DNOMINMAX )
 
 if(OVGL_BUILD_DOC)
 	find_package( Doxygen )

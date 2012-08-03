@@ -16,29 +16,63 @@
 * @brief None.
 */
 
+#pragma once
+
+#pragma warning(disable : 4251) // Disable std warnings
+
+#pragma warning(disable : 4244) // Disable conversion loss of data warnings
+
+#define _CRT_SECURE_NO_WARNINGS // Disable security warnings
+
+#define __STDC_CONSTANT_MACROS // Enable c99 macros
+
 #ifdef _WIN32
 #  define DLLEXPORT __declspec( dllexport )
 #else
 #  define DLLEXPORT
 #endif
 
-#include <Cg/cg.h>
+// C++ Standard Library Headers
+#include <sys/stat.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <math.h>
+#include <algorithm>
+#include <iostream>
+#include <fstream>
+#include <map>
+#include <vector>
+#include <string>
+#include <set>
+
+// GLEW Headers
+#include <GL/glew.h>
+
+// SFML Headers
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/System.hpp>
 #include <SFML/OpenGL.hpp>
 
-// Forward declare external classes
-class btDefaultCollisionConfiguration;
-class btCollisionDispatcher;
-class btBroadphaseInterface;
-class btSequentialImpulseConstraintSolver;
-class btConvexHullShape;
-struct ALCdevice_struct;
-struct ALCcontext_struct;
-typedef struct ALCdevice_struct ALCdevice;
-typedef struct ALCcontext_struct ALCcontext;
+// OpenAl Headers
+#include <AL/al.h>
+#include <AL/alc.h>
+
+// Cg Headers
+#include <Cg/cg.h>
+#include <Cg/cgGL.h>
+
+// Bullet Headers
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletDynamics/Character/btKinematicCharacterController.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
+
+// Assimp Headers
+#include <assimp/cimport.h>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 
 namespace Ovgl
 {

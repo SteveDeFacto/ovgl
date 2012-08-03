@@ -16,7 +16,6 @@
 * @brief This file contains classes related to the Ovgl mesh format.
 */
 
-#include "OvglIncludes.h"
 #include "OvglInstance.h"
 #include "OvglMath.h"
 #include "OvglMesh.h"
@@ -82,67 +81,69 @@ namespace Ovgl
 				delete skeleton->bones[i]->convex;
 			}
 		}
-		glGenBuffersARB( 1, &vertex_buffer );
-		glBindBufferARB( GL_ARRAY_BUFFER, vertex_buffer );
-		glBufferDataARB( GL_ARRAY_BUFFER, vertices.size()*sizeof(Vertex), &vertices[0], GL_STATIC_DRAW );
+        glGenBuffersARB( 1, &vertex_buffer );
+        glBindBufferARB( GL_ARRAY_BUFFER, vertex_buffer );
+        glBufferDataARB( GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW );
+        glBindBufferARB( GL_ARRAY_BUFFER, 0 );
 
-		// Create Index buffers.
-		std::set<uint32_t> usedAttributes(attributes.begin(), attributes.end());
-		std::vector< std::vector< Face > > index_subsets;
-		index_subsets.resize(usedAttributes.size());
-		for( uint32_t i = 0; i < attributes.size(); i++ )
-		{
-			uint32_t s = 0; 
-			for( std::set<uint32_t>::iterator j = usedAttributes.begin(); j != usedAttributes.end(); ++j)
-			{
-				if( attributes[i] == *j )
-				{
-					index_subsets[s].push_back(faces[i]);
-				}
-				s++;
-			}
-		}
+        // Create Index buffers.
+        std::set<uint32_t> usedAttributes(attributes.begin(), attributes.end());
+        std::vector< std::vector< Face > > index_subsets;
+        index_subsets.resize(usedAttributes.size());
+        for( uint32_t i = 0; i < attributes.size(); i++ )
+        {
+            uint32_t s = 0;
+            for( std::set<uint32_t>::iterator j = usedAttributes.begin(); j != usedAttributes.end(); ++j)
+            {
+                if( attributes[i] == *j )
+                {
+                    index_subsets[s].push_back(faces[i]);
+                }
+                s++;
+            }
+        }
 
-		// Get subset count.
-		subset_count = index_subsets.size();
+        // Get subset count.
+        subset_count = index_subsets.size();
 
-		index_buffers = new uint32_t[subset_count];
-		for( uint32_t i = 0; i < subset_count; i++ )
-		{
-			glGenBuffersARB( 1, &index_buffers[i] );
-			glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, index_buffers[i] );
-			glBufferDataARB( GL_ELEMENT_ARRAY_BUFFER, index_subsets[i].size()*sizeof(Face), &index_subsets[i][0], GL_STATIC_DRAW );
-		}
+        index_buffers = new uint32_t[subset_count];
+        for( uint32_t i = 0; i < subset_count; i++ )
+        {
+            glGenBuffersARB( 1, &index_buffers[i] );
+            glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, index_buffers[i] );
+            glBufferDataARB( GL_ELEMENT_ARRAY_BUFFER, index_subsets[i].size()*sizeof(Face), &index_subsets[i][0], GL_STATIC_DRAW );
+        }
+        glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, 0 );
 
 		// Create triangle mesh.
-		btTriangleMesh* trimesh = new btTriangleMesh();
-		for( uint32_t t = 0; t < faces.size(); t++ )
-		{
-			btVector3* v0 = (btVector3*)&vertices[faces[t].indices[0]].position;
-			btVector3* v1 = (btVector3*)&vertices[faces[t].indices[1]].position;
-			btVector3* v2 = (btVector3*)&vertices[faces[t].indices[2]].position;
-			trimesh->addTriangle( *v0, *v1, *v2 );
-		}
-		if( trimesh->getNumTriangles() )
-		{
-			triangle_mesh = new btBvhTriangleMeshShape(trimesh, false);
-			triangle_mesh->setMargin(0.1f);
-		}
-		else
-		{
-			delete trimesh;
-		}
+        btTriangleMesh* trimesh = new btTriangleMesh();
+        for( uint32_t t = 0; t < faces.size(); t++ )
+        {
+            btVector3* v0 = (btVector3*)&vertices[faces[t].indices[0]].position;
+            btVector3* v1 = (btVector3*)&vertices[faces[t].indices[1]].position;
+            btVector3* v2 = (btVector3*)&vertices[faces[t].indices[2]].position;
+            trimesh->addTriangle( *v0, *v1, *v2 );
+        }
+        if( trimesh->getNumTriangles() )
+        {
+            triangle_mesh = new btBvhTriangleMeshShape(trimesh, false);
+            triangle_mesh->setMargin(0.1f);
+        }
+        else
+        {
+            delete trimesh;
+        }
 		// Create bone shapes.
-		for( uint32_t i = 0; i < skeleton->bones.size(); i++ )
-		{
-			if(skeleton->bones[i]->mesh->vertices.size() > 0)
-			{
-				skeleton->bones[i]->mesh->clean( 0.001f, CLEAN_CLOSE_VERTICES );
-				skeleton->bones[i]->volume = skeleton->bones[i]->mesh->quick_hull();
-				skeleton->bones[i]->mesh->simplify(100, 0);
-				skeleton->bones[i]->convex = new btConvexHullShape((float*)&skeleton->bones[i]->mesh->vertices[0], skeleton->bones[i]->mesh->vertices.size(), sizeof(Vertex));
-			}
-		}
+        for( uint32_t i = 0; i < skeleton->bones.size(); i++ )
+        {
+            if(skeleton->bones[i]->mesh->vertices.size() > 0)
+            {
+                skeleton->bones[i]->mesh->clean( 0.001f, CLEAN_CLOSE_VERTICES );
+                skeleton->bones[i]->volume = skeleton->bones[i]->mesh->quick_hull();
+                skeleton->bones[i]->mesh->simplify(100, 0);
+                skeleton->bones[i]->convex = new btConvexHullShape((float*)&skeleton->bones[i]->mesh->vertices[0], skeleton->bones[i]->mesh->vertices.size(), sizeof(Vertex));
+            }
+        }
 	}
 
 	Mesh::Mesh()

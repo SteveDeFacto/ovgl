@@ -16,7 +16,6 @@
 * @brief This file contains classes related to 3D scene objects.
 */
 
-#include "OvglIncludes.h"
 #include "OvglInstance.h"
 #include "OvglMath.h"
 #include "OvglMedia.h"

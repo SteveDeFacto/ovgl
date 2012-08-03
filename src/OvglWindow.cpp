@@ -16,7 +16,6 @@
 * @brief This file contains all classes used for windows and keyboard/mouse inputs.
 */
 
-#include "OvglIncludes.h"
 #include "OvglInstance.h"
 #include "OvglMath.h"
 #include "OvglGraphics.h"
@@ -356,11 +355,15 @@ namespace Ovgl
         settings.antialiasingLevel = 0;
         settings.majorVersion = 3;
         settings.minorVersion = 3;
-        hWnd = new sf::Window(sf::VideoMode(640, 480, 32), name.c_str(), sf::Style::Default, settings);
+        hWnd = new sf::RenderWindow(sf::VideoMode(640, 480), name.c_str(), sf::Style::Default, settings);
         hWnd->setActive( true );
         glEnable (GL_BLEND);
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable (GL_CULL_FACE);
+        hWnd->setActive( false );
+
+
+
 		instance->Windows.push_back(this);
 	};
 
@@ -405,6 +408,22 @@ namespace Ovgl
                     {
                         On_MouseMove( Event.mouseMove.x, Event.mouseMove.y );
                     }
+                    if(Event.mouseMove.x < 0)
+                    {
+                        Event.mouseMove.x = 0;
+                    }
+                    else if(Event.mouseMove.x > hWnd->getSize().x)
+                    {
+                        Event.mouseMove.x = hWnd->getSize().x;
+                    }
+                    if(Event.mouseMove.y < 0)
+                    {
+                        Event.mouseMove.y = 0;
+                    }
+                    else if(Event.mouseMove.y > hWnd->getSize().y)
+                    {
+                        Event.mouseMove.y = hWnd->getSize().y;
+                    }
                 }
                 break;
             case sf::Event::MouseButtonPressed:
@@ -426,7 +445,6 @@ namespace Ovgl
                 }
                 while(hWnd->pollEvent(Event)){}
                 break;
-
             case sf::Event::GainedFocus:
                 active = true;
                 break;
@@ -451,19 +469,19 @@ namespace Ovgl
         hWnd->display();
     }
 
-	void Window::SetFullscreen( bool state )
+    void Window::SetFullscreen( bool state )
 	{
 		if(state)
 		{
             sf::ContextSettings settings = hWnd->getSettings();
             sf::Vector2u winsz = hWnd->getSize();
             delete hWnd;
-            hWnd = new sf::Window(sf::VideoMode(winsz.x, winsz.y, 32), title.c_str(), sf::Style::Fullscreen, settings);
+            hWnd = new sf::RenderWindow(sf::VideoMode(winsz.x, winsz.y, 32), title.c_str(), sf::Style::Fullscreen, settings);
+            hWnd->setMouseCursorVisible( !this->lockmouse );
             hWnd->setActive( true );
             glEnable (GL_BLEND);
             glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glEnable (GL_CULL_FACE);
-            hWnd->setMouseCursorVisible( !lockmouse );
 			fullscreen = true;
 		}
 		else
@@ -471,12 +489,12 @@ namespace Ovgl
             sf::ContextSettings settings = hWnd->getSettings();
             sf::Vector2u winsz = hWnd->getSize();
             delete hWnd;
-            hWnd = new sf::Window(sf::VideoMode(winsz.x, winsz.y, 32), title.c_str(), sf::Style::Default, settings);
+            hWnd = new sf::RenderWindow(sf::VideoMode(winsz.x, winsz.y, 32), title.c_str(), sf::Style::Default, settings);
+            hWnd->setMouseCursorVisible( !this->lockmouse );
             hWnd->setActive( true );
             glEnable (GL_BLEND);
             glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glEnable (GL_CULL_FACE);
-            hWnd->setMouseCursorVisible( !lockmouse );
 			fullscreen = false;
 		}
 	}

@@ -21,6 +21,7 @@
 Ovgl::Instance*				Inst;
 Ovgl::RenderTarget*			RenderTarget;
 Ovgl::Window*				Window;
+Ovgl::Window*				Window2;
 Ovgl::MediaLibrary*			MediaLibrary;
 Ovgl::Scene*				Scene;
 Ovgl::Actor*				Actor;
@@ -68,60 +69,60 @@ int main()
 
 	// Create Window
 	Window = new Ovgl::Window( Inst, "Test");
-	Window->LockMouse(true);
+    Window->LockMouse(true);
     Window->SetFullscreen( false );
     Window->SetVSync( true );
-	Window->On_MouseMove = MouseMove;
-	Window->On_KeyDown = KeyDown;
+    Window->On_MouseMove = MouseMove;
+    Window->On_KeyDown = KeyDown;
 
-	// Create Render Target
-    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::Vector4(0.0f, 0.0f, 0.999f, 0.999f), 0);
-	RenderTarget->bloom = 4;
-	RenderTarget->autoLuminance = true;
-	RenderTarget->motionBlur = true;
-	RenderTarget->multiSample = true;
-	RenderTarget->debugMode = false;
+    // Create Render Target
+    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::Vector4(0.0f, 0.0f, 0.9999f, 0.9999f), 0);
+    RenderTarget->bloom = 4;
+    RenderTarget->autoLuminance = true;
+    RenderTarget->motionBlur = true;
+    RenderTarget->multiSample = true;
+    RenderTarget->debugMode = false;
 
     // Create Media Library
-	MediaLibrary = new Ovgl::MediaLibrary(Inst, "");
+    MediaLibrary = new Ovgl::MediaLibrary(Inst, "");
 
-	// Create empty scene
-	Scene = MediaLibrary->CreateScene();
+    // Create empty scene
+    Scene = MediaLibrary->CreateScene();
 
-	// Add light to scene.
+    // Add light to scene.
     Light = Scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 10.0f, 10.0f, 10.0f, 10.0f ));
 
-	// Add camera to scene
-	Camera = Scene->CreateCamera(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
+    // Add camera to scene
+    Camera = Scene->CreateCamera(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
 
-	// Set camera as view for render target
-	RenderTarget->View = Camera;
+    // Set camera as view for render target
+    RenderTarget->View = Camera;
 
-	// Create cubemap texture
-	Texture1 = MediaLibrary->ImportCubeMap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
-											"../media/textures/skybox/bottom.png", "../media/textures/skybox/left.png", "../media/textures/skybox/right.png");
-	// Create 2D texture
-	Texture2 = MediaLibrary->ImportTexture("../media/textures/Grass.png");
+    // Create cubemap texture
+    Texture1 = MediaLibrary->ImportCubeMap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
+                                            "../media/textures/skybox/bottom.png", "../media/textures/skybox/left.png", "../media/textures/skybox/right.png");
+    // Create 2D texture
+    Texture2 = MediaLibrary->ImportTexture("../media/textures/Grass.png");
 
-	// Import mesh
-	Mesh = MediaLibrary->ImportModel( "../media/meshes/plane.dae", true );
-	Mesh2 = MediaLibrary->ImportModel( "../media/meshes/test.dae", true );
+    // Import mesh
+    Mesh = MediaLibrary->ImportModel( "../media/meshes/plane.dae", true );
+    Mesh2 = MediaLibrary->ImportModel( "../media/meshes/test.dae", true );
 
-	MediaLibrary->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);
+    MediaLibrary->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);
 
-	// Add object to scene
-	Object = Scene->CreateObject(Mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
+    // Add object to scene
+    Object = Scene->CreateObject(Mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
     Object->materials[0]->setEffectTexture("txDiffuse", Texture2);
 
-	// Add actor to scene
-	Actor = Scene->CreateActor(Mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
-	Actor->PlayAnimation( &Mesh2->skeleton->animations[0], 0, 10, true);
+    // Add actor to scene
+    Actor = Scene->CreateActor(Mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+    Actor->PlayAnimation( &Mesh2->skeleton->animations[0], 0, 10, true);
 
-	Actor2 = Scene->CreateActor(Mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
-	Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
+    Actor2 = Scene->CreateActor(Mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+    Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
 
-	// Set scene sky box
-	Scene->sky_box = Texture1;
+    // Set scene sky box
+    Scene->sky_box = Texture1;
 
 	Inst->Start();
 

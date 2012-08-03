@@ -16,7 +16,6 @@
 * @brief This file contains classes which import external media formats into an Ovgl media library.
 */
 
-#include "OvglIncludes.h"
 #include "OvglInstance.h"
 #include "OvglMath.h"
 #include "OvglMedia.h"
@@ -643,7 +642,7 @@ namespace Ovgl
 			mesh->index_buffers = 0;
 
 			// Update video memory copies of index and vertex buffers.
-			mesh->update();
+            mesh->update();
 
 			Meshes.push_back( mesh );
 			return mesh;

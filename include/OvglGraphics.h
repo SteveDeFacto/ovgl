@@ -169,59 +169,5 @@ namespace Ovgl
 			*/
 			void RenderMesh( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender );
 		};
-
-		class Interface
-		{
-		public:
-			/**
-			* Pointer to render target.
-			*/
-			Ovgl::RenderTarget*					RenderTarget;
-			/**
-			* Pointer to texture to display for this interface.
-			*/
-			Ovgl::Texture*						Texture;
-			int									CSize;
-			/**
-			* Text to display for this interface.
-			*/
-			std::string							Text;
-			/**
-			* Font to use for this interface.
-			*/
-			std::string							Font;
-			/**
-			* Font size to use for this interface.
-			*/
-			float								Size;
-			/**
-			* Specifies if font is bold.
-			*/
-			bool								Bold;
-			/**
-			* Specifies if font is italic.
-			*/
-			bool								Italic;
-			/**
-			* Area to render interface.
-			*/
-			Ovgl::Vector4						Rect;
-			/**
-			* Specifies if render target is enabled.
-			*/
-			bool								Enabled;
-			/**
-			* Specifies if mouse pointer is over interface.
-			*/
-			bool								Over;
-			/**
-			* Updates texture to display the specified text.
-			*/
-			void UpdateText();
-			/**
-			* Releases this interface.
-			*/
-			void Release();
-		};
 	}
 }

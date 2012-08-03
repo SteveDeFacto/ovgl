@@ -16,7 +16,6 @@
 * @brief None.
 */
 
-#include "OvglIncludes.h"
 #include "OvglInstance.h"
 #include "OvglMath.h"
 #include "OvglMedia.h"
@@ -494,7 +493,7 @@ namespace Ovgl
 		btVector3 worldMin(-1000,-1000,-1000);
 		btVector3 worldMax(1000,1000,1000);
 		PhysicsBroadphase = new btAxisSweep3(worldMin,worldMax);
-		PhysicsSolver = new btSequentialImpulseConstraintSolver;
+        PhysicsSolver = new btSequentialImpulseConstraintSolver;
 
 		// Build the default media.
 		BuildDefaultMedia( this );
@@ -602,19 +601,19 @@ namespace Ovgl
 			{
 				for( uint32_t s = 0; s < MediaLibraries[ml]->Scenes.size(); s++ )
 				{
-					MediaLibraries[ml]->Scenes[s]->Update(elapsedTime);
+                    MediaLibraries[ml]->Scenes[s]->Update(elapsedTime);
 				}
 			}
 			for( uint32_t w = 0; w < Windows.size(); w++ )
 			{
 				for( uint32_t r = 0; r < Windows[w]->RenderTargets.size(); r++ )
 				{
-					Windows[w]->RenderTargets[r]->Render();
+                   Windows[w]->RenderTargets[r]->Render();
 				}
 			}
 			for( uint32_t w = 0; w < Windows.size(); w++ )
 			{
-				Windows[w]->DoEvents();
+                Windows[w]->DoEvents();
 			}
 			previousTime = currentTime;
 		}

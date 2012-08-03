@@ -34,9 +34,9 @@ namespace Ovgl
 			Window( Ovgl::Instance* inst, const std::string& name );
 			~Window();
 			Instance* inst;
-			sf::Window* hWnd;
+            sf::RenderWindow* hWnd;
 			sf::Thread* event_thread;
-			std::vector< RenderTarget* > RenderTargets;
+            std::vector< RenderTarget* > RenderTargets;
             std::string title;
 			bool sizing;
 			bool active;
