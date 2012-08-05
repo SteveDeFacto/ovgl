@@ -1089,6 +1089,8 @@ Interface::Interface( Interface* parent, const URect& rect )
 {
     this->rect = rect;
     background = NULL;
+    tilex = false;
+    tiley = false;
     color = parent->color;
     On_KeyDown = NULL;
     On_KeyUp = NULL;
@@ -1105,6 +1107,8 @@ Interface::Interface( RenderTarget* parent, const URect& rect )
 {
     this->rect = rect;
     background = NULL;
+    tilex = false;
+    tiley = false;
     color = Vector4( 1.0f, 1.0f, 1.0f, 1.0f );
     On_KeyDown = NULL;
     On_KeyUp = NULL;
@@ -1135,14 +1139,29 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
 
     glColor4f(color.x, color.y, color.z, color.w);
 
+    float tilewidth = 1.0f;
+    float tileheight = 1.0f;
+
+    if(tilex)
+    {
+        GLint width;
+        glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        tilewidth = (float)(adjustedrect.right - adjustedrect.left) / (float)width;
+    }
+    if(tiley)
+    {
+        GLint height;
+        glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+        tileheight = (float)(adjustedrect.bottom - adjustedrect.top) / (float)height;
+    }
     glBegin( GL_QUADS );
-    glTexCoord2i( 1, 1 );
+    glTexCoord2f( tilewidth, tileheight );
     glVertex2i( adjustedrect.right, adjustedrect.top );
-    glTexCoord2i( 0, 1 );
+    glTexCoord2f( 0, tileheight );
     glVertex2i( adjustedrect.left, adjustedrect.top );
-    glTexCoord2i( 0, 0 );
+    glTexCoord2f( 0, 0 );
     glVertex2i( adjustedrect.left, adjustedrect.bottom );
-    glTexCoord2i( 1, 0 );
+    glTexCoord2f( tilewidth, 0 );
     glVertex2i( adjustedrect.right, adjustedrect.bottom );
     glEnd();
 

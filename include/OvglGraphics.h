@@ -182,6 +182,8 @@ namespace Ovgl
             RenderTarget*               rendertarget;
             URect                       rect;
             Texture*                    background;
+            bool                        tilex;
+            bool                        tiley;
             Vector4                     color;
             std::string                 text;
             Interface*                  parent;

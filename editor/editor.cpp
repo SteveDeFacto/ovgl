@@ -87,7 +87,8 @@ int main()
     RenderTarget->multiSample = true;
     RenderTarget->debugMode = false;
 
-    Interface = new Ovgl::Interface( RenderTarget, Ovgl::URect(0.1f, 50, 0.9f, 100) );
+    Interface = new Ovgl::Interface( RenderTarget, Ovgl::URect(0.1f, 50, 1.0f, 100) );
+    Interface->tilex = true;
     Interface2 = new Ovgl::Interface( Interface, Ovgl::URect(0.5f, 0.0f, 1.0f, 0.1f) );
 
     // Create Media Library
