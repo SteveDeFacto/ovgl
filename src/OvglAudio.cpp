@@ -26,107 +26,107 @@
 
 namespace Ovgl
 {
-	AudioInstance* AudioBuffer::CreateAudioInstance( Emitter* emitter, bool loop )
-	{
-		AudioInstance* instance = new AudioInstance;
-		instance->paused = false;
-		instance->emitter = emitter;
-		AudioVoice* voice = new AudioVoice;
-		voice->instance = instance;
-		alGenSources(1, &voice->source);
-		if( !emitter && format == AL_FORMAT_STEREO16 )
-		{
-			alSourcei( voice->source, AL_BUFFER, stereo );
-		}
-		else
-		{
-			alSourcei( voice->source, AL_BUFFER, mono );
-		}
-		if( !emitter )
-		{
-			alSourcei( voice->source, AL_SOURCE_RELATIVE, AL_TRUE );
+AudioInstance* AudioBuffer::CreateAudioInstance( Emitter* emitter, bool loop )
+{
+    AudioInstance* instance = new AudioInstance;
+    instance->paused = false;
+    instance->emitter = emitter;
+    AudioVoice* voice = new AudioVoice;
+    voice->instance = instance;
+    alGenSources(1, &voice->source);
+    if( !emitter && format == AL_FORMAT_STEREO16 )
+    {
+        alSourcei( voice->source, AL_BUFFER, stereo );
+    }
+    else
+    {
+        alSourcei( voice->source, AL_BUFFER, mono );
+    }
+    if( !emitter )
+    {
+        alSourcei( voice->source, AL_SOURCE_RELATIVE, AL_TRUE );
+    }
+    alSourcef( voice->source, AL_PITCH,	1.0f );
+    alSourcef( voice->source, AL_GAIN, 1.0f );
+    alSourcei( voice->source, AL_LOOPING, loop );
+    alSourcePlay( voice->source );
+    instance->voices.push_back(voice);
+    if( emitter )
+    {
+        for( uint32_t w = 0; w < Inst->Windows.size(); w++ )
+        {
+            for( uint32_t r = 0; r < Inst->Windows[w]->RenderTargets.size(); r++ )
+            {
+                for(uint32_t c = 0; c < emitter->scene->cameras.size(); c++)
+                {
+                    if( Inst->Windows[w]->RenderTargets[r]->View == emitter->scene->cameras[c] )
+                    {
+                        emitter->scene->cameras[c]->voices.push_back(voice);
+                    }
+                }
+            }
         }
-		alSourcef( voice->source, AL_PITCH,	1.0f );
-		alSourcef( voice->source, AL_GAIN, 1.0f );
-		alSourcei( voice->source, AL_LOOPING, loop );
-		alSourcePlay( voice->source );
-		instance->voices.push_back(voice);
-		if( emitter )
-		{
-			for( uint32_t w = 0; w < Inst->Windows.size(); w++ )
-			{
-				for( uint32_t r = 0; r < Inst->Windows[w]->RenderTargets.size(); r++ )
-				{
-					for(uint32_t c = 0; c < emitter->scene->cameras.size(); c++)
-					{
-						if( Inst->Windows[w]->RenderTargets[r]->View == emitter->scene->cameras[c] )
-						{
-							emitter->scene->cameras[c]->voices.push_back(voice);
-						}
-					}
-				}
-			}
-		}
-		return instance;
-	}
+    }
+    return instance;
+}
 
-	void AudioInstance::Play( bool loop )
-	{
-		for( uint32_t i = 0; i < voices.size(); i++ )
-		{
-			alSourcePlay( voices[i]->source );
-		}
-		paused = false;
-	}
+void AudioInstance::Play( bool loop )
+{
+    for( uint32_t i = 0; i < voices.size(); i++ )
+    {
+        alSourcePlay( voices[i]->source );
+    }
+    paused = false;
+}
 
 
-	void AudioInstance::Stop()
-	{
-		for( uint32_t i = 0; i < voices.size(); i++ )
-		{
-			alSourceStop(voices[i]->source);
-		}
-	}
+void AudioInstance::Stop()
+{
+    for( uint32_t i = 0; i < voices.size(); i++ )
+    {
+        alSourceStop(voices[i]->source);
+    }
+}
 
-	void AudioInstance::Pause()
-	{
-		//if( paused )
-		//{
-		//	for( uint32_t v = 0; v < voices.size(); v++ )
-		//	{
-		//		voices[v]->voice->Start( 0 );
-		//	}
-		//	paused = false;
-		//}
-		//else
-		//{
-		//	for( uint32_t v = 0; v < voices.size(); v++ )
-		//	{
-		//		voices[v]->voice->Stop( 0 );
-		//	}
-		//	paused = true;
-		//}
-	}
+void AudioInstance::Pause()
+{
+    //if( paused )
+    //{
+    //	for( uint32_t v = 0; v < voices.size(); v++ )
+    //	{
+    //		voices[v]->voice->Start( 0 );
+    //	}
+    //	paused = false;
+    //}
+    //else
+    //{
+    //	for( uint32_t v = 0; v < voices.size(); v++ )
+    //	{
+    //		voices[v]->voice->Stop( 0 );
+    //	}
+    //	paused = true;
+    //}
+}
 
-	void AudioVoice::Release()
-	{
-		alDeleteSources( 1, &source );
-		delete this;
-	}
+void AudioVoice::Release()
+{
+    alDeleteSources( 1, &source );
+    delete this;
+}
 
-	void AudioInstance::Release()
-	{
-		for( uint32_t i = 0; i < 0; i++)
-		{
-			voices[i]->Release();
-		}
-		voices.clear();
-		delete this;
-	}
+void AudioInstance::Release()
+{
+    for( uint32_t i = 0; i < 0; i++)
+    {
+        voices[i]->Release();
+    }
+    voices.clear();
+    delete this;
+}
 
-	void AudioBuffer::Release()
-	{
-		data.clear();
-		delete this;
-	}
+void AudioBuffer::Release()
+{
+    data.clear();
+    delete this;
+}
 }
