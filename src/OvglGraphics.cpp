@@ -69,8 +69,24 @@ namespace Ovgl
         return adjustedrect;
 	}
 
+    Ovgl::Rect RenderTargetAdjustedRect( RenderTarget* rendertarget, URect* rect)
+    {
+        // Get the rendertarget's rect
+        Ovgl::Rect RenderTargetRect;
+
+        RenderTargetRect = WindowAdjustedRect(rendertarget->hWin, &rendertarget->rect);
+
+        Ovgl::Rect adjustedrect;
+        adjustedrect.left = ((RenderTargetRect.right - RenderTargetRect.left) * rect->left.scale) + rect->left.offset;
+        adjustedrect.top = ((RenderTargetRect.bottom - RenderTargetRect.top) * rect->top.scale) + rect->top.offset;
+        adjustedrect.right = ((RenderTargetRect.right - RenderTargetRect.left) * rect->right.scale) + rect->right.offset;
+        adjustedrect.bottom = ((RenderTargetRect.bottom - RenderTargetRect.top) * rect->bottom.scale) + rect->bottom.offset;
+
+        return adjustedrect;
+    }
+
     Ovgl::Rect TextureAdjustedRect( Texture* texture, URect* rect)
-	{
+    {
         // Get the window's rect
         Ovgl::Rect WindowRect;
 
@@ -95,6 +111,13 @@ namespace Ovgl
     RenderTarget::RenderTarget( Instance* Instance, Window* hWindow, const URect& viewport, uint32_t flags )
 	{
 		Inst = Instance;
+        On_KeyDown = NULL;
+        On_KeyUp = NULL;
+        On_MouseMove = NULL;
+        On_MouseDown = NULL;
+        On_MouseUp = NULL;
+        On_MouseOver = NULL;
+        On_MouseOut = NULL;
 		hWin = hWindow;
 		hTex = NULL;
 		View = NULL;
@@ -120,9 +143,16 @@ namespace Ovgl
     RenderTarget::RenderTarget( Instance* Instance, Texture* hTexture, const URect& viewport, uint32_t flags )
 	{
 		Inst = Instance;
+        On_KeyDown = NULL;
+        On_KeyUp = NULL;
+        On_MouseMove = NULL;
+        On_MouseDown = NULL;
+        On_MouseUp = NULL;
+        On_MouseOver = NULL;
+        On_MouseOut = NULL;
 		hWin = NULL;
 		hTex = hTexture;
-		View = NULL;
+        View = NULL;
 		debugMode = false;
 		autoLuminance = true;
 		bloom = 4;
@@ -777,7 +807,6 @@ namespace Ovgl
             glDepthMask (GL_FALSE);
             glDisable( GL_LIGHTING );
             glEnable(GL_TEXTURE_2D);
-            glDisable (GL_BLEND);
             glMatrixMode( GL_MODELVIEW );
             glLoadIdentity();
             glMatrixMode( GL_PROJECTION );
@@ -846,6 +875,7 @@ namespace Ovgl
                 glVertex2i( adjustedrect.right, adjustedrect.bottom );
             glEnd();
 
+            glEnable(GL_BLEND);
             for( int i = 0; i < Interfaces.size(); i++ )
             {
                 Ovgl::Rect interfacerect;
@@ -855,6 +885,7 @@ namespace Ovgl
                 interfacerect.bottom = ((adjustedrect.bottom - adjustedrect.top) * Interfaces[i]->rect.bottom.scale) + Interfaces[i]->rect.bottom.offset + adjustedrect.top;
                 Interfaces[i]->render( interfacerect );
             }
+            glDisable(GL_BLEND);
             hWin->hWnd->setActive(false);
 		}
 	}
@@ -937,15 +968,152 @@ namespace Ovgl
         hWin->hWnd->setActive(false);
 	}
 
+    void RenderTarget::DoEvent(sf::Event event)
+    {
+        Ovgl::Rect adjustedrect;
+        adjustedrect = WindowAdjustedRect( hWin, &rect);
+        switch (event.type)
+        {
+        case sf::Event::KeyPressed:
+            if(On_KeyDown)
+            {
+                On_KeyDown( event.key.code );
+            }
+            for( uint32_t i = 0; i < Interfaces.size(); i++ )
+            {
+                Interfaces[i]->DoEvent(event, adjustedrect);
+            }
+            break;
+
+        case sf::Event::KeyReleased:
+            if(On_KeyUp)
+            {
+                On_KeyUp( event.key.code );
+            }
+            for( uint32_t i = 0; i < Interfaces.size(); i++ )
+            {
+                Interfaces[i]->DoEvent(event, adjustedrect);
+            }
+            break;
+        case sf::Event::MouseMoved:
+            if( event.mouseMove.x > adjustedrect.left && event.mouseMove.x < adjustedrect.right )
+                if( event.mouseMove.y > adjustedrect.top && event.mouseMove.y < adjustedrect.bottom )
+                {
+                    event.mouseMove.x -= adjustedrect.left;
+                    event.mouseMove.y -= adjustedrect.top;
+                    if(On_MouseMove)
+                    {
+                        On_MouseMove( event.mouseMove.x, event.mouseMove.y );
+                    }
+                    for( uint32_t i = 0; i < Interfaces.size(); i++ )
+                    {
+                        Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
+                        if( event.mouseMove.x > interfacerect.left && event.mouseMove.x < interfacerect.right )
+                            if( event.mouseMove.y > interfacerect.top && event.mouseMove.y < interfacerect.bottom )
+                            {
+                                sf::Event interfaceevent = event;
+                                interfaceevent.mouseMove.x -= interfacerect.left;
+                                interfaceevent.mouseMove.y -= interfacerect.top;
+                                Interfaces[i]->DoEvent(interfaceevent, interfacerect);
+                            }
+                    }
+                }
+            break;
+        case sf::Event::MouseButtonPressed:
+            if( event.mouseButton.x > adjustedrect.left && event.mouseButton.x < adjustedrect.right )
+                if( event.mouseButton.y > adjustedrect.top && event.mouseButton.y < adjustedrect.bottom )
+                {
+                    event.mouseButton.x -= adjustedrect.left;
+                    event.mouseButton.y -= adjustedrect.top;
+                    if(On_MouseDown)
+                    {
+                        On_MouseDown( event.mouseButton.x, event.mouseButton.y, event.mouseButton.button );
+                    }
+                    for( uint32_t i = 0; i < Interfaces.size(); i++ )
+                    {
+                        Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
+                        if( event.mouseButton.x > interfacerect.left && event.mouseButton.x < interfacerect.right )
+                            if( event.mouseButton.y > interfacerect.top && event.mouseButton.y < interfacerect.bottom )
+                            {
+                                sf::Event interfaceevent = event;
+                                interfaceevent.mouseButton.x -= interfacerect.left;
+                                interfaceevent.mouseButton.y -= interfacerect.top;
+                                Interfaces[i]->DoEvent(interfaceevent, interfacerect);
+                            }
+                    }
+                }
+            break;
+        case sf::Event::MouseButtonReleased:
+            if( event.mouseButton.x > adjustedrect.left && event.mouseButton.x < adjustedrect.right )
+                if( event.mouseButton.y > adjustedrect.top && event.mouseButton.y < adjustedrect.bottom )
+                {
+                    event.mouseButton.x -= adjustedrect.left;
+                    event.mouseButton.y -= adjustedrect.top;
+                    if(On_MouseUp)
+                    {
+                        On_MouseUp( event.mouseButton.x, event.mouseButton.y, event.mouseButton.button );
+                    }
+                    for( uint32_t i = 0; i < Interfaces.size(); i++ )
+                    {
+                        Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
+                        if( event.mouseButton.x > interfacerect.left && event.mouseButton.x < interfacerect.right )
+                            if( event.mouseButton.y > interfacerect.top && event.mouseButton.y < interfacerect.bottom )
+                            {
+                                sf::Event interfaceevent = event;
+                                interfaceevent.mouseButton.x -= interfacerect.left;
+                                interfaceevent.mouseButton.y -= interfacerect.top;
+                                Interfaces[i]->DoEvent(interfaceevent, interfacerect);
+                            }
+                    }
+                }
+            break;
+//        case sf::Event::MouseEntered:
+//            if(On_MouseOver)
+//            {
+//                On_MouseOver();
+//            }
+//            break;
+//        case sf::Event::MouseLeft:
+//            if(On_MouseOut)
+//            {
+//                On_MouseOut();
+//            }
+//            break;
+
+        default:
+            break;
+        }
+    }
+
     Interface::Interface( Interface* parent, const URect& rect )
     {
         this->rect = rect;
+        background = NULL;
+        color = parent->color;
+        On_KeyDown = NULL;
+        On_KeyUp = NULL;
+        On_MouseMove = NULL;
+        On_MouseDown = NULL;
+        On_MouseUp = NULL;
+        On_MouseOver = NULL;
+        On_MouseOut = NULL;
+        rendertarget = parent->rendertarget;
         parent->children.push_back(this);
     }
 
     Interface::Interface( RenderTarget* parent, const URect& rect )
     {
         this->rect = rect;
+        background = NULL;
+        color = Vector4( 1.0f, 1.0f, 1.0f, 1.0f );
+        On_KeyDown = NULL;
+        On_KeyUp = NULL;
+        On_MouseMove = NULL;
+        On_MouseDown = NULL;
+        On_MouseUp = NULL;
+        On_MouseOver = NULL;
+        On_MouseOut = NULL;
+        rendertarget = parent;
         parent->Interfaces.push_back(this);
     }
 
@@ -956,7 +1124,17 @@ namespace Ovgl
 
     void Interface::render( const Ovgl::Rect& adjustedrect )
     {
-        glBindTexture(GL_TEXTURE_2D, background->Image );
+        if( background )
+        {
+            glBindTexture(GL_TEXTURE_2D, background->Image );
+        }
+        else
+        {
+            glBindTexture(GL_TEXTURE_2D, 0 );
+        }
+
+        glColor4f(color.x, color.y, color.z, color.w);
+
         glBegin( GL_QUADS );
             glTexCoord2i( 1, 1 );
             glVertex2i( adjustedrect.right, adjustedrect.top );
@@ -976,6 +1154,106 @@ namespace Ovgl
             childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset + adjustedrect.left;
             childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset + adjustedrect.top;
             children[c]->render( childrect );
+        }
+    }
+
+    void Interface::DoEvent(sf::Event event, const Rect& adjustedrect)
+    {
+        switch (event.type)
+        {
+        case sf::Event::KeyPressed:
+            if(On_KeyDown)
+            {
+                On_KeyDown( event.key.code );
+            }
+            break;
+        case sf::Event::KeyReleased:
+            if(On_KeyUp)
+            {
+                On_KeyUp( event.key.code );
+            }
+            break;
+        case sf::Event::MouseMoved:
+            if(On_MouseMove)
+            {
+                On_MouseMove( event.mouseMove.x, event.mouseMove.y );
+            }
+            for( int c = 0; c < children.size(); c++ )
+            {
+                Ovgl::Rect childrect;
+                childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset ;
+                childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset ;
+                childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset ;
+                childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset ;
+                if( event.mouseMove.x > childrect.left && event.mouseMove.x < childrect.right )
+                    if( event.mouseMove.y > childrect.top && event.mouseMove.y < childrect.bottom )
+                    {
+                        sf::Event interfaceevent = event;
+                        interfaceevent.mouseMove.x -= childrect.left;
+                        interfaceevent.mouseMove.y -= childrect.top;
+                        children[c]->DoEvent(interfaceevent, childrect);
+                    }
+            }
+            break;
+        case sf::Event::MouseButtonPressed:
+            if(On_MouseDown)
+            {
+                On_MouseDown( event.mouseButton.x, event.mouseButton.y, event.mouseButton.button );
+            }
+            for( int c = 0; c < children.size(); c++ )
+            {
+                Ovgl::Rect childrect;
+                childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset ;
+                childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset ;
+                childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset ;
+                childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset ;
+                if( event.mouseButton.x > childrect.left && event.mouseButton.x < childrect.right )
+                    if( event.mouseButton.y > childrect.top && event.mouseButton.y < childrect.bottom )
+                    {
+                        sf::Event interfaceevent = event;
+                        interfaceevent.mouseButton.x -= childrect.left;
+                        interfaceevent.mouseButton.y -= childrect.top;
+                        children[c]->DoEvent(interfaceevent, childrect);
+                    }
+            }
+            break;
+        case sf::Event::MouseButtonReleased:
+            if(On_MouseUp)
+            {
+                On_MouseUp( event.mouseButton.x, event.mouseButton.y, event.mouseButton.button );
+            }
+            for( int c = 0; c < children.size(); c++ )
+            {
+                Ovgl::Rect childrect;
+                childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset ;
+                childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset ;
+                childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset ;
+                childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset ;
+                if( event.mouseButton.x > childrect.left && event.mouseButton.x < childrect.right )
+                    if( event.mouseButton.y > childrect.top && event.mouseButton.y < childrect.bottom )
+                    {
+                        sf::Event interfaceevent = event;
+                        interfaceevent.mouseButton.x -= childrect.left;
+                        interfaceevent.mouseButton.y -= childrect.top;
+                        children[c]->DoEvent(interfaceevent, childrect);
+                    }
+            }
+            break;
+//        case sf::Event::MouseEntered:
+//            if(On_MouseOver)
+//            {
+//                On_MouseOver();
+//            }
+//            break;
+//        case sf::Event::MouseLeft:
+//            if(On_MouseOut)
+//            {
+//                On_MouseOut();
+//            }
+//            break;
+
+        default:
+            break;
         }
     }
 }

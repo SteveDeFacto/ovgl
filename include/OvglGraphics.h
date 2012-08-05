@@ -162,6 +162,15 @@ namespace Ovgl
 			* Render a single mesh.
 			*/
 			void RenderMesh( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender );
+
+            void DoEvent(sf::Event event);
+            void (*On_KeyDown)(char);
+            void (*On_KeyUp)(char);
+            void (*On_MouseMove)(long, long);
+            void (*On_MouseDown)(long, long, int);
+            void (*On_MouseUp)(long, long, int);
+            void (*On_MouseOver)();
+            void (*On_MouseOut)();
         };
 
         class DLLEXPORT Interface
@@ -170,17 +179,22 @@ namespace Ovgl
             Interface( Interface* parent, const URect& rect );
             Interface( RenderTarget* parent, const URect& rect );
             ~Interface();
+            RenderTarget*               rendertarget;
             URect                       rect;
             Texture*                    background;
+            Vector4                     color;
             std::string                 text;
             Interface*                  parent;
             std::vector<Interface*>     children;
             void render( const Ovgl::Rect& adjustedrect );
+            void DoEvent( sf::Event event, const Rect& adjustedrect);
+            void (*On_KeyDown)(char);
+            void (*On_KeyUp)(char);
             void (*On_MouseMove)(long, long);
             void (*On_MouseDown)(long, long, int);
             void (*On_MouseUp)(long, long, int);
-            void (*On_MouseOver)(long, long);
-            void (*On_MouseOut)(long, long);
+            void (*On_MouseOver)();
+            void (*On_MouseOut)();
         };
 	}
 }

@@ -349,6 +349,8 @@ namespace Ovgl
 		On_MouseMove = NULL;
 		On_MouseDown = NULL;
 		On_MouseUp = NULL;
+        On_MouseOver = NULL;
+        On_MouseOut = NULL;
 		sf::ContextSettings settings;
         settings.depthBits = 32;
         settings.stencilBits = 0;
@@ -357,7 +359,7 @@ namespace Ovgl
         settings.minorVersion = 3;
         hWnd = new sf::RenderWindow(sf::VideoMode(640, 480), name.c_str(), sf::Style::Default, settings);
         hWnd->setActive( true );
-        glEnable (GL_BLEND);
+        glDisable(GL_BLEND);
         glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable (GL_CULL_FACE);
         hWnd->setActive( false );
@@ -389,40 +391,38 @@ namespace Ovgl
             switch (Event.type)
             {
             case sf::Event::KeyPressed:
+                Event.key.code = (sf::Keyboard::Key)SFKeyToASCII(Event.key.code);
                 if(On_KeyDown)
                 {
-                    On_KeyDown( SFKeyToASCII(Event.key.code) );
+                    On_KeyDown( Event.key.code );
+                }
+                for( uint32_t r = 0; r < RenderTargets.size(); r++ )
+                {
+                    RenderTargets[r]->DoEvent(Event);
                 }
                 break;
 
             case sf::Event::KeyReleased:
+                Event.key.code = (sf::Keyboard::Key)SFKeyToASCII(Event.key.code);
                 if(On_KeyUp)
                 {
-                    On_KeyUp( SFKeyToASCII(Event.key.code) );
+                    On_KeyUp( Event.key.code );
+                }
+                for( uint32_t r = 0; r < RenderTargets.size(); r++ )
+                {
+                    RenderTargets[r]->DoEvent(Event);
                 }
                 break;
             case sf::Event::MouseMoved:
-                if(On_MouseMove)
+                if(!lockmouse)
                 {
-                    if(!lockmouse)
+                    if(On_MouseMove)
                     {
                         On_MouseMove( Event.mouseMove.x, Event.mouseMove.y );
                     }
-                    if(Event.mouseMove.x < 0)
+                    for( uint32_t r = 0; r < RenderTargets.size(); r++ )
                     {
-                        Event.mouseMove.x = 0;
-                    }
-                    else if(Event.mouseMove.x > hWnd->getSize().x)
-                    {
-                        Event.mouseMove.x = hWnd->getSize().x;
-                    }
-                    if(Event.mouseMove.y < 0)
-                    {
-                        Event.mouseMove.y = 0;
-                    }
-                    else if(Event.mouseMove.y > hWnd->getSize().y)
-                    {
-                        Event.mouseMove.y = hWnd->getSize().y;
+                        RenderTargets[r]->DoEvent(Event);
                     }
                 }
                 break;
@@ -431,11 +431,31 @@ namespace Ovgl
                 {
                     On_MouseDown( Event.mouseButton.x, Event.mouseButton.y, Event.mouseButton.button );
                 }
+                for( uint32_t r = 0; r < RenderTargets.size(); r++ )
+                {
+                    RenderTargets[r]->DoEvent(Event);
+                }
                 break;
             case sf::Event::MouseButtonReleased:
                 if(On_MouseUp)
                 {
                     On_MouseUp( Event.mouseButton.x, Event.mouseButton.y, Event.mouseButton.button );
+                }
+                for( uint32_t r = 0; r < RenderTargets.size(); r++ )
+                {
+                    RenderTargets[r]->DoEvent(Event);
+                }
+                break;
+            case sf::Event::MouseEntered:
+                if(On_MouseOver)
+                {
+                    On_MouseOver();
+                }
+                break;
+            case sf::Event::MouseLeft:
+                if(On_MouseOut)
+                {
+                    On_MouseOut();
                 }
                 break;
             case sf::Event::Resized:
@@ -479,7 +499,7 @@ namespace Ovgl
             hWnd = new sf::RenderWindow(sf::VideoMode(winsz.x, winsz.y, 32), title.c_str(), sf::Style::Fullscreen, settings);
             hWnd->setMouseCursorVisible( !this->lockmouse );
             hWnd->setActive( true );
-            glEnable (GL_BLEND);
+            glDisable(GL_BLEND);
             glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glEnable (GL_CULL_FACE);
 			fullscreen = true;
@@ -492,7 +512,7 @@ namespace Ovgl
             hWnd = new sf::RenderWindow(sf::VideoMode(winsz.x, winsz.y, 32), title.c_str(), sf::Style::Default, settings);
             hWnd->setMouseCursorVisible( !this->lockmouse );
             hWnd->setActive( true );
-            glEnable (GL_BLEND);
+            glDisable(GL_BLEND);
             glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glEnable (GL_CULL_FACE);
 			fullscreen = false;

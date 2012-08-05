@@ -80,15 +80,15 @@ int main()
     Window->On_KeyDown = KeyDown;
 
     // Create Render Target
-    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::URect(0.5f, 0, 1.0f, 1.0f), 0);
+    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::URect(0, 0, 1.0f, 1.0f), 0);
     RenderTarget->bloom = 4;
     RenderTarget->autoLuminance = true;
     RenderTarget->motionBlur = true;
     RenderTarget->multiSample = true;
     RenderTarget->debugMode = false;
 
-    Interface = new Ovgl::Interface( RenderTarget, Ovgl::URect(0.1f, 0.1f, 0.9f, 0.3f) );
-    Interface2 = new Ovgl::Interface( Interface, Ovgl::URect(0.5f, 0, 1.0f, 10) );
+    Interface = new Ovgl::Interface( RenderTarget, Ovgl::URect(0.1f, 50, 0.9f, 100) );
+    Interface2 = new Ovgl::Interface( Interface, Ovgl::URect(0.5f, 0.0f, 1.0f, 0.1f) );
 
     // Create Media Library
     MediaLibrary = new Ovgl::MediaLibrary(Inst, "");

@@ -50,11 +50,12 @@ namespace Ovgl
 			void SetFullscreen( bool state );
 			void LockMouse( bool state );
 			void (*On_KeyDown)(char);
-			void (*On_KeyPress)(char);
 			void (*On_KeyUp)(char);
 			void (*On_MouseMove)(long, long);
 			void (*On_MouseDown)(long, long, int);
 			void (*On_MouseUp)(long, long, int);
+            void (*On_MouseOver)();
+            void (*On_MouseOut)();
 		};
 	}
 }
