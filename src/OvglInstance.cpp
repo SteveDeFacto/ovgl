@@ -619,6 +619,46 @@ namespace Ovgl
 		}
 	}
 
+    UDim::UDim()
+    {
+        this->offset = 0;
+        this->scale = 0;
+    }
+
+    UDim::UDim( int offset )
+    {
+        this->offset = offset;
+        this->scale = 0.0f;
+    }
+
+    UDim::UDim( float scale )
+    {
+        this->offset = 0;
+        this->scale = scale;
+    }
+
+    UDim::UDim( int32_t offset, float scale )
+    {
+        this->offset = offset;
+        this->scale = scale;
+    }
+
+    URect::URect()
+    {
+        left = UDim( 0, 0.0f );
+        top = UDim( 0, 0.0f );
+        right = UDim( 0, 0.0f );
+        bottom = UDim( 0, 0.0f );
+    }
+
+    URect::URect( UDim left, UDim top, UDim right, UDim bottom )
+    {
+        this->left = left;
+        this->top = top;
+        this->right = right;
+        this->bottom = bottom;
+    }
+
 	Rect::Rect()
 	{
 		left = 0;
@@ -627,11 +667,11 @@ namespace Ovgl
 		bottom = 0;
 	}
 
-	Rect::Rect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom )
+    Rect::Rect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom )
 	{
 		this->left = left;
 		this->top = top;
 		this->right = right;
-		this->bottom = bottom;
+        this->bottom = bottom;
 	}
 }

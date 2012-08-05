@@ -50,122 +50,49 @@ namespace Ovgl
 		return max;
 	}
 
-	Ovgl::Rect WindowAdjustedRect( Window* window, Vector4* rect)
+    Ovgl::Rect WindowAdjustedRect( Window* window, URect* rect)
 	{
-		// Get the window's rect
-		Ovgl::Rect WindowRect;
+        // Get the window's rect
+        Ovgl::Rect WindowRect;
 
         WindowRect.left = window->hWnd->getPosition().x;
-		WindowRect.top = window->hWnd->getPosition().y;
-		WindowRect.right = window->hWnd->getPosition().x + window->hWnd->getSize().x;
-		WindowRect.bottom = window->hWnd->getPosition().y + window->hWnd->getSize().y;
+        WindowRect.top = window->hWnd->getPosition().y;
+        WindowRect.right = window->hWnd->getPosition().x + window->hWnd->getSize().x;
+        WindowRect.bottom = window->hWnd->getPosition().y + window->hWnd->getSize().y;
 
-		Ovgl::Rect adjustedrect;
+        Ovgl::Rect adjustedrect;
+        adjustedrect.left = ((WindowRect.right - WindowRect.left) * rect->left.scale) + rect->left.offset;
+        adjustedrect.top = ((WindowRect.bottom - WindowRect.top) * rect->top.scale) + rect->left.offset;
+        adjustedrect.right = ((WindowRect.right - WindowRect.left) * rect->right.scale) + rect->right.offset;
+        adjustedrect.bottom = ((WindowRect.bottom - WindowRect.top) * rect->bottom.scale) + rect->bottom.offset;
 
-		// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
-		if( rect->x > 0 && rect->x < 1 )
-		{
-            adjustedrect.left = (uint32_t)((WindowRect.right - WindowRect.left) * rect->x);
-		}
-		else
-		{
-            adjustedrect.left = (uint32_t)rect->x;
-		}
-
-		// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
-		if( rect->y > 0 && rect->y < 1 )
-		{
-            adjustedrect.top = (uint32_t)((WindowRect.bottom - WindowRect.top) * rect->y);
-		}
-		else
-		{
-            adjustedrect.top = (uint32_t)rect->y;
-		}
-
-		// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
-		if( rect->z > 0 && rect->z < 1 )
-		{
-            adjustedrect.right = (uint32_t)((WindowRect.right - WindowRect.left) * rect->z);
-		}
-		else
-		{
-            adjustedrect.right = (uint32_t)rect->z;
-		}
-
-		// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
-		if( rect->w > 0 && rect->w < 1 )
-		{
-            adjustedrect.bottom = (uint32_t)((WindowRect.bottom - WindowRect.top) * rect->w);
-		}
-		else
-		{
-            adjustedrect.bottom = (uint32_t)rect->w;
-		}
-
-		return adjustedrect;
+        return adjustedrect;
 	}
 
-	Ovgl::Rect TextureAdjustedRect( Texture* texture, Vector4* rect)
+    Ovgl::Rect TextureAdjustedRect( Texture* texture, URect* rect)
 	{
-		// Get the window's rect
-		Ovgl::Rect WindowRect;
+        // Get the window's rect
+        Ovgl::Rect WindowRect;
 
-		glBindTexture(GL_TEXTURE_2D, texture->Image);
-		GLint width, height;
-		glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-		glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+        glBindTexture(GL_TEXTURE_2D, texture->Image);
+        GLint width, height;
+        glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
 
-		WindowRect.left =0;
-		WindowRect.top =0;
-		WindowRect.right = width;
-		WindowRect.bottom = height;
+        WindowRect.left =0;
+        WindowRect.top =0;
+        WindowRect.right = width;
+        WindowRect.bottom = height;
 
-		Ovgl::Rect adjustedrect;
-
-		// Check if sprite rect left is relative or absolute and set AdjustedRect left accordingly
-		if( rect->x > 0 && rect->x < 1 )
-		{
-            adjustedrect.left = (uint32_t)((WindowRect.right - WindowRect.left) * rect->x);
-		}
-		else
-		{
-            adjustedrect.left = (uint32_t)rect->x;
-		}
-
-		// Check if sprite rect top is relative or absolute and set AdjustedRect top accordingly
-		if( rect->y > 0 && rect->y < 1 )
-		{
-            adjustedrect.top = (uint32_t)((WindowRect.bottom - WindowRect.top) * rect->y);
-		}
-		else
-		{
-            adjustedrect.top = (uint32_t)rect->y;
-		}
-
-		// Check if sprite rect right is relative or absolute and set AdjustedRect right accordingly
-		if( rect->z > 0 && rect->z < 1 )
-		{
-            adjustedrect.right = (uint32_t)((WindowRect.right - WindowRect.left) * rect->z);
-		}
-		else
-		{
-            adjustedrect.right = (uint32_t)rect->z;
-		}
-
-		// Check if sprite rect bottom is relative or absolute and set AdjustedRect bottom accordingly
-		if( rect->w > 0 && rect->w < 1 )
-		{
-            adjustedrect.bottom = (uint32_t)((WindowRect.bottom - WindowRect.top) * rect->w);
-		}
-		else
-		{
-            adjustedrect.bottom = (uint32_t)rect->w;
-		}
-
-		return adjustedrect;
+        Ovgl::Rect adjustedrect;
+        adjustedrect.left = ((WindowRect.right - WindowRect.left) * rect->left.scale) + rect->left.offset;
+        adjustedrect.top = ((WindowRect.bottom - WindowRect.top) * rect->top.scale) + rect->left.offset;
+        adjustedrect.right = ((WindowRect.right - WindowRect.left) * rect->right.scale) + rect->right.offset;
+        adjustedrect.bottom = ((WindowRect.bottom - WindowRect.top) * rect->bottom.scale) + rect->bottom.offset;
+        return adjustedrect;
 	}
 
-	RenderTarget::RenderTarget( Instance* Instance, Window* hWindow, const Vector4& viewport, uint32_t flags )
+    RenderTarget::RenderTarget( Instance* Instance, Window* hWindow, const URect& viewport, uint32_t flags )
 	{
 		Inst = Instance;
 		hWin = hWindow;
@@ -177,7 +104,7 @@ namespace Ovgl
         motionBlur = false;
         multiSample = false;
 		eye_luminance = 0.0f;
-		Rect = viewport;
+        rect = viewport;
         MultiSampleFrameBuffer = 0;
         EffectFrameBuffer = 0;
         ColorBuffer = 0;
@@ -190,7 +117,7 @@ namespace Ovgl
 		hWin->RenderTargets.push_back(this);
 	};
 
-	RenderTarget::RenderTarget( Instance* Instance, Texture* hTexture, const Vector4& viewport, uint32_t flags )
+    RenderTarget::RenderTarget( Instance* Instance, Texture* hTexture, const URect& viewport, uint32_t flags )
 	{
 		Inst = Instance;
 		hWin = NULL;
@@ -202,7 +129,7 @@ namespace Ovgl
 		motionBlur = true;
 		multiSample = true;
 		eye_luminance = 0.0f;
-        Rect = viewport;
+        rect = viewport;
         MultiSampleFrameBuffer = 0;
         EffectFrameBuffer = 0;
         ColorBuffer = 0;
@@ -689,7 +616,7 @@ namespace Ovgl
             WindowRect.top = hWin->hWnd->getPosition().y;
             WindowRect.right = hWin->hWnd->getPosition().x + hWin->hWnd->getSize().x;
             WindowRect.bottom = hWin->hWnd->getPosition().y + hWin->hWnd->getSize().y;
-            adjustedrect = WindowAdjustedRect( hWin, &Rect);
+            adjustedrect = WindowAdjustedRect( hWin, &rect);
         }
         else
         {
@@ -702,7 +629,7 @@ namespace Ovgl
             glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &glheight);
             WindowRect.right = glwidth;
             WindowRect.bottom = glheight;
-            adjustedrect = TextureAdjustedRect( hTex, &Rect);
+            adjustedrect = TextureAdjustedRect( hTex, &rect);
         }
 
         int width = (int)(adjustedrect.right - adjustedrect.left);
@@ -918,6 +845,16 @@ namespace Ovgl
                 glTexCoord2i( 1, 0 );
                 glVertex2i( adjustedrect.right, adjustedrect.bottom );
             glEnd();
+
+            for( int i = 0; i < Interfaces.size(); i++ )
+            {
+                Ovgl::Rect interfacerect;
+                interfacerect.left = ((adjustedrect.right - adjustedrect.left) * Interfaces[i]->rect.left.scale) + Interfaces[i]->rect.left.offset + adjustedrect.left;
+                interfacerect.top = ((adjustedrect.bottom - adjustedrect.top) * Interfaces[i]->rect.top.scale) + Interfaces[i]->rect.top.offset + adjustedrect.top;
+                interfacerect.right = ((adjustedrect.right - adjustedrect.left) * Interfaces[i]->rect.right.scale) + Interfaces[i]->rect.right.offset + adjustedrect.left;
+                interfacerect.bottom = ((adjustedrect.bottom - adjustedrect.top) * Interfaces[i]->rect.bottom.scale) + Interfaces[i]->rect.bottom.offset + adjustedrect.top;
+                Interfaces[i]->render( interfacerect );
+            }
             hWin->hWnd->setActive(false);
 		}
 	}
@@ -925,7 +862,7 @@ namespace Ovgl
 	void RenderTarget::Update()
 	{
         hWin->hWnd->setActive(true);
-		Ovgl::Rect adjustedrect = WindowAdjustedRect( hWin, &Rect);
+        Ovgl::Rect adjustedrect = WindowAdjustedRect( hWin, &rect);
 
 		int width = (int)(adjustedrect.right - adjustedrect.left);
 		int height = (int)(adjustedrect.bottom - adjustedrect.top);
@@ -998,6 +935,47 @@ namespace Ovgl
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
         hWin->hWnd->setActive(false);
-
 	}
+
+    Interface::Interface( Interface* parent, const URect& rect )
+    {
+        this->rect = rect;
+        parent->children.push_back(this);
+    }
+
+    Interface::Interface( RenderTarget* parent, const URect& rect )
+    {
+        this->rect = rect;
+        parent->Interfaces.push_back(this);
+    }
+
+    Interface::~Interface()
+    {
+
+    }
+
+    void Interface::render( const Ovgl::Rect& adjustedrect )
+    {
+        glBindTexture(GL_TEXTURE_2D, background->Image );
+        glBegin( GL_QUADS );
+            glTexCoord2i( 1, 1 );
+            glVertex2i( adjustedrect.right, adjustedrect.top );
+            glTexCoord2i( 0, 1 );
+            glVertex2i( adjustedrect.left, adjustedrect.top );
+            glTexCoord2i( 0, 0 );
+            glVertex2i( adjustedrect.left, adjustedrect.bottom );
+            glTexCoord2i( 1, 0 );
+            glVertex2i( adjustedrect.right, adjustedrect.bottom );
+        glEnd();
+
+        for( int c = 0; c < children.size(); c++ )
+        {
+            Ovgl::Rect childrect;
+            childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset + adjustedrect.left;
+            childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset + adjustedrect.top;
+            childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset + adjustedrect.left;
+            childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset + adjustedrect.top;
+            children[c]->render( childrect );
+        }
+    }
 }

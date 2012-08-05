@@ -30,10 +30,14 @@ Ovgl::Camera*				Camera;
 Ovgl::Emitter*				Emitter;
 Ovgl::Texture*				Texture1;
 Ovgl::Texture*				Texture2;
+Ovgl::Texture*				Texture3;
 Ovgl::Mesh*					Mesh;
 Ovgl::Mesh*					Mesh2;
 Ovgl::Object*				Object;
 Ovgl::Light*				Light;
+Ovgl::Interface*			Interface;
+Ovgl::Interface*			Interface2;
+Ovgl::Interface*			Interface3;
 
 void MouseMove(long x, long y)
 {
@@ -76,12 +80,15 @@ int main()
     Window->On_KeyDown = KeyDown;
 
     // Create Render Target
-    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::Vector4(0.0f, 0.0f, 0.9999f, 0.9999f), 0);
+    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::URect(0.5f, 0, 1.0f, 1.0f), 0);
     RenderTarget->bloom = 4;
     RenderTarget->autoLuminance = true;
     RenderTarget->motionBlur = true;
     RenderTarget->multiSample = true;
     RenderTarget->debugMode = false;
+
+    Interface = new Ovgl::Interface( RenderTarget, Ovgl::URect(0.1f, 0.1f, 0.9f, 0.3f) );
+    Interface2 = new Ovgl::Interface( Interface, Ovgl::URect(0.5f, 0, 1.0f, 10) );
 
     // Create Media Library
     MediaLibrary = new Ovgl::MediaLibrary(Inst, "");
@@ -103,6 +110,12 @@ int main()
                                             "../media/textures/skybox/bottom.png", "../media/textures/skybox/left.png", "../media/textures/skybox/right.png");
     // Create 2D texture
     Texture2 = MediaLibrary->ImportTexture("../media/textures/Grass.png");
+
+    Texture3 = MediaLibrary->ImportTexture("../media/textures/white marble.png");
+
+    Interface->background = Texture2;
+
+    Interface2->background = Texture3;
 
     // Import mesh
     Mesh = MediaLibrary->ImportModel( "../media/meshes/plane.dae", true );

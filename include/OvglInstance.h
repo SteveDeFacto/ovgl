@@ -111,15 +111,37 @@ namespace Ovgl
 		class MediaLibrary;
 		class Window;
 
+        class DLLEXPORT UDim
+        {
+        public:
+            UDim();
+            UDim( int offset);
+            UDim( float scale );
+            UDim( int32_t offset, float scale );
+            int32_t                                 offset;
+            float                                   scale;
+        };
+
+        class DLLEXPORT URect
+        {
+        public:
+            URect();
+            URect( UDim left, UDim top, UDim right, UDim bottom );
+            UDim                    				left;
+            UDim                    				top;
+            UDim                    				right;
+            UDim                    				bottom;
+        };
+
         class DLLEXPORT Rect
 		{
 		public:
 			Rect();
-			Rect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom );
-			uint32_t								left;
-			uint32_t								top;
-			uint32_t								right;
-			uint32_t								bottom;
+            Rect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom );
+            uint32_t								left;
+            uint32_t								top;
+            uint32_t								right;
+            uint32_t								bottom;
 		};
 
         class DLLEXPORT Texture

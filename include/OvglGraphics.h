@@ -31,7 +31,9 @@ namespace Ovgl
 	{
 		class Camera;
 		class Interface;
-		class Vector4;
+        class Vector4;
+        class Texture;
+        class URect;
 
         class DLLEXPORT RenderTarget
 		{
@@ -39,11 +41,11 @@ namespace Ovgl
 			/**
 			* This is the constuctor for a window based render target.
 			*/
-			RenderTarget( Ovgl::Instance* Instance, Ovgl::Window* window, const Ovgl::Vector4& viewport, uint32_t flags );
+            RenderTarget( Ovgl::Instance* Instance, Ovgl::Window* window, const Ovgl::URect& viewport, uint32_t flags );
 			/**
 			* This is the constuctor for a texture based render target.
 			*/
-			RenderTarget( Ovgl::Instance* Instance, Ovgl::Texture* texture, const Ovgl::Vector4& viewport, uint32_t flags );
+            RenderTarget( Ovgl::Instance* Instance, Ovgl::Texture* texture, const Ovgl::URect& viewport, uint32_t flags );
 			/**
 			* This is a pointer to the instance which owns this render target.
 			*/
@@ -95,19 +97,11 @@ namespace Ovgl
 			/**
 			* The area of the texture or window to render to.
 			*/
-			Ovgl::Vector4 Rect;
+            Ovgl::URect rect;
 			/**
 			* List of user interfaces.
 			*/
 			std::vector< Ovgl::Interface* > Interfaces;
-			/**
-			* This function creates a sprite user interface.
-			*/
-			Ovgl::Interface* CreateSprite( Ovgl::Texture* Texture, Ovgl::Vector4* rect );
-			/**
-			* This function creates a text user interface.
-			*/
-			Ovgl::Interface* CreateText( const std::string& text, Ovgl::Vector4* rect );
 			/**
 			* Last position of camera. Used for motion blur.
 			*/
@@ -168,6 +162,25 @@ namespace Ovgl
 			* Render a single mesh.
 			*/
 			void RenderMesh( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender );
-		};
+        };
+
+        class DLLEXPORT Interface
+        {
+        public:
+            Interface( Interface* parent, const URect& rect );
+            Interface( RenderTarget* parent, const URect& rect );
+            ~Interface();
+            URect                       rect;
+            Texture*                    background;
+            std::string                 text;
+            Interface*                  parent;
+            std::vector<Interface*>     children;
+            void render( const Ovgl::Rect& adjustedrect );
+            void (*On_MouseMove)(long, long);
+            void (*On_MouseDown)(long, long, int);
+            void (*On_MouseUp)(long, long, int);
+            void (*On_MouseOver)(long, long);
+            void (*On_MouseOut)(long, long);
+        };
 	}
 }

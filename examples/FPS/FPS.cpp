@@ -75,7 +75,7 @@ int main()
     Window->On_KeyDown = KeyDown;
 
     // Create Render Target
-    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::Vector4(0.0f, 0.0f, 0.999f, 0.999f), 0);
+    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::URect(0, 0, 1.0f, 1.0f), 0);
     RenderTarget->bloom = 4;
     RenderTarget->autoLuminance = true;
     RenderTarget->motionBlur = true;
