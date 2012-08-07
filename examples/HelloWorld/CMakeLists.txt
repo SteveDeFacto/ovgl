@@ -5,7 +5,7 @@ project(HelloWorld)
 set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/../../bin")
 set(CMAKE_DEBUG_POSTFIX "_d")
 
-include_directories( "./../../include" "/usr/local/include/bullet")
+include_directories( "/usr/include/freetype2" "./../../include" "/usr/local/include/bullet")
 
 link_directories( "./../../lib" )
 

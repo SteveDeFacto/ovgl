@@ -32,7 +32,7 @@ IF(WIN32)
     "${BULLET_DIR}/lib"
     "${GLEW_DIR}/lib")
 ELSEIF(UNIX)
-    include_directories( "./../include" "/usr/local/include/bullet")
+    include_directories( "/usr/include/freetype2" "./../include" "/usr/local/include/bullet")
 ENDIF(WIN32)
 
 

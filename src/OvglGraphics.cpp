@@ -876,6 +876,7 @@ void RenderTarget::Render()
         glEnd();
 
         glEnable(GL_BLEND);
+        glEnable(GL_STENCIL_TEST);
         for( int i = 0; i < Interfaces.size(); i++ )
         {
             Ovgl::Rect interfacerect;
@@ -885,6 +886,7 @@ void RenderTarget::Render()
             interfacerect.bottom = ((adjustedrect.bottom - adjustedrect.top) * Interfaces[i]->rect.bottom.scale) + Interfaces[i]->rect.bottom.offset + adjustedrect.top;
             Interfaces[i]->render( interfacerect );
         }
+        glDisable(GL_STENCIL_TEST);
         glDisable(GL_BLEND);
         hWin->hWnd->setActive(false);
     }
@@ -1091,7 +1093,10 @@ Interface::Interface( Interface* parent, const URect& rect )
     background = NULL;
     tilex = false;
     tiley = false;
+    wordbreak = true;
     color = parent->color;
+    hscroll = 0;
+    vscroll = 0;
     On_KeyDown = NULL;
     On_KeyUp = NULL;
     On_MouseMove = NULL;
@@ -1109,7 +1114,10 @@ Interface::Interface( RenderTarget* parent, const URect& rect )
     background = NULL;
     tilex = false;
     tiley = false;
+    wordbreak = true;
     color = Vector4( 1.0f, 1.0f, 1.0f, 1.0f );
+    hscroll = 0;
+    vscroll = 0;
     On_KeyDown = NULL;
     On_KeyUp = NULL;
     On_MouseMove = NULL;
@@ -1128,9 +1136,11 @@ Interface::~Interface()
 
 void Interface::render( const Ovgl::Rect& adjustedrect )
 {
+    glClearStencil(0);
     if( background )
     {
         glBindTexture(GL_TEXTURE_2D, background->Image );
+
     }
     else
     {
@@ -1154,16 +1164,53 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
         glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
         tileheight = (float)(adjustedrect.bottom - adjustedrect.top) / (float)height;
     }
+    glStencilFunc(GL_EQUAL, 0, 1);
+    glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
+
     glBegin( GL_QUADS );
-    glTexCoord2f( tilewidth, tileheight );
-    glVertex2i( adjustedrect.right, adjustedrect.top );
-    glTexCoord2f( 0, tileheight );
-    glVertex2i( adjustedrect.left, adjustedrect.top );
-    glTexCoord2f( 0, 0 );
-    glVertex2i( adjustedrect.left, adjustedrect.bottom );
     glTexCoord2f( tilewidth, 0 );
+    glVertex2i( adjustedrect.right, adjustedrect.top );
+    glTexCoord2f( 0, 0 );
+    glVertex2i( adjustedrect.left, adjustedrect.top );
+    glTexCoord2f( 0, tileheight );
+    glVertex2i( adjustedrect.left, adjustedrect.bottom );
+    glTexCoord2f( tilewidth, tileheight );
     glVertex2i( adjustedrect.right, adjustedrect.bottom );
     glEnd();
+
+    glStencilFunc(GL_NOTEQUAL, 1, 1);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+    uint32_t x = adjustedrect.left;
+    uint32_t y = adjustedrect.top + vscroll;
+    for( uint32_t i = 0; i < text.size(); i++ )
+    {
+        glBindTexture(GL_TEXTURE_2D, font->charset[ text[i] ]);
+        GLint charwidth, charheight;
+        glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &charwidth);
+        glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &charheight);
+        if(x + charwidth > adjustedrect.right)
+        {
+            y += font->size;
+            x = adjustedrect.left;
+        }
+        if(charwidth == 0)
+        {
+            charwidth = font->size / 2;
+        }
+        uint32_t charoffset = font->size - charheight;
+        glBegin( GL_QUADS );
+        glTexCoord2f( 1, 0 );
+        glVertex2i( x + charwidth, y + charoffset );
+        glTexCoord2f( 0, 0 );
+        glVertex2i( x, y + charoffset );
+        glTexCoord2f( 0, 1 );
+        glVertex2i( x, y + charheight + charoffset );
+        glTexCoord2f( 1, 1 );
+        glVertex2i( x + charwidth, y + charheight + charoffset );
+        glEnd();
+        x += charwidth + 2;
+    }
 
     for( int c = 0; c < children.size(); c++ )
     {
@@ -1275,4 +1322,10 @@ void Interface::DoEvent(sf::Event event, const Rect& adjustedrect)
         break;
     }
 }
+
+void Interface::set_text( const std::string& text )
+{
+    this->text = text;
+}
+
 }

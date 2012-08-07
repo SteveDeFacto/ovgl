@@ -80,16 +80,21 @@ int main()
     Window->On_KeyDown = KeyDown;
 
     // Create Render Target
-    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::URect(0, 0, 1.0f, 1.0f), 0);
+    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::URect(0, 0.1f, 1.0f, 1.0f), 0);
     RenderTarget->bloom = 4;
     RenderTarget->autoLuminance = true;
     RenderTarget->motionBlur = true;
     RenderTarget->multiSample = true;
     RenderTarget->debugMode = false;
 
-    Interface = new Ovgl::Interface( RenderTarget, Ovgl::URect(0.1f, 50, 1.0f, 100) );
-    Interface->tilex = true;
-    Interface2 = new Ovgl::Interface( Interface, Ovgl::URect(0.5f, 0.0f, 1.0f, 0.1f) );
+    Ovgl::Font* font = new Ovgl::Font(Inst, "/usr/share/fonts/truetype/msttcorefonts/arial.ttf", 30);
+
+    Interface = new Ovgl::Interface( RenderTarget, Ovgl::URect(0.1f, 50, 0.9f, 0.9f) );
+    //Interface->tilex = true;
+    Interface->font = font;
+    Interface->set_text("Hello World! childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset + adjustedrect.left; childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset + adjustedrect.top; childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset + adjustedrect.left; childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset + adjustedrect.top;");
+    Interface->vscroll = -100;
+    //Interface2 = new Ovgl::Interface( Interface, Ovgl::URect(0.5f, 0.0f, 1.0f, 0.1f) );
 
     // Create Media Library
     MediaLibrary = new Ovgl::MediaLibrary(Inst, "");
@@ -116,7 +121,7 @@ int main()
 
     Interface->background = Texture2;
 
-    Interface2->background = Texture3;
+    //Interface2->background = Texture3;
 
     // Import mesh
     Mesh = MediaLibrary->ImportModel( "../media/meshes/plane.dae", true );

@@ -55,6 +55,13 @@
 #include <SFML/System.hpp>
 #include <SFML/OpenGL.hpp>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
+#include <freetype/fttrigon.h>
+#include <freetype/ftglyph.h>
+
 // OpenAl Headers
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -144,6 +151,14 @@ namespace Ovgl
             uint32_t								bottom;
 		};
 
+        class DLLEXPORT Font
+        {
+        public:
+            Font( Instance* instance,  const std::string& file, uint32_t size );
+            uint32_t								charset[256];
+            uint32_t                                size;
+        };
+
         class DLLEXPORT Texture
 		{
 		public:
@@ -195,6 +210,7 @@ namespace Ovgl
 			MediaLibrary*							DefaultMedia;
 			std::vector< MediaLibrary* >			MediaLibraries;
 			std::vector< Window* >					Windows;
+            FT_Library                              ftlibrary;
 			Window*									CreateOWindow( const std::string& name );
 			void									Start();
 			RenderTarget*							CreateRenderTarget( Ovgl::Window* window, Ovgl::Vector4* rect, uint32_t flags );

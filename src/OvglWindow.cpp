@@ -353,7 +353,7 @@ Window::Window( Instance* instance, const std::string& name )
     On_MouseOut = NULL;
     sf::ContextSettings settings;
     settings.depthBits = 32;
-    settings.stencilBits = 0;
+    settings.stencilBits = 8;
     settings.antialiasingLevel = 0;
     settings.majorVersion = 3;
     settings.minorVersion = 3;

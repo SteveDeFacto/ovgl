@@ -495,6 +495,9 @@ Instance::Instance( uint32_t flags )
     PhysicsBroadphase = new btAxisSweep3(worldMin,worldMax);
     PhysicsSolver = new btSequentialImpulseConstraintSolver;
 
+    // Initialize FreeType
+    FT_Init_FreeType( &ftlibrary );
+
     // Build the default media.
     BuildDefaultMedia( this );
 }
@@ -673,5 +676,29 @@ Rect::Rect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom )
     this->top = top;
     this->right = right;
     this->bottom = bottom;
+}
+
+Font::Font( Instance* instance, const std::string& file, uint32_t size )
+{
+    this->size = size;
+    FT_Face ftface;
+    FT_New_Face( instance->ftlibrary, file.c_str(), 0, &ftface );
+
+    for(int i = 0; i < 256; i++)
+    {
+        FT_Set_Pixel_Sizes( ftface, 0, size);
+        FT_Load_Char(ftface, i, FT_LOAD_RENDER);
+        glGenTextures( 1, &charset[i] );
+        glBindTexture( GL_TEXTURE_2D, charset[i] );
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        GLint swizzleMask[] = {GL_ONE, GL_ONE, GL_ONE, GL_ALPHA};
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA_EXT, swizzleMask);
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, ftface->glyph->bitmap.width, ftface->glyph->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE, ftface->glyph->bitmap.buffer );
+        glBindTexture( GL_TEXTURE_2D, 0 );
+    }
 }
 }
