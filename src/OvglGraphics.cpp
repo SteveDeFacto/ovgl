@@ -1137,6 +1137,7 @@ Interface::~Interface()
 void Interface::render( const Ovgl::Rect& adjustedrect )
 {
     glClearStencil(0);
+    glClear(GL_STENCIL_BUFFER_BIT);
     if( background )
     {
         glBindTexture(GL_TEXTURE_2D, background->Image );
@@ -1164,8 +1165,9 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
         glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
         tileheight = (float)(adjustedrect.bottom - adjustedrect.top) / (float)height;
     }
-    glStencilFunc(GL_EQUAL, 0, 1);
-    glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
+    //glStencilMask(1);
+    glStencilFunc(GL_ALWAYS, 0x1, 0x1);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     glBegin( GL_QUADS );
     glTexCoord2f( tilewidth, 0 );
@@ -1178,7 +1180,8 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
     glVertex2i( adjustedrect.right, adjustedrect.bottom );
     glEnd();
 
-    glStencilFunc(GL_NOTEQUAL, 1, 1);
+    //glStencilMask(0);
+    glStencilFunc(GL_EQUAL, 0x1, 0x1);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
     uint32_t x = adjustedrect.left;
