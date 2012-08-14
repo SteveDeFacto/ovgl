@@ -471,7 +471,9 @@ void BuildDefaultMedia( Instance* inst )
     bone->mesh = new Mesh;
     bone->convex = NULL;
     mesh->skeleton->bones.push_back(bone);
+    SDL_GL_MakeCurrent(NULL, inst->hWnd);
     mesh->update();
+    SDL_GL_MakeCurrent(NULL, NULL);
     inst->DefaultMedia->Meshes.push_back(mesh);
 }
 
@@ -479,13 +481,29 @@ Instance::Instance( uint32_t flags )
 {
     g_Quit = false;
 
-    // Create GL context.
-    hWnd = new sf::Context();
+    // Initialize SDL
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_Window* window = SDL_CreateWindow("ContextWindow", 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+    hWnd = SDL_GL_CreateContext(window);
+    SDL_DestroyWindow( window );
+
+    // Initialize GLEW
     glewInit();
 
     // Initialize CG
     CgContext = cgCreateContext();
     cgGLRegisterStates(CgContext);
+
+    // Initialize OpenAL
+    ALCdevice *device = alcOpenDevice(NULL);
+    ALCcontext *context = alcCreateContext(device, NULL);
+    alcMakeContextCurrent(context);
 
     // Initialize Bullet
     PhysicsConfiguration = new btDefaultCollisionConfiguration();
@@ -495,8 +513,14 @@ Instance::Instance( uint32_t flags )
     PhysicsBroadphase = new btAxisSweep3(worldMin,worldMax);
     PhysicsSolver = new btSequentialImpulseConstraintSolver;
 
+    // Initialize FFMPEG
+    av_register_all();
+
     // Initialize FreeType
     FT_Init_FreeType( &ftlibrary );
+
+    // Initialize FreeImage
+    FreeImage_Initialise();
 
     // Build the default media.
     BuildDefaultMedia( this );
@@ -516,8 +540,8 @@ Instance::~Instance()
     delete PhysicsBroadphase;
     delete PhysicsDispatcher;
     delete PhysicsConfiguration;
-    delete hWnd;
     cgDestroyContext(CgContext);
+    SDL_Quit();
 }
 
 void Material::setEffectVariable(const std::string& variable, const std::vector< float >& data )
@@ -592,13 +616,12 @@ void Texture::Release()
 
 void Instance::Start()
 {
-    sf::Clock clock;
-    uint32_t previousTime = clock.getElapsedTime().asMilliseconds();
+    uint32_t previousTime = SDL_GetTicks();
 
     // Main message loop
     while( !g_Quit )
     {
-        uint32_t currentTime = clock.getElapsedTime().asMilliseconds();
+        uint32_t currentTime = SDL_GetTicks();
         uint32_t elapsedTime = currentTime - previousTime;
         for( uint32_t ml = 0; ml < MediaLibraries.size(); ml++ )
         {
@@ -670,7 +693,7 @@ Rect::Rect()
     bottom = 0;
 }
 
-Rect::Rect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom )
+Rect::Rect( int32_t left, int32_t top, int32_t right, int32_t bottom )
 {
     this->left = left;
     this->top = top;
@@ -688,13 +711,17 @@ Font::Font( Instance* instance, const std::string& file, uint32_t size )
     {
         FT_Set_Pixel_Sizes( ftface, 0, size);
         FT_Load_Char(ftface, i, FT_LOAD_RENDER);
+        FT_Glyph ftglyph;
+        FT_Get_Glyph( ftface->glyph, &ftglyph );
+        FT_BitmapGlyph bmglyph = (FT_BitmapGlyph)ftglyph;
+        charoffsets[i] = bmglyph->top;
         glGenTextures( 1, &charset[i] );
         glBindTexture( GL_TEXTURE_2D, charset[i] );
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         GLint swizzleMask[] = {GL_ONE, GL_ONE, GL_ONE, GL_ALPHA};
         glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA_EXT, swizzleMask);
         glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, ftface->glyph->bitmap.width, ftface->glyph->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE, ftface->glyph->bitmap.buffer );

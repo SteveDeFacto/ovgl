@@ -54,11 +54,10 @@ Ovgl::Rect WindowAdjustedRect( Window* window, URect* rect)
 {
     // Get the window's rect
     Ovgl::Rect WindowRect;
-
-    WindowRect.left = window->hWnd->getPosition().x;
-    WindowRect.top = window->hWnd->getPosition().y;
-    WindowRect.right = window->hWnd->getPosition().x + window->hWnd->getSize().x;
-    WindowRect.bottom = window->hWnd->getPosition().y + window->hWnd->getSize().y;
+    SDL_GetWindowPosition( window->hWnd, &WindowRect.left, &WindowRect.top );
+    SDL_GetWindowSize( window->hWnd, &WindowRect.right, &WindowRect.bottom);
+    WindowRect.right += WindowRect.left;
+    WindowRect.bottom += WindowRect.top;
 
     Ovgl::Rect adjustedrect;
     adjustedrect.left = ((WindowRect.right - WindowRect.left) * rect->left.scale) + rect->left.offset;
@@ -169,7 +168,6 @@ RenderTarget::RenderTarget( Instance* Instance, Texture* hTexture, const URect& 
     PrimaryBloomTex = 0;
     SecondaryBloomTex = 0;
     Update();
-    Inst->hWnd->setActive(false);
 };
 
 void RenderTarget::Release()
@@ -641,16 +639,15 @@ void RenderTarget::Render()
 
     if(hWin)
     {
-        hWin->hWnd->setActive(true);
-        WindowRect.left = hWin->hWnd->getPosition().x;
-        WindowRect.top = hWin->hWnd->getPosition().y;
-        WindowRect.right = hWin->hWnd->getPosition().x + hWin->hWnd->getSize().x;
-        WindowRect.bottom = hWin->hWnd->getPosition().y + hWin->hWnd->getSize().y;
+        SDL_GetWindowPosition( hWin->hWnd, &WindowRect.left, &WindowRect.top );
+        SDL_GetWindowSize( hWin->hWnd, &WindowRect.right, &WindowRect.bottom );
+        WindowRect.right += WindowRect.left;
+        WindowRect.bottom += WindowRect.top;
         adjustedrect = WindowAdjustedRect( hWin, &rect);
+        SDL_GL_MakeCurrent( hWin->hWnd, Inst->hWnd);
     }
     else
     {
-        hWin->hWnd->setActive(true);
         WindowRect.left = 0;
         WindowRect.top = 0;
         glBindTexture(GL_TEXTURE_2D, hTex->Image);
@@ -888,13 +885,13 @@ void RenderTarget::Render()
         }
         glDisable(GL_STENCIL_TEST);
         glDisable(GL_BLEND);
-        hWin->hWnd->setActive(false);
     }
+    SDL_GL_MakeCurrent( NULL, NULL);
 }
 
 void RenderTarget::Update()
 {
-    hWin->hWnd->setActive(true);
+    SDL_GL_MakeCurrent( NULL, Inst );
     Ovgl::Rect adjustedrect = WindowAdjustedRect( hWin, &rect);
 
     int width = (int)(adjustedrect.right - adjustedrect.left);
@@ -967,19 +964,19 @@ void RenderTarget::Update()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width/4, height/4, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    hWin->hWnd->setActive(false);
+    SDL_GL_MakeCurrent( NULL, NULL );
 }
 
-void RenderTarget::DoEvent(sf::Event event)
+void RenderTarget::DoEvent(SDL_Event event)
 {
     Ovgl::Rect adjustedrect;
     adjustedrect = WindowAdjustedRect( hWin, &rect);
     switch (event.type)
     {
-    case sf::Event::KeyPressed:
+    case SDL_KEYDOWN:
         if(On_KeyDown)
         {
-            On_KeyDown( event.key.code );
+            On_KeyDown( event.key.keysym.sym);
         }
         for( uint32_t i = 0; i < Interfaces.size(); i++ )
         {
@@ -987,83 +984,83 @@ void RenderTarget::DoEvent(sf::Event event)
         }
         break;
 
-    case sf::Event::KeyReleased:
+    case SDL_KEYUP:
         if(On_KeyUp)
         {
-            On_KeyUp( event.key.code );
+            On_KeyUp( event.key.keysym.sym );
         }
         for( uint32_t i = 0; i < Interfaces.size(); i++ )
         {
             Interfaces[i]->DoEvent(event, adjustedrect);
         }
         break;
-    case sf::Event::MouseMoved:
-        if( event.mouseMove.x > adjustedrect.left && event.mouseMove.x < adjustedrect.right )
-            if( event.mouseMove.y > adjustedrect.top && event.mouseMove.y < adjustedrect.bottom )
+    case SDL_MOUSEMOTION:
+        if( event.motion.x > adjustedrect.left && event.motion.x < adjustedrect.right )
+            if( event.motion.y > adjustedrect.top && event.motion.y < adjustedrect.bottom )
             {
-                event.mouseMove.x -= adjustedrect.left;
-                event.mouseMove.y -= adjustedrect.top;
+                event.motion.x -= adjustedrect.left;
+                event.motion.y -= adjustedrect.top;
                 if(On_MouseMove)
                 {
-                    On_MouseMove( event.mouseMove.x, event.mouseMove.y );
+                    On_MouseMove( event.motion.x, event.motion.y );
                 }
                 for( uint32_t i = 0; i < Interfaces.size(); i++ )
                 {
                     Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
-                    if( event.mouseMove.x > interfacerect.left && event.mouseMove.x < interfacerect.right )
-                        if( event.mouseMove.y > interfacerect.top && event.mouseMove.y < interfacerect.bottom )
+                    if( event.motion.x > interfacerect.left && event.motion.x < interfacerect.right )
+                        if( event.motion.y > interfacerect.top && event.motion.y < interfacerect.bottom )
                         {
-                            sf::Event interfaceevent = event;
-                            interfaceevent.mouseMove.x -= interfacerect.left;
-                            interfaceevent.mouseMove.y -= interfacerect.top;
+                            SDL_Event interfaceevent = event;
+                            interfaceevent.motion.x -= interfacerect.left;
+                            interfaceevent.motion.y -= interfacerect.top;
                             Interfaces[i]->DoEvent(interfaceevent, interfacerect);
                         }
                 }
             }
         break;
-    case sf::Event::MouseButtonPressed:
-        if( event.mouseButton.x > adjustedrect.left && event.mouseButton.x < adjustedrect.right )
-            if( event.mouseButton.y > adjustedrect.top && event.mouseButton.y < adjustedrect.bottom )
+    case SDL_MOUSEBUTTONDOWN:
+        if( event.motion.x > adjustedrect.left && event.motion.x < adjustedrect.right )
+            if( event.motion.y > adjustedrect.top && event.motion.y < adjustedrect.bottom )
             {
-                event.mouseButton.x -= adjustedrect.left;
-                event.mouseButton.y -= adjustedrect.top;
+                event.motion.x -= adjustedrect.left;
+                event.motion.y -= adjustedrect.top;
                 if(On_MouseDown)
                 {
-                    On_MouseDown( event.mouseButton.x, event.mouseButton.y, event.mouseButton.button );
+                    On_MouseDown( event.motion.x, event.motion.y, (int)event.button.button );
                 }
                 for( uint32_t i = 0; i < Interfaces.size(); i++ )
                 {
                     Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
-                    if( event.mouseButton.x > interfacerect.left && event.mouseButton.x < interfacerect.right )
-                        if( event.mouseButton.y > interfacerect.top && event.mouseButton.y < interfacerect.bottom )
+                    if( event.motion.x > interfacerect.left && event.motion.x < interfacerect.right )
+                        if( event.motion.y > interfacerect.top && event.motion.y < interfacerect.bottom )
                         {
-                            sf::Event interfaceevent = event;
-                            interfaceevent.mouseButton.x -= interfacerect.left;
-                            interfaceevent.mouseButton.y -= interfacerect.top;
+                            SDL_Event interfaceevent = event;
+                            interfaceevent.motion.x -= interfacerect.left;
+                            interfaceevent.motion.y -= interfacerect.top;
                             Interfaces[i]->DoEvent(interfaceevent, interfacerect);
                         }
                 }
             }
         break;
-    case sf::Event::MouseButtonReleased:
-        if( event.mouseButton.x > adjustedrect.left && event.mouseButton.x < adjustedrect.right )
-            if( event.mouseButton.y > adjustedrect.top && event.mouseButton.y < adjustedrect.bottom )
+    case SDL_MOUSEBUTTONUP:
+        if( event.motion.x > adjustedrect.left && event.motion.x < adjustedrect.right )
+            if( event.motion.y > adjustedrect.top && event.motion.y < adjustedrect.bottom )
             {
-                event.mouseButton.x -= adjustedrect.left;
-                event.mouseButton.y -= adjustedrect.top;
+                event.motion.x -= adjustedrect.left;
+                event.motion.y -= adjustedrect.top;
                 if(On_MouseUp)
                 {
-                    On_MouseUp( event.mouseButton.x, event.mouseButton.y, event.mouseButton.button );
+                    On_MouseUp( event.motion.x, event.motion.y, event.button.button );
                 }
                 for( uint32_t i = 0; i < Interfaces.size(); i++ )
                 {
                     Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
-                    if( event.mouseButton.x > interfacerect.left && event.mouseButton.x < interfacerect.right )
-                        if( event.mouseButton.y > interfacerect.top && event.mouseButton.y < interfacerect.bottom )
+                    if( event.motion.x > interfacerect.left && event.motion.x < interfacerect.right )
+                        if( event.motion.y > interfacerect.top && event.motion.y < interfacerect.bottom )
                         {
-                            sf::Event interfaceevent = event;
-                            interfaceevent.mouseButton.x -= interfacerect.left;
-                            interfaceevent.mouseButton.y -= interfacerect.top;
+                            SDL_Event interfaceevent = event;
+                            interfaceevent.motion.x -= interfacerect.left;
+                            interfaceevent.motion.y -= interfacerect.top;
                             Interfaces[i]->DoEvent(interfaceevent, interfacerect);
                         }
                 }
@@ -1095,6 +1092,7 @@ Interface::Interface( Interface* parent, const URect& rect )
     tiley = false;
     wordbreak = true;
     color = parent->color;
+    align = 0;
     hscroll = 0;
     vscroll = 0;
     On_KeyDown = NULL;
@@ -1116,6 +1114,7 @@ Interface::Interface( RenderTarget* parent, const URect& rect )
     tiley = false;
     wordbreak = true;
     color = Vector4( 1.0f, 1.0f, 1.0f, 1.0f );
+    align = 0;
     hscroll = 0;
     vscroll = 0;
     On_KeyDown = NULL;
@@ -1165,7 +1164,6 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
         glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
         tileheight = (float)(adjustedrect.bottom - adjustedrect.top) / (float)height;
     }
-    //glStencilMask(1);
     glStencilFunc(GL_ALWAYS, 0x1, 0x1);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
@@ -1180,39 +1178,101 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
     glVertex2i( adjustedrect.right, adjustedrect.bottom );
     glEnd();
 
-    //glStencilMask(0);
     glStencilFunc(GL_EQUAL, 0x1, 0x1);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glColor4f(text_color.x, text_color.y, text_color.z, text_color.w);
 
-    uint32_t x = adjustedrect.left;
-    uint32_t y = adjustedrect.top + vscroll;
-    for( uint32_t i = 0; i < text.size(); i++ )
+    int32_t x;
+    if(align == 0)
     {
-        glBindTexture(GL_TEXTURE_2D, font->charset[ text[i] ]);
-        GLint charwidth, charheight;
-        glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &charwidth);
-        glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &charheight);
-        if(x + charwidth > adjustedrect.right)
+        x = adjustedrect.left;
+        int32_t y = adjustedrect.top + vscroll;
+        for( int32_t i = 0; i < text.size(); i++ )
         {
-            y += font->size;
-            x = adjustedrect.left;
+            int32_t wordwidth = 0;
+            int32_t charwidth, charheight;
+            if(wordbreak)
+            {
+                int32_t wi = i + 1;
+                while(text[wi] != 32 && wi < text.size())
+                {
+                    glBindTexture(GL_TEXTURE_2D, font->charset[ text[wi] ]);
+                    glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &charwidth);
+                    wordwidth += charwidth;
+                    wi++;
+                }
+            }
+            glBindTexture(GL_TEXTURE_2D, font->charset[ text[i] ]);
+            glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &charwidth);
+            glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &charheight);
+            if(x + charwidth + wordwidth > adjustedrect.right)
+            {
+                y += font->size;
+                x = adjustedrect.left;
+            }
+            if(charwidth == 0)
+            {
+                charwidth = font->size / 2;
+            }
+            uint32_t charoffset = font->size - font->charoffsets[text[i]];
+            glBegin( GL_QUADS );
+            glTexCoord2f( 1, 0 );
+            glVertex2i( x + charwidth, y + charoffset );
+            glTexCoord2f( 0, 0 );
+            glVertex2i( x, y + charoffset );
+            glTexCoord2f( 0, 1 );
+            glVertex2i( x, y + charheight + charoffset );
+            glTexCoord2f( 1, 1 );
+            glVertex2i( x + charwidth, y + charheight + charoffset );
+            glEnd();
+            x += charwidth + 2;
         }
-        if(charwidth == 0)
+    }
+    else if(align == 1)
+    {
+        x = adjustedrect.right;
+        int32_t y = adjustedrect.top + vscroll;
+        for( int32_t i = text.size()-1; i >= 0 ; i-- )
         {
-            charwidth = font->size / 2;
+            int32_t wordwidth = 0;
+            int32_t charwidth, charheight;
+            if(wordbreak)
+            {
+                int32_t wi = i - 1;
+                while(text[wi] != 32 && wi >= 0)
+                {
+                    glBindTexture(GL_TEXTURE_2D, font->charset[ text[wi] ]);
+                    glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &charwidth);
+                    wordwidth += charwidth;
+                    wi--;
+                }
+            }
+            glBindTexture(GL_TEXTURE_2D, font->charset[ text[i] ]);
+            glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &charwidth);
+            glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &charheight);
+            x -= charwidth + 2;
+            if(x - (charwidth + wordwidth) < (int32_t)adjustedrect.left)
+            {
+                y -= font->size;
+                x = adjustedrect.right;
+            }
+            if(charwidth == 0)
+            {
+                charwidth = font->size / 2;
+            }
+            uint32_t charoffset = font->size - font->charoffsets[text[i]];
+            glBegin( GL_QUADS );
+            glTexCoord2f( 1, 0 );
+            glVertex2i( x + charwidth, y + charoffset );
+            glTexCoord2f( 0, 0 );
+            glVertex2i( x, y + charoffset );
+            glTexCoord2f( 0, 1 );
+            glVertex2i( x, y + charheight + charoffset );
+            glTexCoord2f( 1, 1 );
+            glVertex2i( x + charwidth, y + charheight + charoffset );
+            glEnd();
+
         }
-        uint32_t charoffset = font->size - charheight;
-        glBegin( GL_QUADS );
-        glTexCoord2f( 1, 0 );
-        glVertex2i( x + charwidth, y + charoffset );
-        glTexCoord2f( 0, 0 );
-        glVertex2i( x, y + charoffset );
-        glTexCoord2f( 0, 1 );
-        glVertex2i( x, y + charheight + charoffset );
-        glTexCoord2f( 1, 1 );
-        glVertex2i( x + charwidth, y + charheight + charoffset );
-        glEnd();
-        x += charwidth + 2;
     }
 
     for( int c = 0; c < children.size(); c++ )
@@ -1226,26 +1286,26 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
     }
 }
 
-void Interface::DoEvent(sf::Event event, const Rect& adjustedrect)
+void Interface::DoEvent(SDL_Event event, const Rect& adjustedrect)
 {
     switch (event.type)
     {
-    case sf::Event::KeyPressed:
+    case SDL_KEYDOWN:
         if(On_KeyDown)
         {
-            On_KeyDown( event.key.code );
+            On_KeyDown( event.key.keysym.sym );
         }
         break;
-    case sf::Event::KeyReleased:
+    case SDL_KEYUP:
         if(On_KeyUp)
         {
-            On_KeyUp( event.key.code );
+            On_KeyUp( event.key.keysym.sym );
         }
         break;
-    case sf::Event::MouseMoved:
+    case SDL_MOUSEMOTION:
         if(On_MouseMove)
         {
-            On_MouseMove( event.mouseMove.x, event.mouseMove.y );
+            On_MouseMove( event.motion.x, event.motion.y );
         }
         for( int c = 0; c < children.size(); c++ )
         {
@@ -1254,20 +1314,20 @@ void Interface::DoEvent(sf::Event event, const Rect& adjustedrect)
             childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset ;
             childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset ;
             childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset ;
-            if( event.mouseMove.x > childrect.left && event.mouseMove.x < childrect.right )
-                if( event.mouseMove.y > childrect.top && event.mouseMove.y < childrect.bottom )
+            if( event.motion.x > childrect.left && event.motion.x < childrect.right )
+                if( event.motion.y > childrect.top && event.motion.y < childrect.bottom )
                 {
-                    sf::Event interfaceevent = event;
-                    interfaceevent.mouseMove.x -= childrect.left;
-                    interfaceevent.mouseMove.y -= childrect.top;
+                    SDL_Event interfaceevent = event;
+                    interfaceevent.motion.x -= childrect.left;
+                    interfaceevent.motion.y -= childrect.top;
                     children[c]->DoEvent(interfaceevent, childrect);
                 }
         }
         break;
-    case sf::Event::MouseButtonPressed:
+    case SDL_MOUSEBUTTONDOWN:
         if(On_MouseDown)
         {
-            On_MouseDown( event.mouseButton.x, event.mouseButton.y, event.mouseButton.button );
+            On_MouseDown( event.motion.x, event.motion.y, event.button.button );
         }
         for( int c = 0; c < children.size(); c++ )
         {
@@ -1276,20 +1336,20 @@ void Interface::DoEvent(sf::Event event, const Rect& adjustedrect)
             childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset ;
             childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset ;
             childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset ;
-            if( event.mouseButton.x > childrect.left && event.mouseButton.x < childrect.right )
-                if( event.mouseButton.y > childrect.top && event.mouseButton.y < childrect.bottom )
+            if( event.motion.x > childrect.left && event.motion.x < childrect.right )
+                if( event.motion.y > childrect.top && event.motion.y < childrect.bottom )
                 {
-                    sf::Event interfaceevent = event;
-                    interfaceevent.mouseButton.x -= childrect.left;
-                    interfaceevent.mouseButton.y -= childrect.top;
+                    SDL_Event interfaceevent = event;
+                    interfaceevent.motion.x -= childrect.left;
+                    interfaceevent.motion.y -= childrect.top;
                     children[c]->DoEvent(interfaceevent, childrect);
                 }
         }
         break;
-    case sf::Event::MouseButtonReleased:
+    case SDL_MOUSEBUTTONUP:
         if(On_MouseUp)
         {
-            On_MouseUp( event.mouseButton.x, event.mouseButton.y, event.mouseButton.button );
+            On_MouseUp( event.motion.x, event.motion.y, event.button.button );
         }
         for( int c = 0; c < children.size(); c++ )
         {
@@ -1298,12 +1358,12 @@ void Interface::DoEvent(sf::Event event, const Rect& adjustedrect)
             childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset ;
             childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset ;
             childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset ;
-            if( event.mouseButton.x > childrect.left && event.mouseButton.x < childrect.right )
-                if( event.mouseButton.y > childrect.top && event.mouseButton.y < childrect.bottom )
+            if( event.motion.x > childrect.left && event.motion.x < childrect.right )
+                if( event.motion.y > childrect.top && event.motion.y < childrect.bottom )
                 {
-                    sf::Event interfaceevent = event;
-                    interfaceevent.mouseButton.x -= childrect.left;
-                    interfaceevent.mouseButton.y -= childrect.top;
+                    SDL_Event interfaceevent = event;
+                    interfaceevent.motion.x -= childrect.left;
+                    interfaceevent.motion.y -= childrect.top;
                     children[c]->DoEvent(interfaceevent, childrect);
                 }
         }

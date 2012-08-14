@@ -23,311 +23,308 @@
 
 namespace Ovgl
 {
-unsigned char SFKeyToASCII(sf::Keyboard::Key keycode)
+unsigned char SFKeyToASCII(SDL_Keycode keycode)
 {
     switch (keycode)
     {
-    case sf::Keyboard::Escape:
+    case SDLK_ESCAPE:
         return 27;
         break;
-    case sf::Keyboard::LControl:
+    case SDLK_LCTRL:
         return 162;
         break;
-    case sf::Keyboard::LShift:
+    case SDLK_LSHIFT:
         return 160;
         break;
-    case sf::Keyboard::LAlt:
+    case SDLK_LALT:
         return 164;
         break;
-    case sf::Keyboard::LSystem:
+    case SDLK_RGUI:
         return 91;
         break;
-    case sf::Keyboard::RControl:
+    case SDLK_RCTRL:
         return 163;
         break;
-    case sf::Keyboard::RShift:
+    case SDLK_RSHIFT:
         return 161;
         break;
-    case sf::Keyboard::RAlt:
+    case SDLK_RALT:
         return 165;
         break;
-    case sf::Keyboard::RSystem:
-        return 92;
-        break;
-    case sf::Keyboard::Menu:
+    case SDLK_MENU:
         return 93;
         break;
-    case sf::Keyboard::LBracket:
+    case SDLK_LEFTPAREN:
         return 91;
         break;
-    case sf::Keyboard::RBracket:
+    case SDLK_RIGHTPAREN:
         return 90;
         break;
-    case sf::Keyboard::SemiColon:
+    case SDLK_SEMICOLON:
         return 59;
         break;
-    case sf::Keyboard::Comma:
+    case SDLK_COMMA:
         return 44;
         break;
-    case sf::Keyboard::Period:
+    case SDLK_PERIOD:
         return 46;
         break;
-    case sf::Keyboard::Quote:
+    case SDLK_QUOTE:
         return 34;
         break;
-    case sf::Keyboard::Slash:
+    case SDLK_SLASH:
         return 47;
         break;
-    case sf::Keyboard::BackSlash:
+    case SDLK_BACKSLASH:
         return 92;
         break;
-    case sf::Keyboard::Tilde:
-        return 152;
-        break;
-    case sf::Keyboard::Equal:
+//    case sf::Keyboard::Tilde:
+//        return 152;
+//        break;
+    case SDLK_EQUALS:
         return 61;
         break;
-    case sf::Keyboard::Dash:
+    case SDLK_MINUS:
         return 45;
         break;
-    case sf::Keyboard::Space:
+    case SDLK_SPACE:
         return 32;
         break;
-    case sf::Keyboard::Return:
+    case SDLK_RETURN:
         return 13;
         break;
-    case sf::Keyboard::BackSpace:
+    case SDLK_BACKSPACE:
         return 8;
         break;
-    case sf::Keyboard::Tab:
+    case SDLK_TAB:
         return 9;
         break;
-    case sf::Keyboard::PageUp:
+    case SDLK_PAGEUP:
         return 33;
         break;
-    case sf::Keyboard::PageDown:
+    case SDLK_PAGEDOWN:
         return 34;
         break;
-    case sf::Keyboard::End:
+    case SDLK_END:
         return 35;
         break;
-    case sf::Keyboard::Home:
+    case SDLK_HOME:
         return 36;
         break;
-    case sf::Keyboard::Insert:
+    case SDLK_INSERT:
         return 45;
         break;
-    case sf::Keyboard::Delete:
+    case SDLK_DELETE:
         return 48;
         break;
-    case sf::Keyboard::Pause:
+    case SDLK_PAUSE:
         return 19;
         break;
-    case sf::Keyboard::Add:
+    case SDLK_KP_PLUS:
         return 43;
         break;
-    case sf::Keyboard::Subtract:
+    case SDLK_KP_MINUS:
         return 45;
         break;
-    case sf::Keyboard::Multiply:
+    case SDLK_KP_MULTIPLY:
         return 42;
         break;
-    case sf::Keyboard::Divide:
+    case SDLK_KP_DIVIDE:
         return 47;
         break;
-    case sf::Keyboard::Left:
+    case SDLK_LEFT:
         return 37;
         break;
-    case sf::Keyboard::Right:
+    case SDLK_RIGHT:
         return 39;
         break;
-    case sf::Keyboard::Up:
+    case SDLK_UP:
         return 38;
         break;
-    case sf::Keyboard::Down:
+    case SDLK_DOWN:
         return 40;
         break;
-    case sf::Keyboard::Numpad0:
+    case SDLK_KP_0:
         return 96;
         break;
-    case sf::Keyboard::Numpad1:
+    case SDLK_KP_1:
         return 97;
         break;
-    case sf::Keyboard::Numpad2:
+    case SDLK_KP_2:
         return 98;
         break;
-    case sf::Keyboard::Numpad3:
+    case SDLK_KP_3:
         return 99;
         break;
-    case sf::Keyboard::Numpad4:
+    case SDLK_KP_4:
         return 100;
         break;
-    case sf::Keyboard::Numpad5:
+    case SDLK_KP_5:
         return 101;
         break;
-    case sf::Keyboard::Numpad6:
+    case SDLK_KP_6:
         return 102;
         break;
-    case sf::Keyboard::Numpad7:
+    case SDLK_KP_7:
         return 103;
         break;
-    case sf::Keyboard::Numpad8:
+    case SDLK_KP_8:
         return 104;
         break;
-    case sf::Keyboard::Numpad9:
+    case SDLK_KP_9:
         return 105;
         break;
-    case sf::Keyboard::F1:
+    case SDLK_F1:
         return 112;
         break;
-    case sf::Keyboard::F2:
+    case SDLK_F2:
         return 113;
         break;
-    case sf::Keyboard::F3:
+    case SDLK_F3:
         return 114;
         break;
-    case sf::Keyboard::F4:
+    case SDLK_F4:
         return 115;
         break;
-    case sf::Keyboard::F5:
+    case SDLK_F5:
         return 116;
         break;
-    case sf::Keyboard::F6:
+    case SDLK_F6:
         return 117;
         break;
-    case sf::Keyboard::F7:
+    case SDLK_F7:
         return 118;
         break;
-    case sf::Keyboard::F8:
+    case SDLK_F8:
         return 119;
         break;
-    case sf::Keyboard::F9:
+    case SDLK_F9:
         return 120;
         break;
-    case sf::Keyboard::F10:
+    case SDLK_F10:
         return 121;
         break;
-    case sf::Keyboard::F11:
+    case SDLK_F11:
         return 122;
         break;
-    case sf::Keyboard::F12:
+    case SDLK_F12:
         return 123;
         break;
-    case sf::Keyboard::F13:
+    case SDLK_F13:
         return 124;
         break;
-    case sf::Keyboard::F14:
+    case SDLK_F14:
         return 125;
         break;
-    case sf::Keyboard::F15:
+    case SDLK_F15:
         return 126;
         break;
-    case sf::Keyboard::Num0:
+    case SDLK_0:
         return 48;
         break;
-    case sf::Keyboard::Num1:
+    case SDLK_1:
         return 49;
         break;
-    case sf::Keyboard::Num2:
+    case SDLK_2:
         return 50;
         break;
-    case sf::Keyboard::Num3:
+    case SDLK_3:
         return 51;
         break;
-    case sf::Keyboard::Num4:
+    case SDLK_4:
         return 52;
         break;
-    case sf::Keyboard::Num5:
+    case SDLK_5:
         return 53;
         break;
-    case sf::Keyboard::Num6:
+    case SDLK_6:
         return 54;
         break;
-    case sf::Keyboard::Num7:
+    case SDLK_7:
         return 55;
         break;
-    case sf::Keyboard::Num8:
+    case SDLK_8:
         return 56;
         break;
-    case sf::Keyboard::Num9:
+    case SDLK_9:
         return 57;
         break;
-    case sf::Keyboard::A:
+    case SDLK_a:
         return 65;
         break;
-    case sf::Keyboard::B:
+    case SDLK_b:
         return 66;
         break;
-    case sf::Keyboard::C:
+    case SDLK_c:
         return 67;
         break;
-    case sf::Keyboard::D:
+    case SDLK_d:
         return 68;
         break;
-    case sf::Keyboard::E:
+    case SDLK_e:
         return 69;
         break;
-    case sf::Keyboard::F:
+    case SDLK_f:
         return 70;
         break;
-    case sf::Keyboard::G:
+    case SDLK_g:
         return 71;
         break;
-    case sf::Keyboard::H:
+    case SDLK_h:
         return 72;
         break;
-    case sf::Keyboard::I:
+    case SDLK_i:
         return 73;
         break;
-    case sf::Keyboard::J:
+    case SDLK_j:
         return 74;
         break;
-    case sf::Keyboard::K:
+    case SDLK_k:
         return 75;
         break;
-    case sf::Keyboard::L:
+    case SDLK_l:
         return 76;
         break;
-    case sf::Keyboard::M:
+    case SDLK_m:
         return 77;
         break;
-    case sf::Keyboard::N:
+    case SDLK_n:
         return 78;
         break;
-    case sf::Keyboard::O:
+    case SDLK_o:
         return 79;
         break;
-    case sf::Keyboard::P:
+    case SDLK_p:
         return 80;
         break;
-    case sf::Keyboard::Q:
+    case SDLK_q:
         return 81;
         break;
-    case sf::Keyboard::R:
+    case SDLK_r:
         return 82;
         break;
-    case sf::Keyboard::S:
+    case SDLK_s:
         return 83;
         break;
-    case sf::Keyboard::T:
+    case SDLK_t:
         return 84;
         break;
-    case sf::Keyboard::U:
+    case SDLK_u:
         return 85;
         break;
-    case sf::Keyboard::V:
+    case SDLK_v:
         return 86;
         break;
-    case sf::Keyboard::W:
+    case SDLK_w:
         return 87;
         break;
-    case sf::Keyboard::X:
+    case SDLK_x:
         return 88;
         break;
-    case sf::Keyboard::Y:
+    case SDLK_y:
         return 89;
         break;
-    case sf::Keyboard::Z:
+    case SDLK_z:
         return 90;
         break;
 
@@ -351,21 +348,12 @@ Window::Window( Instance* instance, const std::string& name )
     On_MouseUp = NULL;
     On_MouseOver = NULL;
     On_MouseOut = NULL;
-    sf::ContextSettings settings;
-    settings.depthBits = 32;
-    settings.stencilBits = 8;
-    settings.antialiasingLevel = 0;
-    settings.majorVersion = 3;
-    settings.minorVersion = 3;
-    hWnd = new sf::RenderWindow(sf::VideoMode(640, 480), name.c_str(), sf::Style::Default, settings);
-    hWnd->setActive( true );
+    hWnd = SDL_CreateWindow( name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
+    SDL_GL_MakeCurrent(hWnd, instance->hWnd);
     glDisable(GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable (GL_CULL_FACE);
-    hWnd->setActive( false );
-
-
-
+    SDL_GL_MakeCurrent(0, 0);
     instance->Windows.push_back(this);
 };
 
@@ -374,27 +362,27 @@ void Window::LockMouse( bool state )
     if( state )
     {
         lockmouse = true;
-        hWnd->setMouseCursorVisible( false );
+        SDL_SetRelativeMouseMode(SDL_TRUE);
     }
     else
     {
         lockmouse = false;
-        hWnd->setMouseCursorVisible( true);
+        SDL_SetRelativeMouseMode(SDL_FALSE);
     }
 }
 
 void Window::DoEvents()
 {
-    sf::Event Event;
-    while(hWnd->pollEvent(Event))
+    SDL_Event Event;
+    while(SDL_PollEvent(&Event))
     {
         switch (Event.type)
         {
-        case sf::Event::KeyPressed:
-            Event.key.code = (sf::Keyboard::Key)SFKeyToASCII(Event.key.code);
+        case SDL_KEYDOWN:
+            Event.key.keysym.sym = SFKeyToASCII(Event.key.keysym.sym);
             if(On_KeyDown)
             {
-                On_KeyDown( Event.key.code );
+                On_KeyDown( Event.key.keysym.sym );
             }
             for( uint32_t r = 0; r < RenderTargets.size(); r++ )
             {
@@ -402,23 +390,23 @@ void Window::DoEvents()
             }
             break;
 
-        case sf::Event::KeyReleased:
-            Event.key.code = (sf::Keyboard::Key)SFKeyToASCII(Event.key.code);
+        case SDL_KEYUP:
+            Event.key.keysym.sym = SFKeyToASCII(Event.key.keysym.sym);
             if(On_KeyUp)
             {
-                On_KeyUp( Event.key.code );
+                On_KeyUp( Event.key.keysym.sym );
             }
             for( uint32_t r = 0; r < RenderTargets.size(); r++ )
             {
                 RenderTargets[r]->DoEvent(Event);
             }
             break;
-        case sf::Event::MouseMoved:
+        case SDL_MOUSEMOTION:
             if(!lockmouse)
             {
                 if(On_MouseMove)
                 {
-                    On_MouseMove( Event.mouseMove.x, Event.mouseMove.y );
+                    On_MouseMove( Event.motion.x, Event.motion.y );
                 }
                 for( uint32_t r = 0; r < RenderTargets.size(); r++ )
                 {
@@ -426,12 +414,12 @@ void Window::DoEvents()
                 }
             }
             break;
-        case sf::Event::MouseButtonPressed:
+        case SDL_MOUSEBUTTONDOWN:
             if(!lockmouse)
             {
                 if(On_MouseDown)
                 {
-                    On_MouseDown( Event.mouseButton.x, Event.mouseButton.y, Event.mouseButton.button );
+                    On_MouseDown( Event.motion.x, Event.motion.y, Event.button.button );
                 }
                 for( uint32_t r = 0; r < RenderTargets.size(); r++ )
                 {
@@ -442,16 +430,16 @@ void Window::DoEvents()
             {
                 if(On_MouseDown)
                 {
-                    On_MouseDown( 0, 0, Event.mouseButton.button );
+                    On_MouseDown( 0, 0, Event.button.button );
                 }
             }
             break;
-        case sf::Event::MouseButtonReleased:
+        case SDL_MOUSEBUTTONUP:
             if(!lockmouse)
             {
                 if(On_MouseUp)
                 {
-                    On_MouseUp( Event.mouseButton.x, Event.mouseButton.y, Event.mouseButton.button );
+                    On_MouseUp( Event.motion.x, Event.motion.y, Event.button.button );
                 }
                 for( uint32_t r = 0; r < RenderTargets.size(); r++ )
                 {
@@ -462,82 +450,76 @@ void Window::DoEvents()
             {
                 if(On_MouseUp)
                 {
-                    On_MouseUp( 0, 0, Event.mouseButton.button );
+                    On_MouseUp( 0, 0, Event.button.button );
                 }
             }
             break;
-        case sf::Event::MouseEntered:
-            if(On_MouseOver)
+        case SDL_WINDOWEVENT:
+            switch (Event.window.event)
             {
-                On_MouseOver();
+            case SDL_WINDOWEVENT_ENTER:
+                if(On_MouseOver)
+                {
+                    On_MouseOver();
+                }
+                break;
+            case SDL_WINDOWEVENT_LEAVE:
+                if(On_MouseOut)
+                {
+                    On_MouseOut();
+                }
+                break;
+            case SDL_WINDOWEVENT_RESIZED:
+                for(uint32_t i = 0; i < RenderTargets.size(); i++)
+                {
+                    RenderTargets[i]->Update();
+                }
+                break;
+            case SDL_WINDOWEVENT_FOCUS_GAINED:
+                active = true;
+                break;
+            case SDL_WINDOWEVENT_FOCUS_LOST:
+                active = false;
+                break;
+            case SDL_WINDOWEVENT_CLOSE:
+                SDL_QuitSubSystem(SDL_INIT_VIDEO);
+                inst->g_Quit = true;
+                break;
             }
             break;
-        case sf::Event::MouseLeft:
-            if(On_MouseOut)
-            {
-                On_MouseOut();
-            }
-            break;
-        case sf::Event::Resized:
-            for(uint32_t i = 0; i < RenderTargets.size(); i++)
-            {
-                RenderTargets[i]->Update();
-            }
-            while(hWnd->pollEvent(Event)){}
-            break;
-        case sf::Event::GainedFocus:
-            active = true;
-            break;
-
-        case sf::Event::LostFocus:
-            active = false;
-            break;
-
         default:
             break;
         }
     }
     if(lockmouse && active)
     {
-        long cx = hWnd->getSize().x / 2;
-        long cy = hWnd->getSize().y / 2;
-        sf::Vector2i Point = sf::Mouse::getPosition(*hWnd);
+
+        int32_t cx, cy;
+        SDL_GetWindowSize( hWnd, &cx, &cy);
+        cx /= 2;
+        cy /= 2;
+
+        int32_t mx, my;
+        SDL_GetRelativeMouseState( &mx, &my );
         if(On_MouseMove)
         {
-            On_MouseMove( Point.x - cx, Point.y - cy );
+            On_MouseMove( mx, my );
         }
-        sf::Mouse::setPosition( sf::Vector2i(cx, cy), *hWnd );
-        while(hWnd->pollEvent(Event)){}
+        SDL_WarpMouseInWindow(hWnd,cx, cy);
     }
-    hWnd->display();
+    SDL_GL_SwapWindow(hWnd);
 }
 
 void Window::SetFullscreen( bool state )
 {
     if(state)
     {
-        sf::ContextSettings settings = hWnd->getSettings();
-        sf::Vector2u winsz = hWnd->getSize();
-        delete hWnd;
-        hWnd = new sf::RenderWindow(sf::VideoMode(winsz.x, winsz.y, 32), title.c_str(), sf::Style::Fullscreen, settings);
-        hWnd->setMouseCursorVisible( !this->lockmouse );
-        hWnd->setActive( true );
-        glDisable(GL_BLEND);
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable (GL_CULL_FACE);
+        SDL_SetWindowFullscreen(hWnd, SDL_TRUE);
         fullscreen = true;
     }
     else
     {
-        sf::ContextSettings settings = hWnd->getSettings();
-        sf::Vector2u winsz = hWnd->getSize();
-        delete hWnd;
-        hWnd = new sf::RenderWindow(sf::VideoMode(winsz.x, winsz.y, 32), title.c_str(), sf::Style::Default, settings);
-        hWnd->setMouseCursorVisible( !this->lockmouse );
-        hWnd->setActive( true );
-        glDisable(GL_BLEND);
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable (GL_CULL_FACE);
+        SDL_SetWindowFullscreen(hWnd, SDL_FALSE);
         fullscreen = false;
     }
 }
@@ -545,12 +527,11 @@ void Window::SetFullscreen( bool state )
 void Window::SetVSync( bool state )
 {
     vsync = state;
-    hWnd->setVerticalSyncEnabled(state);
+    SDL_GL_SetSwapInterval(state);
 }
 
 Window::~Window()
 {
-    hWnd->close();
-    delete hWnd;
+    SDL_DestroyWindow(hWnd);
 }
 }

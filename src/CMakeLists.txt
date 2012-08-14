@@ -59,19 +59,7 @@ add_library( Ovgl SHARED
 
 IF(WIN32)
 target_link_libraries( Ovgl
-optimized "sfml-graphics"
-debug "sfml-graphics-d"
-optimized "sfml-window"
-debug "sfml-window-d"
-optimized "sfml-system"
-debug "sfml-system-d"
-optimized "sfml-audio"
-debug "sfml-audio-d"
-optimized "sfml-network"
-debug "sfml-network-d"
-optimized "sfml-main"
-debug "sfml-main-d"
-"sfgui"
+"SDL2"
 "GL"
 "openal"
 "Cg"
@@ -83,15 +71,12 @@ optimized "BulletCollision"
 debug "BulletCollision_d"
 optimized "LinearMath"
 debug "LinearMath_d"
-optimized "assimp")
+optimized "assimp"
+"freetype"
+"freeimage")
 ELSEIF(UNIX)
 target_link_libraries( Ovgl
-"sfml-graphics"
-"sfml-window"
-"sfml-system"
-"sfml-audio"
-"sfml-network"
-"sfgui"
+"SDL2"
 "GL"
 "openal"
 "Cg"
@@ -101,8 +86,11 @@ target_link_libraries( Ovgl
 "BulletCollision"
 "LinearMath"
 "assimp"
-"CEGUIBase"
-"CEGUIOpenGLRenderer")
+"freetype"
+"freeimage"
+"avcodec"
+"avformat"
+"avutil")
 ENDIF(WIN32)
 
 add_definitions( -DNOMINMAX )

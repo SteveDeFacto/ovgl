@@ -164,7 +164,7 @@ public:
     */
     void RenderMesh( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender );
 
-    void DoEvent(sf::Event event);
+    void DoEvent(SDL_Event event);
     void (*On_KeyDown)(char);
     void (*On_KeyUp)(char);
     void (*On_MouseMove)(long, long);
@@ -187,15 +187,17 @@ public:
     bool                        tiley;
     bool                        wordbreak;
     Vector4                     color;
+    Vector4                     text_color;
     std::string                 text;
     Font*                       font;
+    uint32_t                    align;
     Interface*                  parent;
     int32_t                     hscroll;
     int32_t                     vscroll;
     std::vector<Interface*>     children;
     void set_text( const std::string& text );
     void render( const Ovgl::Rect& adjustedrect );
-    void DoEvent( sf::Event event, const Rect& adjustedrect);
+    void DoEvent( SDL_Event event, const Rect& adjustedrect);
     void (*On_KeyDown)(char);
     void (*On_KeyUp)(char);
     void (*On_MouseMove)(long, long);

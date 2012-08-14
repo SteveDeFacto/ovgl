@@ -42,7 +42,7 @@ namespace Ovgl
 			int									frequency;
 			uint32_t							stereo;
 			uint32_t							mono;
-            std::vector< int16_t >				data;
+            std::vector< int8_t >				data;
 			AudioInstance* CreateAudioInstance( Emitter* emitter, bool loop );
 			void Release();
 		};
@@ -64,7 +64,7 @@ namespace Ovgl
 		{
 		public:
 			AudioInstance*						instance;
-			uint32_t						source;
+            uint32_t                            source;
 			void Release();
 		};
 	}

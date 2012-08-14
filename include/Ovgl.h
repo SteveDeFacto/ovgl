@@ -19,6 +19,8 @@
 #ifndef _Ovgl
 #define _Ovgl
 
+#define __STDC_CONSTANT_MACROS
+
 #pragma warning(disable:4251)
 
 // C++ Standard Library Headers

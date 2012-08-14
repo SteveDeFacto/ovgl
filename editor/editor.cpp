@@ -64,6 +64,11 @@ void KeyDown(char key)
 		Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
 		Camera->setPose( (Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
 	}
+
+    if( key == 'F')
+    {
+        Window->SetFullscreen( !Window->fullscreen );
+    }
 }
 
 int main()
@@ -71,30 +76,20 @@ int main()
 	// Create Main Instance
 	Inst = new Ovgl::Instance( 0 );
 
-	// Create Window
-	Window = new Ovgl::Window( Inst, "Test");
-    Window->LockMouse(true);
-    Window->SetFullscreen( false );
+    // Create Window
+    Window = new Ovgl::Window( Inst, "Test");
+    Window->LockMouse( true );
     Window->SetVSync( true );
     Window->On_MouseMove = MouseMove;
     Window->On_KeyDown = KeyDown;
 
     // Create Render Target
-    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::URect(0, 0.1f, 1.0f, 1.0f), 0);
+    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::URect(0, 0, 1.0f, 1.0f), 0);
     RenderTarget->bloom = 4;
     RenderTarget->autoLuminance = true;
     RenderTarget->motionBlur = true;
     RenderTarget->multiSample = true;
     RenderTarget->debugMode = false;
-
-    Ovgl::Font* font = new Ovgl::Font(Inst, "/usr/share/fonts/truetype/msttcorefonts/arial.ttf", 30);
-
-    Interface = new Ovgl::Interface( RenderTarget, Ovgl::URect(0.1f, 50, 0.9f, 0.9f) );
-    //Interface->tilex = true;
-    Interface->font = font;
-    Interface->set_text("Hello World! childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset + adjustedrect.left; childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset + adjustedrect.top; childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset + adjustedrect.left; childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset + adjustedrect.top;");
-    Interface->vscroll = -100;
-    //Interface2 = new Ovgl::Interface( Interface, Ovgl::URect(0.5f, 0.0f, 1.0f, 0.1f) );
 
     // Create Media Library
     MediaLibrary = new Ovgl::MediaLibrary(Inst, "");
@@ -119,15 +114,11 @@ int main()
 
     Texture3 = MediaLibrary->ImportTexture("../media/textures/white marble.png");
 
-    Interface->background = Texture2;
-
-    //Interface2->background = Texture3;
-
     // Import mesh
     Mesh = MediaLibrary->ImportModel( "../media/meshes/plane.dae", true );
     Mesh2 = MediaLibrary->ImportModel( "../media/meshes/test.dae", true );
 
-    MediaLibrary->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);
+    MediaLibrary->ImportAudio("../media/audio/foot_step.ogg")->CreateAudioInstance(NULL, true);
 
     // Add object to scene
     Object = Scene->CreateObject(Mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
@@ -143,7 +134,7 @@ int main()
     // Set scene sky box
     Scene->sky_box = Texture1;
 
-	Inst->Start();
+    Inst->Start();
 
 	// Release all
 	delete Inst;

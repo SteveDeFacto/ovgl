@@ -663,16 +663,58 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& front, cons
     // Create array of cube faces.
     std::string CubeFaces[6] = {front, back, top, bottom, left, right};
 
+    SDL_GL_MakeCurrent(NULL, Inst->hWnd);
+
     glGenTextures(1, &texture->Image);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture->Image);
     for (int i = 0; i < 6; i++)
     {
-        sf::Image Image;
-        Image.loadFromFile(CubeFaces[i].c_str());
-        Image.flipVertically();
+        // Image format
+        FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+
+        // Check the file signature and deduce its format
+        fif = FreeImage_GetFileType( CubeFaces[i].c_str(), 0 );
+
+        // If still unknown, try to guess the file format from the file extension
+        if( fif == FIF_UNKNOWN )
+        {
+            fif = FreeImage_GetFIFFromFilename( CubeFaces[i].c_str() );
+        }
+
+        // If still unkown, return NULL
+        if( fif == FIF_UNKNOWN )
+        {
+            return NULL;
+        }
+
+        // Load texture
+        FIBITMAP* dib = FreeImage_Load( fif, CubeFaces[i].c_str() );
+
+        // Convert to RGB format
+        dib = FreeImage_ConvertTo32Bits( dib );
+
+        // Get raw data and dimensions
+        uint32_t w = FreeImage_GetWidth( dib );
+        uint32_t h = FreeImage_GetHeight( dib );
+        BYTE* pixeles = FreeImage_GetBits( dib );
+        GLubyte* textura = new GLubyte[4*w*h];
+
+        for( uint32_t j = 0; j < w * h; j++ )
+        {
+            textura[j*4+0] = pixeles[j*4+2];
+            textura[j*4+1] = pixeles[j*4+1];
+            textura[j*4+2] = pixeles[j*4+0];
+            textura[j*4+3] = pixeles[j*4+3];
+        }
 
         // Create texture.
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, Image.getSize().x, Image.getSize().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, Image.getPixelsPtr());
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura);
+
+        // Release FreeImage's copy of the image
+        FreeImage_Unload( dib );
+
+        // delete our converted copy of the texture pixels
+        delete [] textura;
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -680,6 +722,8 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& front, cons
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    SDL_GL_MakeCurrent(NULL, NULL);
 
     // Add texture to media library
     Textures.push_back( texture );
@@ -690,34 +734,102 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& front, cons
 
 Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
 {
-    sf::Image Image;
-    Image.loadFromFile(file.c_str());
+    struct stat stFileInfo;
+    int intStat = stat(file.c_str(), &stFileInfo);
+    if(intStat == 0)
+    {
+        // Image format
+        FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 
-    // Create new texture
-    Ovgl::Texture* texture = new Ovgl::Texture;
+        // Check the file signature and deduce its format
+        fif = FreeImage_GetFileType( file.c_str(), 0 );
 
-    // Set the texture's media library handle to this media library
-    texture->MLibrary = this;
+        // If still unknown, try to guess the file format from the file extension
+        if( fif == FIF_UNKNOWN )
+        {
+            fif = FreeImage_GetFIFFromFilename( file.c_str() );
+        }
 
-    // Set the texture's file name.
-    texture->File = file;
+        // If still unkown, return NULL
+        if( fif == FIF_UNKNOWN )
+        {
+            return NULL;
+        }
 
-    texture->HasAlpha = false;
+        // Load texture
+        FIBITMAP* dib = FreeImage_Load( fif, file.c_str() );
 
-    // Create OpenGL texture
-    glGenTextures( 1, &texture->Image );
-    glBindTexture( GL_TEXTURE_2D, texture->Image );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, Image.getSize().x, Image.getSize().y, 0, GL_RGBA, GL_UNSIGNED_BYTE, Image.getPixelsPtr() );
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glBindTexture( GL_TEXTURE_2D, 0 );
+        // Check if file was loaded
+        if(dib == NULL)
+        {
+            return NULL;
+        }
 
-    // Add texture to media library
-    Textures.push_back( texture );
+        // Get raw data and dimensions
+        uint32_t w = FreeImage_GetWidth( dib );
+        uint32_t h = FreeImage_GetHeight( dib );
 
-    // Return texture pointer
-    return texture;
+        // Check if texture is valid.
+        if( w == 0 && h == 0 )
+        {
+            return NULL;
+        }
+
+        // Create new texture
+        Ovgl::Texture* texture = new Ovgl::Texture;
+
+        // Set the texture's media library handle to this media library
+        texture->MLibrary = this;
+
+        // Set the texture's file name.
+        texture->File = file;
+
+        texture->HasAlpha = !!FreeImage_IsTransparent( dib );
+
+        // Convert to RGB format
+        dib = FreeImage_ConvertTo32Bits( dib );
+
+        BYTE* pixeles = FreeImage_GetBits( dib );
+        GLubyte* textura = new GLubyte[4*w*h];
+
+        for( uint32_t j = 0; j < w * h; j++ )
+        {
+            textura[j*4+0] = pixeles[j*4+2];
+            textura[j*4+1] = pixeles[j*4+1];
+            textura[j*4+2] = pixeles[j*4+0];
+            textura[j*4+3] = pixeles[j*4+3];
+        }
+
+        SDL_GL_MakeCurrent(NULL, Inst->hWnd);
+
+        // Create OpenGL texture
+        glGenTextures( 1, &texture->Image );
+        glBindTexture( GL_TEXTURE_2D, texture->Image );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glBindTexture( GL_TEXTURE_2D, 0 );
+
+        SDL_GL_MakeCurrent(NULL, NULL);
+
+        // Release FreeImage's copy of the image
+        FreeImage_Unload( dib );
+
+        // delete our converted copy of the texture pixels
+        delete [] textura;
+
+        // Add texture to media library
+        Textures.push_back( texture );
+
+        // Return texture pointer
+        return texture;
+    }
+    else
+    {
+        // File does not exist!
+        return NULL;
+    }
 }
 
 Ovgl::Shader* Ovgl::MediaLibrary::ImportShader( const std::string& file )
@@ -755,7 +867,7 @@ Ovgl::Scene* Ovgl::MediaLibrary::CreateScene()
     info.m_numIterations = 20;
     Scenes.push_back(scene);
     return scene;
-};
+}
 
 Ovgl::Material* Ovgl::MediaLibrary::CreateMaterial( )
 {
@@ -769,7 +881,7 @@ Ovgl::Material* Ovgl::MediaLibrary::CreateMaterial( )
     material->setEffectTexture("txEnvironment", Inst->DefaultMedia->Textures[1] );
     Materials.push_back(material);
     return material;
-};
+}
 
 Ovgl::Texture* Ovgl::MediaLibrary::CreateTexture( uint32_t width, uint32_t height )
 {
@@ -795,14 +907,14 @@ Ovgl::Texture* Ovgl::MediaLibrary::CreateTexture( uint32_t width, uint32_t heigh
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
-    glGenerateMipmap( GL_TEXTURE_2D );
+    //glGenerateMipmap( GL_TEXTURE_2D );
     glBindTexture( GL_TEXTURE_2D, 0 );
 
     // Add texture to media library
     Textures.push_back( texture );
 
     return texture;
-};
+}
 
 Ovgl::Texture* Ovgl::MediaLibrary::CreateCubemap( uint32_t width, uint32_t height )
 {
@@ -841,28 +953,62 @@ Ovgl::Texture* Ovgl::MediaLibrary::CreateCubemap( uint32_t width, uint32_t heigh
     Textures.push_back( texture );
 
     return texture;
-};
+}
 
 Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportAudio( const std::string& file )
 {
     Ovgl::AudioBuffer* buffer = new Ovgl::AudioBuffer;
     buffer->Inst = Inst;
-    sf::SoundBuffer sfbuffer;
-    if (sfbuffer.loadFromFile(file.c_str()))
+    AVFrame* frame = avcodec_alloc_frame();
+    AVFormatContext* formatContext = NULL;
+    avformat_open_input(&formatContext, file.c_str(), NULL, NULL);
+    avformat_find_stream_info(formatContext, NULL);
+    AVStream* audioStream = NULL;
+    for (unsigned int i = 0; i < formatContext->nb_streams; ++i)
     {
-        if (sfbuffer.getChannelCount() == 1)
+        if (formatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO)
         {
-            buffer->format = AL_FORMAT_MONO16;
+            audioStream = formatContext->streams[i];
+            break;
         }
-        else
-        {
-            buffer->format = AL_FORMAT_STEREO16;
-        }
-
-        buffer->frequency = sfbuffer.getSampleRate();
-        buffer->data.resize(sfbuffer.getSampleCount() * 2);
-        memcpy( &buffer->data[0], sfbuffer.getSamples(), sfbuffer.getSampleCount() * 2);
     }
+    AVCodecContext* codecContext = audioStream->codec;
+    codecContext->codec = avcodec_find_decoder(codecContext->codec_id);
+    avcodec_open2(codecContext, codecContext->codec, NULL);
+
+    if (codecContext->channels == 1)
+    {
+        buffer->format = AL_FORMAT_MONO16;
+    }
+    else
+    {
+        buffer->format = AL_FORMAT_STEREO16;
+    }
+
+    buffer->frequency = codecContext->sample_rate;
+
+    AVPacket packet;
+    av_init_packet(&packet);
+    while (av_read_frame(formatContext, &packet) == 0)
+    {
+        if (packet.stream_index == audioStream->index)
+        {
+            int frameFinished = 0;
+            avcodec_decode_audio4(codecContext, frame, &frameFinished, &packet);
+            if (frameFinished)
+            {
+                int data_size = av_samples_get_buffer_size(NULL, codecContext->channels, frame->nb_samples, codecContext->sample_fmt, 1);
+                buffer->data.resize( buffer->data.size() + data_size );
+                memcpy( &buffer->data[buffer->data.size() - data_size], frame->data[0], data_size);
+            }
+        }
+        av_free_packet(&packet);
+    }
+
+    av_free(frame);
+    avcodec_close(codecContext);
+    avformat_close_input(&formatContext);
+
     if( buffer->format == AL_FORMAT_MONO16 )
     {
         alGenBuffers( 1, &buffer->mono );
@@ -872,7 +1018,7 @@ Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportAudio( const std::string& file )
     {
         alGenBuffers( 1, &buffer->stereo );
         alBufferData( buffer->stereo, AL_FORMAT_STEREO16, (ALvoid*)&buffer->data[0], buffer->data.size(), buffer->frequency );
-        std::vector< signed short > mono(buffer->data.size() / 2);
+        std::vector< int8_t > mono(buffer->data.size() / 2);
         for (uint32_t i = 0; i < mono.size(); i++)
         {
             mono[i] = (buffer->data[2*i] + buffer->data[2*i+1]) / 2;
@@ -880,7 +1026,8 @@ Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportAudio( const std::string& file )
         alGenBuffers( 1, &buffer->mono );
         alBufferData( buffer->mono, AL_FORMAT_MONO16, (ALvoid*)&mono[0], mono.size(), buffer->frequency );
     }
+
     AudioBuffers.push_back(buffer);
     return buffer;
-};
+}
 }

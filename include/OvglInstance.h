@@ -48,19 +48,8 @@
 // GLEW Headers
 #include <GL/glew.h>
 
-// SFML Headers
-#include <SFML/Audio.hpp>
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
-#include <SFML/System.hpp>
-#include <SFML/OpenGL.hpp>
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <freetype/freetype.h>
-#include <freetype/ftoutln.h>
-#include <freetype/fttrigon.h>
-#include <freetype/ftglyph.h>
+// SDL Headers
+#include <SDL2/SDL.h>
 
 // OpenAl Headers
 #include <AL/al.h>
@@ -80,6 +69,24 @@
 #include <assimp/cimport.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+
+// FreeType Headers
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
+#include <freetype/fttrigon.h>
+#include <freetype/ftglyph.h>
+
+// FreeImage Headers
+#include <FreeImage.h>
+
+// FFMPEG Headers
+extern "C"
+{
+    #include <libavcodec/avcodec.h>
+    #include <libavformat/avformat.h>
+}
 
 namespace Ovgl
 {
@@ -144,11 +151,11 @@ namespace Ovgl
 		{
 		public:
 			Rect();
-            Rect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom );
-            uint32_t								left;
-            uint32_t								top;
-            uint32_t								right;
-            uint32_t								bottom;
+            Rect( int32_t left, int32_t top, int32_t right, int32_t bottom );
+            int32_t                                 left;
+            int32_t                                 top;
+            int32_t                                 right;
+            int32_t                                 bottom;
 		};
 
         class DLLEXPORT Font
@@ -156,6 +163,7 @@ namespace Ovgl
         public:
             Font( Instance* instance,  const std::string& file, uint32_t size );
             uint32_t								charset[256];
+            uint32_t								charoffsets[256];
             uint32_t                                size;
         };
 
@@ -199,7 +207,7 @@ namespace Ovgl
 			Instance( uint32_t flags );
 			~Instance();
 			bool									g_Quit;
-			sf::Context*							hWnd;
+            SDL_GLContext							hWnd;
 			_CGcontext*								CgContext;
 			btDefaultCollisionConfiguration*		PhysicsConfiguration;
 			btCollisionDispatcher*					PhysicsDispatcher;
@@ -212,7 +220,7 @@ namespace Ovgl
 			std::vector< Window* >					Windows;
             FT_Library                              ftlibrary;
 			Window*									CreateOWindow( const std::string& name );
-			void									Start();
+            void									Start();
 			RenderTarget*							CreateRenderTarget( Ovgl::Window* window, Ovgl::Vector4* rect, uint32_t flags );
 			MediaLibrary*							CreateMediaLibrary( const std::string& file );
 		};
