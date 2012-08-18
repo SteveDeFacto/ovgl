@@ -71,7 +71,7 @@ void KeyDown(char key)
     }
 }
 
-int _main()
+int main()
 {
 	// Create Main Instance
 	Inst = new Ovgl::Instance( 0 );
@@ -118,7 +118,7 @@ int _main()
     Mesh = MediaLibrary->ImportModel( "../media/meshes/plane.dae", true );
     Mesh2 = MediaLibrary->ImportModel( "../media/meshes/test.dae", true );
 
-    MediaLibrary->ImportAudio("../media/audio/foot_step.ogg")->CreateAudioInstance(NULL, true);
+    MediaLibrary->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);
 
     // Add object to scene
     Object = Scene->CreateObject(Mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));

@@ -32,7 +32,7 @@ IF(WIN32)
 	"./../include"
 	"./../dependencies/Bullet/include/bullet")
 ELSEIF(UNIX)
-	include_directories( "/usr/include/freetype2" "./../include" "/usr/local/include/bullet")
+        include_directories( "/usr/include/freetype2" "./../../include" "/usr/local/include/bullet")
 ENDIF(WIN32)
 
 link_directories( "./../../lib" )
