@@ -874,7 +874,7 @@ void RenderTarget::Render()
 
         glEnable(GL_BLEND);
         glEnable(GL_STENCIL_TEST);
-        for( int i = 0; i < Interfaces.size(); i++ )
+        for( uint32_t i = 0; i < Interfaces.size(); i++ )
         {
             Ovgl::Rect interfacerect;
             interfacerect.left = ((adjustedrect.right - adjustedrect.left) * Interfaces[i]->rect.left.scale) + Interfaces[i]->rect.left.offset + adjustedrect.left;
@@ -1187,13 +1187,13 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
     {
         x = adjustedrect.left;
         int32_t y = adjustedrect.top + vscroll;
-        for( int32_t i = 0; i < text.size(); i++ )
+        for( uint32_t i = 0; i < text.size(); i++ )
         {
             int32_t wordwidth = 0;
             int32_t charwidth, charheight;
             if(wordbreak)
             {
-                int32_t wi = i + 1;
+                uint32_t wi = i + 1;
                 while(text[wi] != 32 && wi < text.size())
                 {
                     glBindTexture(GL_TEXTURE_2D, font->charset[ text[wi] ]);
@@ -1275,7 +1275,7 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
         }
     }
 
-    for( int c = 0; c < children.size(); c++ )
+    for( uint32_t c = 0; c < children.size(); c++ )
     {
         Ovgl::Rect childrect;
         childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset + adjustedrect.left;
@@ -1307,7 +1307,7 @@ void Interface::DoEvent(SDL_Event event, const Rect& adjustedrect)
         {
             On_MouseMove( event.motion.x, event.motion.y );
         }
-        for( int c = 0; c < children.size(); c++ )
+        for( uint32_t c = 0; c < children.size(); c++ )
         {
             Ovgl::Rect childrect;
             childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset ;
@@ -1329,7 +1329,7 @@ void Interface::DoEvent(SDL_Event event, const Rect& adjustedrect)
         {
             On_MouseDown( event.motion.x, event.motion.y, event.button.button );
         }
-        for( int c = 0; c < children.size(); c++ )
+        for( uint32_t c = 0; c < children.size(); c++ )
         {
             Ovgl::Rect childrect;
             childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset ;
@@ -1351,7 +1351,7 @@ void Interface::DoEvent(SDL_Event event, const Rect& adjustedrect)
         {
             On_MouseUp( event.motion.x, event.motion.y, event.button.button );
         }
-        for( int c = 0; c < children.size(); c++ )
+        for( uint32_t c = 0; c < children.size(); c++ )
         {
             Ovgl::Rect childrect;
             childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset ;

@@ -71,7 +71,7 @@ void KeyDown(char key)
     }
 }
 
-int main()
+int _main()
 {
 	// Create Main Instance
 	Inst = new Ovgl::Instance( 0 );

@@ -22,15 +22,6 @@
 #  define DLLEXPORT
 #endif
 
-// Forward declare external classes
-class btGeneric6DofConstraint;
-class btKinematicCharacterController;
-class btDiscreteDynamicsWorld;
-class btPairCachingGhostObject;
-class btManifoldPoint;
-class btCollisionObjectWrapper;
-class btBroadphaseProxy;
-typedef float btScalar;
 #include <bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
 namespace Ovgl
