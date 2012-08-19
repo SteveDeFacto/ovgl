@@ -70,7 +70,6 @@ void KeyDown(char key)
         Window->SetFullscreen( !Window->fullscreen );
     }
 }
-
 int main()
 {
 	// Create Main Instance
@@ -115,7 +114,7 @@ int main()
     Texture3 = MediaLibrary->ImportTexture("../media/textures/white marble.png");
 
     // Import mesh
-    Mesh = MediaLibrary->ImportModel( "../media/meshes/plane.dae", true );
+    Mesh = MediaLibrary->ImportModel( "..media/meshes/plane.dae", true );
     Mesh2 = MediaLibrary->ImportModel( "../media/meshes/test.dae", true );
 
     MediaLibrary->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);

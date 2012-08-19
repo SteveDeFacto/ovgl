@@ -26,6 +26,8 @@
 
 #define __STDC_CONSTANT_MACROS // Enable c99 macros
 
+#define SDL_MAIN_HANDLED // Disable SDL main
+
 #ifdef _WIN32
 #  define DLLEXPORT __declspec( dllexport )
 #else
@@ -87,6 +89,12 @@ extern "C"
     #include <libavcodec/avcodec.h>
     #include <libavformat/avformat.h>
 }
+
+//typedef void *SDL_GLContext;
+//
+//typedef void *SDL_Event;
+//
+//typedef void *SDL_Window;
 
 namespace Ovgl
 {
@@ -208,6 +216,7 @@ namespace Ovgl
 			~Instance();
 			bool									g_Quit;
             SDL_GLContext							hWnd;
+			SDL_Window*								ContextWindow;
 			_CGcontext*								CgContext;
 			btDefaultCollisionConfiguration*		PhysicsConfiguration;
 			btCollisionDispatcher*					PhysicsDispatcher;
@@ -224,7 +233,5 @@ namespace Ovgl
 			RenderTarget*							CreateRenderTarget( Ovgl::Window* window, Ovgl::Vector4* rect, uint32_t flags );
 			MediaLibrary*							CreateMediaLibrary( const std::string& file );
 		};
-	
-        DLLEXPORT Instance* Create( uint32_t flags );
 	}
 }
