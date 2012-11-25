@@ -32,7 +32,7 @@ IF(WIN32)
 	"${FREEIMAGE_DIR}/lib"
 	"${FFMPEG_DIR}/lib")
 ELSEIF(UNIX)
-    include_directories( "/usr/include/freetype2" "./../include" "/usr/local/include/bullet")
+    include_directories( "/usr/include/freetype2" "./../include" "/usr/include/bullet")
 ENDIF(WIN32)
 
 add_library( Ovgl SHARED

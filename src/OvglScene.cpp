@@ -28,7 +28,7 @@
 
 namespace Ovgl
 {
-btScalar DisablePairCollision::addSingleResult(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0Wrap,int partId0,int index0,const btCollisionObjectWrapper* colObj1Wrap,int partId1,int index1)
+btScalar DisablePairCollision::addSingleResult(btManifoldPoint& cp,	const btCollisionObject* colObj0,int partId0,int index0,const btCollisionObject* colObj1,int partId1,int index1)
 {
     // Create an identity matrix.
     btTransform frame;
@@ -36,7 +36,7 @@ btScalar DisablePairCollision::addSingleResult(btManifoldPoint& cp,	const btColl
 
     // Create a constraint between the two bone shapes which are contacting each other.
     btGeneric6DofConstraint* Constraint;
-    Constraint = new btGeneric6DofConstraint( *(btRigidBody*)colObj0Wrap, *(btRigidBody*)colObj1Wrap, frame, frame, true );
+    Constraint = new btGeneric6DofConstraint( *(btRigidBody*)colObj0, *(btRigidBody*)colObj1, frame, frame, true );
 
     // Set limits to be limitless.
     Constraint->setLinearLowerLimit( btVector3(1, 1, 1 ) );
