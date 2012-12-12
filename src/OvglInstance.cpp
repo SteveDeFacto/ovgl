@@ -505,9 +505,9 @@ Instance::Instance( uint32_t flags )
     cgGLRegisterStates(CgContext);
 
     // Initialize OpenAL
-    ALCdevice *device = alcOpenDevice(NULL);
-    ALCcontext *context = alcCreateContext(device, NULL);
-    alcMakeContextCurrent(context);
+    aldevice = alcOpenDevice(NULL);
+    alcontext = alcCreateContext(aldevice, NULL);
+    alcMakeContextCurrent(alcontext);
 
     // Initialize Bullet
     PhysicsConfiguration = new btDefaultCollisionConfiguration();
@@ -546,6 +546,9 @@ Instance::~Instance()
     delete PhysicsConfiguration;
     cgDestroyContext(CgContext);
     SDL_Quit();
+    alcMakeContextCurrent(NULL);
+    alcDestroyContext(alcontext);
+    alcCloseDevice(aldevice);
 }
 
 void Material::setEffectVariable(const std::string& variable, const std::vector< float >& data )

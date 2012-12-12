@@ -126,6 +126,8 @@ void AudioInstance::Release()
 
 void AudioBuffer::Release()
 {
+    alDeleteBuffers(1, &mono);
+    alDeleteBuffers(1, &stereo);
     data.clear();
     delete this;
 }

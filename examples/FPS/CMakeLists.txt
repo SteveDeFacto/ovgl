@@ -28,4 +28,4 @@ link_directories( "./../../lib" )
 
 add_executable(FPS WIN32 FPS.cpp)
 
-target_link_libraries( FPS debug "Ovgl_d" optimized "Ovgl")
+target_link_libraries( FPS "Ovgl")

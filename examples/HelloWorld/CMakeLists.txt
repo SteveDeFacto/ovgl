@@ -28,4 +28,4 @@ link_directories( "./../../lib" )
 
 add_executable(HelloWorld WIN32 HelloWorld.cpp)
 
-target_link_libraries( HelloWorld debug "Ovgl_d" optimized "Ovgl")
+target_link_libraries( HelloWorld "Ovgl" )

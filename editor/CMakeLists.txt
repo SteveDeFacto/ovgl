@@ -28,4 +28,4 @@ link_directories( "./../lib" )
 
 add_executable( editor WIN32 editor.cpp)
 
-target_link_libraries( editor debug "Ovgl_d" optimized "Ovgl")
+target_link_libraries( editor "Ovgl")
