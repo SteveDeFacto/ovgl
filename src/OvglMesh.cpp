@@ -16,7 +16,7 @@
 * @brief This file contains classes related to the Ovgl mesh format.
 */
 
-#include "OvglInstance.h"
+#include "OvglContext.h"
 #include "OvglMath.h"
 #include "OvglMesh.h"
 #include "OvglMedia.h"

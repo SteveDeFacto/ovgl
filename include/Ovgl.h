@@ -37,7 +37,7 @@
 #include <set>
 
 // This file includes all the other files which you will need to build a client application
-#include "OvglInstance.h"
+#include "OvglContext.h"
 #include "OvglMath.h"
 #include "OvglGraphics.h"
 #include "OvglAudio.h"

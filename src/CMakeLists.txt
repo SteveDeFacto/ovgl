@@ -38,7 +38,7 @@ ENDIF(WIN32)
 add_library( Ovgl SHARED
 "../include/OvglAudio.h"
 "../include/OvglGraphics.h"
-"../include/OvglInstance.h"
+"../include/OvglContext.h"
 "../include/OvglMath.h"
 "../include/OvglMedia.h"
 "../include/OvglMesh.h"
@@ -47,7 +47,7 @@ add_library( Ovgl SHARED
 "../include/OvglSkeleton.h"
 "OvglAudio.cpp"
 "OvglGraphics.cpp"
-"OvglInstance.cpp"
+"OvglContext.cpp"
 "OvglMath.cpp"
 "OvglMedia.cpp"
 "OvglMesh.cpp"

@@ -16,7 +16,7 @@
 * @brief None.
 */
 
-#include "OvglInstance.h"
+#include "OvglContext.h"
 #include "OvglMath.h"
 
 namespace Ovgl

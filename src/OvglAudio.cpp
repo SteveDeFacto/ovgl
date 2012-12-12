@@ -16,7 +16,7 @@
 * @brief None.
 */
 
-#include "OvglInstance.h"
+#include "OvglContext.h"
 #include "OvglMath.h"
 #include "OvglMedia.h"
 #include "OvglGraphics.h"
@@ -50,23 +50,24 @@ AudioInstance* AudioBuffer::CreateAudioInstance( Emitter* emitter, bool loop )
     alSourcef( voice->source, AL_GAIN, 1.0f );
     alSourcei( voice->source, AL_LOOPING, loop );
     alSourcePlay( voice->source );
-    instance->voices.push_back(voice);
+    instance->voices.push_back( voice );
     if( emitter )
     {
         for( uint32_t w = 0; w < Inst->Windows.size(); w++ )
         {
             for( uint32_t r = 0; r < Inst->Windows[w]->RenderTargets.size(); r++ )
             {
-                for(uint32_t c = 0; c < emitter->scene->cameras.size(); c++)
+                for( uint32_t c = 0; c < emitter->scene->cameras.size(); c++ )
                 {
                     if( Inst->Windows[w]->RenderTargets[r]->View == emitter->scene->cameras[c] )
                     {
-                        emitter->scene->cameras[c]->voices.push_back(voice);
+                        emitter->scene->cameras[c]->voices.push_back( voice );
                     }
                 }
             }
         }
     }
+    audio_instances.push_back( instance );
     return instance;
 }
 
@@ -116,7 +117,7 @@ void AudioVoice::Release()
 
 void AudioInstance::Release()
 {
-    for( uint32_t i = 0; i < 0; i++)
+    for( uint32_t i = 0; i < voices.size(); i++)
     {
         voices[i]->Release();
     }
@@ -126,6 +127,10 @@ void AudioInstance::Release()
 
 void AudioBuffer::Release()
 {
+    for( uint32_t i = 0; i < audio_instances.size(); i++)
+    {
+        audio_instances[i]->Release();
+    }
     alDeleteBuffers(1, &mono);
     alDeleteBuffers(1, &stereo);
     data.clear();

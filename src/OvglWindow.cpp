@@ -16,7 +16,7 @@
 * @brief This file contains all classes used for windows and keyboard/mouse inputs.
 */
 
-#include "OvglInstance.h"
+#include "OvglContext.h"
 #include "OvglMath.h"
 #include "OvglGraphics.h"
 #include "OvglWindow.h"

@@ -16,7 +16,7 @@
 * @brief This file contains classes which import external media formats into an Ovgl media library.
 */
 
-#include "OvglInstance.h"
+#include "OvglContext.h"
 #include "OvglMath.h"
 #include "OvglMedia.h"
 #include "OvglAudio.h"

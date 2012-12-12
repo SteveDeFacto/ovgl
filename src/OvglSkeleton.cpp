@@ -16,7 +16,7 @@
 * @brief None.
 */
 
-#include "OvglInstance.h"
+#include "OvglContext.h"
 #include "OvglMath.h"
 #include "OvglMedia.h"
 #include "OvglGraphics.h"

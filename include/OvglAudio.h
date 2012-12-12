@@ -43,6 +43,7 @@ namespace Ovgl
 			uint32_t							stereo;
 			uint32_t							mono;
             std::vector< int8_t >				data;
+            std::vector< AudioInstance* >		audio_instances;
 			AudioInstance* CreateAudioInstance( Emitter* emitter, bool loop );
 			void Release();
 		};
