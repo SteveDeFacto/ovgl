@@ -81,10 +81,10 @@ void Mesh::update()
             delete skeleton->bones[i]->convex;
         }
     }
-    glGenBuffersARB( 1, &vertex_buffer );
-    glBindBufferARB( GL_ARRAY_BUFFER, vertex_buffer );
-    glBufferDataARB( GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW );
-    glBindBufferARB( GL_ARRAY_BUFFER, 0 );
+    glGenBuffers( 1, &vertex_buffer );
+    glBindBuffer( GL_ARRAY_BUFFER, vertex_buffer );
+    glBufferData( GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW );
+    glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
     // Create Index buffers.
     std::set<uint32_t> usedAttributes(attributes.begin(), attributes.end());
@@ -109,11 +109,11 @@ void Mesh::update()
     index_buffers = new uint32_t[subset_count];
     for( uint32_t i = 0; i < subset_count; i++ )
     {
-        glGenBuffersARB( 1, &index_buffers[i] );
-        glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, index_buffers[i] );
-        glBufferDataARB( GL_ELEMENT_ARRAY_BUFFER, index_subsets[i].size()*sizeof(Face), &index_subsets[i][0], GL_STATIC_DRAW );
+        glGenBuffers( 1, &index_buffers[i] );
+        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, index_buffers[i] );
+        glBufferData( GL_ELEMENT_ARRAY_BUFFER, index_subsets[i].size()*sizeof(Face), &index_subsets[i][0], GL_STATIC_DRAW );
     }
-    glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, 0 );
+    glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 
     // Create triangle mesh.
     btTriangleMesh* trimesh = new btTriangleMesh();
@@ -198,7 +198,6 @@ CMesh::CMesh()
 
 CMesh::~CMesh()
 {
-    //	delete actor->getMotionState();
     scene->DynamicsWorld->removeCollisionObject(actor);
     delete actor;
 }

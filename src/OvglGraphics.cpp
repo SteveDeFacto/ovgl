@@ -273,22 +273,22 @@ void RenderTarget::RenderMesh( const Mesh& mesh, const Matrix44& matrix, std::ve
                 cgSetParameterValuefr( CgVariable, materials[s]->Variables[v].second.size(), (float*)&materials[s]->Variables[v].second[0] );
             }
 
-            glBindBufferARB( GL_ARRAY_BUFFER, mesh.vertex_buffer );
-            glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffers[s] );
+            glBindBuffer( GL_ARRAY_BUFFER, mesh.vertex_buffer );
+            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffers[s] );
 
             // Set vertex attributes
-            glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
-            glVertexAttribPointerARB( 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
-            glVertexAttribPointerARB( 2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (24)) );
-            glVertexAttribPointerARB( 3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (32)) );
-            glVertexAttribPointerARB( 4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (48)) );
+            glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
+            glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
+            glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (24)) );
+            glVertexAttribPointer( 3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (32)) );
+            glVertexAttribPointer( 4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (48)) );
 
             // Enable vertex attributes
-            glEnableVertexAttribArrayARB( 0 );
-            glEnableVertexAttribArrayARB( 1 );
-            glEnableVertexAttribArrayARB( 2 );
-            glEnableVertexAttribArrayARB( 3 );
-            glEnableVertexAttribArrayARB( 4 );
+            glEnableVertexAttribArray( 0 );
+            glEnableVertexAttribArray( 1 );
+            glEnableVertexAttribArray( 2 );
+            glEnableVertexAttribArray( 3 );
+            glEnableVertexAttribArray( 4 );
 
             CGtechnique tech = cgGetFirstTechnique( materials[s]->ShaderProgram->effect );
             CGpass pass;
@@ -304,14 +304,14 @@ void RenderTarget::RenderMesh( const Mesh& mesh, const Matrix44& matrix, std::ve
             }
 
             // Disable vertex attributes
-            glDisableVertexAttribArrayARB( 0 );
-            glDisableVertexAttribArrayARB( 1 );
-            glDisableVertexAttribArrayARB( 2 );
-            glDisableVertexAttribArrayARB( 3 );
-            glDisableVertexAttribArrayARB( 4 );
+            glDisableVertexAttribArray( 0 );
+            glDisableVertexAttribArray( 1 );
+            glDisableVertexAttribArray( 2 );
+            glDisableVertexAttribArray( 3 );
+            glDisableVertexAttribArray( 4 );
 
-            glBindBufferARB( GL_ARRAY_BUFFER, 0 );
-            glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, 0 );
+            glBindBuffer( GL_ARRAY_BUFFER, 0 );
+            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 
             for( uint32_t v = 0; v < materials[s]->Textures.size(); v++)
             {
@@ -394,12 +394,12 @@ void RenderTarget::Bloom()
     cgGLEnableTextureParameter( CgFSTexture );
 
     // Set vertex attributes
-    glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
-    glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
+    glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
+    glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
 
     // Enable vertex attributes
-    glEnableVertexAttribArrayARB( 0 );
-    glEnableVertexAttribArrayARB( 1 );
+    glEnableVertexAttribArray( 0 );
+    glEnableVertexAttribArray( 1 );
 
     tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[3]->effect );
     pass = cgGetFirstPass(tech);
@@ -440,8 +440,8 @@ void RenderTarget::Bloom()
     }
 
     // Disable vertex attributes
-    glDisableVertexAttribArrayARB( 0 );
-    glDisableVertexAttribArrayARB( 1 );
+    glDisableVertexAttribArray( 0 );
+    glDisableVertexAttribArray( 1 );
 
     bool flipflop = true;
     for( float i = 0; i < (float)OvglPi; i = i + ((float)(OvglPi) / bloom))
@@ -467,12 +467,12 @@ void RenderTarget::Bloom()
         cgGLSetParameter2f( CgDirection2, x, y );
 
         // Set vertex attributes
-        glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
-        glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
+        glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
+        glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
 
         // Enable vertex attributes
-        glEnableVertexAttribArrayARB( 0 );
-        glEnableVertexAttribArrayARB( 1 );
+        glEnableVertexAttribArray( 0 );
+        glEnableVertexAttribArray( 1 );
 
         tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[2]->effect );
         pass = cgGetFirstPass(tech);
@@ -494,8 +494,8 @@ void RenderTarget::Bloom()
         }
 
         // Disable vertex attributes
-        glDisableVertexAttribArrayARB( 0 );
-        glDisableVertexAttribArrayARB( 1 );
+        glDisableVertexAttribArray( 0 );
+        glDisableVertexAttribArray( 1 );
         flipflop = !flipflop;
     }
 
@@ -516,12 +516,12 @@ void RenderTarget::Bloom()
     cgGLEnableTextureParameter( CgFSTextureB );
 
     // Set vertex attributes
-    glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
-    glVertexAttribPointerARB( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
+    glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
+    glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
 
     // Enable vertex attributes
-    glEnableVertexAttribArrayARB( 0 );
-    glEnableVertexAttribArrayARB( 1 );
+    glEnableVertexAttribArray( 0 );
+    glEnableVertexAttribArray( 1 );
 
     tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[4]->effect );
     pass = cgGetFirstPass(tech);
@@ -543,28 +543,38 @@ void RenderTarget::Bloom()
     }
 
     // Disable vertex attributes
-    glDisableVertexAttribArrayARB( 0 );
-    glDisableVertexAttribArrayARB( 1 );
+    glDisableVertexAttribArray( 0 );
+    glDisableVertexAttribArray( 1 );
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void RenderTarget::MotionBlur( float x, float y )
+void RenderTarget::MotionBlur( )
 {
     glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, SecondaryTex, 0);
 
-    CGparameter CgFSTexture = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[2]->effect, "txDiffuse" );
+    CGparameter CgFSTexture = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[6]->effect, "sceneSampler" );
     cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
     cgGLEnableTextureParameter( CgFSTexture );
 
-    CGparameter CgDirection = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[2]->effect, "direction" );
+    CGparameter CgFSTexture2 = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[6]->effect, "depthTexture" );
+    cgGLSetTextureParameter( CgFSTexture2, depth_texture );
+    cgGLEnableTextureParameter( CgFSTexture2 );
 
-    cgGLSetParameter2f( CgDirection, x, y );
+    Matrix44 viewProj = MatrixInverse( Vector4(0,0,0,0),(View->projMat * MatrixInverse( Vector4(0,0,0,0),View->getPose()) ));
+    static Matrix44 previous_viewProj;
+    CGparameter CgViewProjMatrix = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[6]->effect, "g_ViewProjectionInverseMatrix" );
+    Matrix44 tViewProj = MatrixTranspose(viewProj);
+    cgGLSetMatrixParameterfc( CgViewProjMatrix, (float*)&tViewProj );
 
-    // Render a full screen quad
-    CGtechnique tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[2]->effect );
-    CGpass pass = cgGetFirstPass(tech);
+    CGparameter CgPreviousViewProjMatrix = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[6]->effect, "g_previousViewProjectionMatrix" );
+    Matrix44 tPreviousViewProj = MatrixTranspose(previous_viewProj);
+    cgGLSetMatrixParameterfc( CgPreviousViewProjMatrix, (float*)&tPreviousViewProj );
+
+    CGtechnique tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[6]->effect );
+    CGpass pass;
+    pass = cgGetFirstPass(tech);
     while (pass)
     {
         cgSetPassState(pass);
@@ -582,10 +592,12 @@ void RenderTarget::MotionBlur( float x, float y )
         pass = cgGetNextPass(pass);
     }
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
-    glBindTexture(GL_TEXTURE_2D, SecondaryTex);
+    cgGLDisableTextureParameter( CgFSTexture );
+    cgGLDisableTextureParameter( CgFSTexture2 );
 
-    // Render a full screen quad
+    glBindTexture(GL_TEXTURE_2D, SecondaryTex);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+
     glBegin(GL_QUADS);
     glTexCoord2f( 0.0f, 0.0f );
     glVertex3f(-1.0f,-1.0f, -1.0f);
@@ -597,9 +609,8 @@ void RenderTarget::MotionBlur( float x, float y )
     glVertex3f(-1.0f, 1.0f, -1.0f);
     glEnd();
 
-    cgGLDisableTextureParameter( CgFSTexture );
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    previous_viewProj = View->projMat * MatrixInverse( Vector4(0,0,0,0),View->getPose());
 }
 
 void RenderTarget::DrawMarker( const Matrix44& matrix )
@@ -698,7 +709,7 @@ void RenderTarget::Render()
             glDisable (GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
 
-            glDisable(GL_MULTISAMPLE_ARB);
+            glDisable(GL_MULTISAMPLE);
 
             // Set skybox shader View variable
             CGparameter CgView = cgGetNamedEffectParameter( Inst->DefaultMedia->Shaders[1]->effect, "View" );
@@ -716,22 +727,22 @@ void RenderTarget::Render()
             cgGLEnableTextureParameter( CgFSTexture );
 
             // Bind vertex and index buffers
-            glBindBufferARB( GL_ARRAY_BUFFER, Inst->DefaultMedia->Meshes[0]->vertex_buffer );
-            glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, Inst->DefaultMedia->Meshes[0]->index_buffers[0] );
+            glBindBuffer( GL_ARRAY_BUFFER, Inst->DefaultMedia->Meshes[0]->vertex_buffer );
+            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, Inst->DefaultMedia->Meshes[0]->index_buffers[0] );
 
             // Set vertex attributes
-            glVertexAttribPointerARB( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
-            glVertexAttribPointerARB( 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
-            glVertexAttribPointerARB( 2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (24)) );
-            glVertexAttribPointerARB( 3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (32)) );
-            glVertexAttribPointerARB( 4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (48)) );
+            glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
+            glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (12)) );
+            glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (24)) );
+            glVertexAttribPointer( 3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (32)) );
+            glVertexAttribPointer( 4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (48)) );
 
             // Enable vertex attributes
-            glEnableVertexAttribArrayARB( 0 );
-            glEnableVertexAttribArrayARB( 1 );
-            glEnableVertexAttribArrayARB( 2 );
-            glEnableVertexAttribArrayARB( 3 );
-            glEnableVertexAttribArrayARB( 4 );
+            glEnableVertexAttribArray( 0 );
+            glEnableVertexAttribArray( 1 );
+            glEnableVertexAttribArray( 2 );
+            glEnableVertexAttribArray( 3 );
+            glEnableVertexAttribArray( 4 );
 
             // Draw skybox
             CGtechnique tech = cgGetFirstTechnique( Inst->DefaultMedia->Shaders[1]->effect );
@@ -745,13 +756,13 @@ void RenderTarget::Render()
             }
 
             // Disable vertex attributes
-            glDisableVertexAttribArrayARB( 0 );
-            glDisableVertexAttribArrayARB( 1 );
-            glDisableVertexAttribArrayARB( 2 );
-            glDisableVertexAttribArrayARB( 3 );
-            glDisableVertexAttribArrayARB( 4 );
-            glBindBufferARB( GL_ARRAY_BUFFER, 0 );
-            glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER, 0 );
+            glDisableVertexAttribArray( 0 );
+            glDisableVertexAttribArray( 1 );
+            glDisableVertexAttribArray( 2 );
+            glDisableVertexAttribArray( 3 );
+            glDisableVertexAttribArray( 4 );
+            glBindBuffer( GL_ARRAY_BUFFER, 0 );
+            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 
             cgGLDisableTextureParameter( CgFSTexture );
         }
@@ -764,11 +775,11 @@ void RenderTarget::Render()
         // Multisample.
         if(multiSample)
         {
-            glEnable(GL_MULTISAMPLE_ARB);
+            glEnable(GL_MULTISAMPLE);
         }
         else
         {
-            glDisable(GL_MULTISAMPLE_ARB);
+            glDisable(GL_MULTISAMPLE);
         }
 
         for( uint32_t PostRender = 0; PostRender < 2; PostRender++ )
@@ -799,7 +810,7 @@ void RenderTarget::Render()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glColor3f(1.0f, 1.0f, 1.0f);
-        glDisable(GL_MULTISAMPLE_ARB);
+        glDisable(GL_MULTISAMPLE);
         glDisable (GL_DEPTH_TEST);
         glDepthMask (GL_FALSE);
         glDisable( GL_LIGHTING );
@@ -810,12 +821,31 @@ void RenderTarget::Render()
         glLoadIdentity();
 
         // Blit MultiSampleTexture to BaseTexture to apply effects.
+
         glBindFramebuffer(GL_READ_FRAMEBUFFER, MultiSampleFrameBuffer);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, EffectFrameBuffer);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
-        glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
+        glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+//        glBindTexture(GL_TEXTURE_2D, depth_texture);
+//        glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
+//        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
+
+//        glBegin(GL_QUADS);
+//        glTexCoord2f( 0.0f, 0.0f );
+//        glVertex3f(-1.0f,-1.0f, -1.0f);
+//        glTexCoord2f( 1.0f, 0.0f );
+//        glVertex3f(1.0f,-1.0f, -1.0f);
+//        glTexCoord2f( 1.0f, 1.0f );
+//        glVertex3f(1.0f, 1.0f, -1.0f);
+//        glTexCoord2f( 0.0f, 1.0f );
+//        glVertex3f(-1.0f, 1.0f, -1.0f);
+//        glEnd();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         if( autoLuminance )
         {
@@ -829,14 +859,7 @@ void RenderTarget::Render()
 
         if(motionBlur)
         {
-            Matrix44 CamMat = View->getPose();
-            Vector2 CamVec = Vector2(sin(CamMat._11*(float)OvglPi) * abs(CamMat._22), sin(CamMat._22*(float)OvglPi) );
-            Vector2 CurCamVec = (CamVec - LastCamVec)/20;
-            if( CurCamVec.x > 0.001f || CurCamVec.x < -0.001f || CurCamVec.y > 0.001f || CurCamVec.y < -0.001f )
-            {
-                MotionBlur( CurCamVec.x, CurCamVec.y );
-            }
-            LastCamVec = CamVec;
+            MotionBlur();
         }
 
         glViewport( 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top );
@@ -902,6 +925,8 @@ void RenderTarget::Update()
     if(EffectFrameBuffer)glDeleteFramebuffers( 1, &EffectFrameBuffer );
     if(ColorBuffer)glDeleteRenderbuffers( 1, &ColorBuffer );
     if(DepthBuffer)glDeleteRenderbuffers( 1, &DepthBuffer );
+    if(color_texture)glDeleteTextures(1, &color_texture);
+    if(depth_texture)glDeleteTextures(1, &depth_texture);
     if(PrimaryTex)glDeleteTextures(1, &PrimaryTex);
     if(SecondaryTex)glDeleteTextures(1, &SecondaryTex);
     if(PrimaryBloomTex)glDeleteTextures(1, &PrimaryBloomTex);
@@ -922,6 +947,35 @@ void RenderTarget::Update()
     glBindRenderbuffer(GL_RENDERBUFFER, DepthBuffer);
     glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT32, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, DepthBuffer);
+
+//    glGenTextures(1, &color_texture);
+//    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, color_texture);
+//    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA16F, width, height, GL_FALSE);
+//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, color_texture, 0);
+
+//    glGenTextures(1, &depth_texture);
+//    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depth_texture);
+//    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_DEPTH_COMPONENT32, width, height, GL_FALSE);
+//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, depth_texture, 0);
+
+//    glGenTextures(1, &color_texture);
+//    glBindTexture(GL_TEXTURE_2D, color_texture);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0);
+
+
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     // Effect framebuffer
@@ -929,6 +983,16 @@ void RenderTarget::Update()
     glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
 
     // Create and bind textures
+
+    glGenTextures(1, &depth_texture);
+    glBindTexture(GL_TEXTURE_2D, depth_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0);
+
     glGenTextures(1, &PrimaryTex);
     glBindTexture(GL_TEXTURE_2D, PrimaryTex);
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, MaxLevel( width, height));

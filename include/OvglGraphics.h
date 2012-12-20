@@ -72,6 +72,14 @@ public:
             */
     GLuint ColorBuffer;
     /**
+            *
+            */
+    GLuint color_texture;
+    /**
+            *
+            */
+    GLuint depth_texture;
+    /**
             * This is the primary texture.
             */
     GLuint PrimaryTex;
@@ -142,7 +150,7 @@ public:
     /**
             * Render auto luminance effect.
             */
-    void MotionBlur( float x, float y );
+    void MotionBlur( );
     /**
             * Render debug marker.
             */

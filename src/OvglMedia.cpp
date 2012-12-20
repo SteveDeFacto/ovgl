@@ -354,7 +354,6 @@ Mesh* MediaLibrary::ImportModel( const std::string& file, bool z_up )
             for( uint32_t sm = 0; sm < scene->mRootNode->mChildren[n]->mNumMeshes; sm++)
             {
                 uint32_t voffset = mesh->vertices.size();
-                uint32_t foffset = mesh->faces.size();
                 uint32_t aoffset = 0;
                 uint32_t boffset = mesh->skeleton->bones.size();
                 for( uint32_t i = 0; i < mesh->faces.size(); i++ )
@@ -374,12 +373,9 @@ Mesh* MediaLibrary::ImportModel( const std::string& file, bool z_up )
                 {
                     matrix = matrix * MatrixRotationX(1.57f);
                 }
-                //if(scene->mMeshes[m]->HasBones())
-                //matrix = matrix * Ovgl::MatrixTranspose(*(Matrix44*)&scene->mMeshes[m]->mBones[0]->mOffsetMatrix).Translation();
+
                 std::vector< std::vector< float > > weights(scene->mMeshes[m]->mNumVertices);
                 std::vector< std::vector< float > > indices(scene->mMeshes[m]->mNumVertices);
-                std::vector< Face > faces;
-                std::vector< uint32_t > attributes;
                 mesh->vertices.resize( voffset + scene->mMeshes[m]->mNumVertices);
 
                 // Get skeleton.
@@ -843,7 +839,15 @@ Ovgl::Shader* Ovgl::MediaLibrary::ImportShader( const std::string& file )
 
     // Create effect
     shader->effect = cgCreateEffectFromFile( Inst->CgContext, file.c_str(), NULL );
+
+    // Check for errors
     string = cgGetLastErrorString(&error);
+    if(error)
+    {
+        fprintf(stderr, "Error: %s\n", string);
+        string = cgGetLastListing(Inst->CgContext);
+        fprintf(stderr, "Compiler: %s\n", string);
+    }
 
     //Add Effect to array
     Shaders.push_back( shader );
@@ -860,9 +864,6 @@ Ovgl::Scene* Ovgl::MediaLibrary::CreateScene()
     scene->DynamicsWorld = new btDiscreteDynamicsWorld(Inst->PhysicsDispatcher,Inst->PhysicsBroadphase,Inst->PhysicsSolver,Inst->PhysicsConfiguration);
     scene->DynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.00001f;
     scene->DynamicsWorld->setGravity(btVector3( 0.0f, -9.8f, 0.0f ));
-    //		GLDebugDrawer* Drawer = new GLDebugDrawer;
-    //		Drawer->setDebugMode( btIDebugDraw::DBG_DrawWireframe );
-    //		scene->DynamicsWorld->setDebugDrawer( Drawer );
     btContactSolverInfo& info = scene->DynamicsWorld->getSolverInfo();
     info.m_numIterations = 20;
     Scenes.push_back(scene);

@@ -38,6 +38,7 @@ void BuildDefaultMedia( Instance* inst )
     Shader* BloomEffect = new Shader;
     Shader* AddEffect = new Shader;
     Shader* BrightnessEffect = new Shader;
+    Shader* MotionBlurEffect = new Shader;
 
     DefaultEffect->MLibrary = inst->DefaultMedia;
     SkyboxEffect->MLibrary = inst->DefaultMedia;
@@ -45,6 +46,11 @@ void BuildDefaultMedia( Instance* inst )
     BloomEffect->MLibrary = inst->DefaultMedia;
     AddEffect->MLibrary = inst->DefaultMedia;
     BrightnessEffect->MLibrary = inst->DefaultMedia;
+    MotionBlurEffect->MLibrary = inst->DefaultMedia;
+
+    // Define debugging variables
+    CGerror error;
+    const char* string;
 
     std::string shader;
 
@@ -134,6 +140,13 @@ void BuildDefaultMedia( Instance* inst )
             "}";
 
     DefaultEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
+    string = cgGetLastErrorString(&error);
+    if(error)
+    {
+        fprintf(stderr, "Error: %s\n", string);
+        string = cgGetLastListing(inst->CgContext);
+        fprintf(stderr, "Compiler: %s\n", string);
+    }
 
     shader =
             "struct VS_INPUT"
@@ -185,6 +198,13 @@ void BuildDefaultMedia( Instance* inst )
             "}";
 
     SkyboxEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
+    string = cgGetLastErrorString(&error);
+    if(error)
+    {
+        fprintf(stderr, "Error: %s\n", string);
+        string = cgGetLastListing(inst->CgContext);
+        fprintf(stderr, "Compiler: %s\n", string);
+    }
 
     shader =
             "struct FS_INPUT"
@@ -257,6 +277,13 @@ void BuildDefaultMedia( Instance* inst )
             "}";
 
     BlurEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
+    string = cgGetLastErrorString(&error);
+    if(error)
+    {
+        fprintf(stderr, "Error: %s\n", string);
+        string = cgGetLastListing(inst->CgContext);
+        fprintf(stderr, "Compiler: %s\n", string);
+    }
 
     shader =
             "struct FS_INPUT"
@@ -292,6 +319,13 @@ void BuildDefaultMedia( Instance* inst )
             "}";
 
     BloomEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
+    string = cgGetLastErrorString(&error);
+    if(error)
+    {
+        fprintf(stderr, "Error: %s\n", string);
+        string = cgGetLastListing(inst->CgContext);
+        fprintf(stderr, "Compiler: %s\n", string);
+    }
 
     shader =
             "struct FS_INPUT"
@@ -326,6 +360,13 @@ void BuildDefaultMedia( Instance* inst )
             "}";
 
     AddEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
+    string = cgGetLastErrorString(&error);
+    if(error)
+    {
+        fprintf(stderr, "Error: %s\n", string);
+        string = cgGetLastListing(inst->CgContext);
+        fprintf(stderr, "Compiler: %s\n", string);
+    }
 
     shader =
             "struct FS_INPUT"
@@ -360,6 +401,72 @@ void BuildDefaultMedia( Instance* inst )
             "}";
 
     BrightnessEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
+    string = cgGetLastErrorString(&error);
+    if(error)
+    {
+        fprintf(stderr, "Error: %s\n", string);
+        string = cgGetLastListing(inst->CgContext);
+        fprintf(stderr, "Compiler: %s\n", string);
+    }
+
+    shader =
+            "struct FS_INPUT"
+            "{"
+            "  float3 pos				: POSITION;"
+            "  float2 tex				: TEXCOORD0;"
+            "};"
+
+            "struct FS_OUTPUT"
+            "{"
+            "  float4 color				: COLOR;"
+            "};"
+
+            "float g_numSamples = 4;"
+            "uniform sampler2D sceneSampler;"
+            "uniform sampler2D depthTexture;"
+            "float4x4 g_ViewProjectionInverseMatrix;"
+            "float4x4 g_previousViewProjectionMatrix;"
+
+            "FS_OUTPUT FS( FS_INPUT In)"
+            "{"
+            "	FS_OUTPUT Out;"
+            "   float2 texCoord = In.tex;"
+            "   float zOverW = tex2D(depthTexture, texCoord);"
+            "   float4 H = float4(texCoord.x * 2 - 1, (1 - texCoord.y) * 2 - 1, zOverW, 1);"
+            "   float4 D = mul(H, g_ViewProjectionInverseMatrix);"
+            "   float4 worldPos = D / D.w;"
+            "   float4 currentPos = H;"
+            "   float4 previousPos = mul(worldPos, g_previousViewProjectionMatrix);"
+            "   previousPos /= previousPos.w;"
+            "   float2 velocity = ((currentPos - previousPos) / 16.f);"
+            "   float4 color = tex2D(sceneSampler, texCoord);"
+            "   texCoord += velocity;"
+            "   for(int i = 1; i < g_numSamples; ++i, texCoord += velocity)"
+            "   {"
+            "       float4 currentColor = tex2D(sceneSampler, texCoord);"
+            "       color += currentColor;"
+            "   }"
+            "   float4 finalColor = color / g_numSamples;"
+            "	Out.color = finalColor;"
+            "	return Out;"
+            "}"
+
+            "technique t0"
+            "{"
+            "   pass p0"
+            "   {"
+            "      FragmentProgram = compile gp4fp FS();"
+            "   }"
+            "}";
+
+    MotionBlurEffect->effect = cgCreateEffect(inst->CgContext, shader.c_str(), NULL);
+    string = cgGetLastErrorString(&error);
+    if(error)
+    {
+        fprintf(stderr, "Error: %s\n", string);
+        string = cgGetLastListing(inst->CgContext);
+        fprintf(stderr, "Compiler: %s\n", string);
+    }
 
     inst->DefaultMedia->Shaders.push_back( DefaultEffect );
     inst->DefaultMedia->Shaders.push_back( SkyboxEffect );
@@ -367,6 +474,7 @@ void BuildDefaultMedia( Instance* inst )
     inst->DefaultMedia->Shaders.push_back( BloomEffect );
     inst->DefaultMedia->Shaders.push_back( AddEffect );
     inst->DefaultMedia->Shaders.push_back( BrightnessEffect );
+    inst->DefaultMedia->Shaders.push_back( MotionBlurEffect );
 
     // Create Default Material
     Material* DefaultMaterial = new Material;
@@ -476,25 +584,29 @@ Instance::Instance( uint32_t flags )
 
     // Initialize SDL
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     ContextWindow = SDL_CreateWindow("ContextWindow", 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
     hWnd = SDL_GL_CreateContext(ContextWindow);
 	if(!hWnd)
-	{
+    {
 		fprintf(stderr, "Error: %s\n", "Could not create GL Context.");
 	}
 
     // Initialize GLEW
-	GLenum err = glewInit();
-	if (GLEW_OK != err)
-	{
-	  fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-	}
+    //glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if (GLEW_OK != err)
+    {
+      fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+    }
 
     // Initialize CG
     CgContext = cgCreateContext();
@@ -730,7 +842,7 @@ Font::Font( Instance* instance, const std::string& file, uint32_t size )
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         GLint swizzleMask[] = {GL_ONE, GL_ONE, GL_ONE, GL_ALPHA};
-        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA_EXT, swizzleMask);
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
         glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, ftface->glyph->bitmap.width, ftface->glyph->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE, ftface->glyph->bitmap.buffer );
         glBindTexture( GL_TEXTURE_2D, 0 );
     }

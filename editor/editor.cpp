@@ -51,18 +51,18 @@ void KeyDown(char key)
 		Inst->g_Quit = true;
 	}
 	if( key == 'W')
-		Camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * Camera->getPose() ) );
+        Camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * Camera->getPose() ) );
 	if( key == 'S')
 		Camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, -0.1f ) * Camera->getPose() ) );
 	if( key == 'A')
 	{
-		Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 1, 6, false);
-		Camera->setPose( (Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
+        //Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 1, 6, false);
+        Camera->setPose( (Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
 	}
 	if( key == 'D')
 	{
-		Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
-		Camera->setPose( (Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
+        //Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
+        Camera->setPose( (Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
 	}
 
     if( key == 'F')
@@ -97,7 +97,7 @@ int main()
     Scene = MediaLibrary->CreateScene();
 
     // Add light to scene.
-    Light = Scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 10.0f, 10.0f, 10.0f, 10.0f ));
+    Light = Scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 1.0f, 1.0f, 1.0f, 1.0f ));
 
     // Add camera to scene
     Camera = Scene->CreateCamera(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
