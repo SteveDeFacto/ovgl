@@ -333,9 +333,9 @@ unsigned char SFKeyToASCII(SDL_Keycode keycode)
     }
 }
 
-Window::Window( Instance* instance, const std::string& name )
+Window::Window( Context* pcontext, const std::string& name )
 {
-    inst = instance;
+    context = pcontext;
     fullscreen = false;
     sizing = false;
     active = true;
@@ -349,12 +349,12 @@ Window::Window( Instance* instance, const std::string& name )
     On_MouseOver = NULL;
     On_MouseOut = NULL;
     hWnd = SDL_CreateWindow( name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
-    SDL_GL_MakeCurrent(hWnd, instance->hWnd);
+    SDL_GL_MakeCurrent(hWnd, context->hWnd);
     glDisable(GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable (GL_CULL_FACE);
     SDL_GL_MakeCurrent(0, 0);
-    instance->Windows.push_back(this);
+    context->Windows.push_back(this);
 };
 
 void Window::LockMouse( bool state )
@@ -483,7 +483,7 @@ void Window::DoEvents()
                 break;
             case SDL_WINDOWEVENT_CLOSE:
                 SDL_QuitSubSystem(SDL_INIT_VIDEO);
-                inst->g_Quit = true;
+                context->g_Quit = true;
                 break;
             }
             break;

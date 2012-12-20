@@ -182,7 +182,7 @@ Prop* Scene::CreateProp( Mesh* mesh, const Matrix44& matrix )
     prop->materials.resize(mesh->subset_count);
     for( uint32_t s = 0; s < prop->materials.size(); s++)
     {
-        prop->materials[s] = Inst->DefaultMedia->Materials[0];
+        prop->materials[s] = context->DefaultMedia->Materials[0];
     }
     for( uint32_t i = 0; i < mesh->skeleton->bones.size(); i++ )
     {
@@ -226,7 +226,7 @@ Object* Scene::CreateObject( Mesh* mesh, const Matrix44& matrix )
     object->materials.resize(mesh->subset_count);
     for( uint32_t s = 0; s < object->materials.size(); s++)
     {
-        object->materials[s] = Inst->DefaultMedia->Materials[0];
+        object->materials[s] = context->DefaultMedia->Materials[0];
     }
     btTransform Transform;
     Transform.setFromOpenGLMatrix((float*)&matrix);
@@ -277,7 +277,7 @@ Actor* Scene::CreateActor( Mesh* mesh, float radius, float height, const Matrix4
         actor->materials.resize( mesh->subset_count );
         for( uint32_t i = 0; i < mesh->subset_count; i++ )
         {
-            actor->materials[i] = Inst->DefaultMedia->Materials[0];
+            actor->materials[i] = context->DefaultMedia->Materials[0];
         }
     }
     actor->crouch = false;
@@ -296,7 +296,7 @@ Actor* Scene::CreateActor( Mesh* mesh, float radius, float height, const Matrix4
     startTransform.setFromOpenGLMatrix((float*)&matrix);
     actor->ghostObject = new btPairCachingGhostObject();
     actor->ghostObject->setWorldTransform(startTransform);
-    Inst->PhysicsBroadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
+    context->PhysicsBroadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
     btConvexShape* capsule = new btCapsuleShape(radius, height);
     actor->ghostObject->setCollisionShape (capsule);
     actor->ghostObject->setCollisionFlags (btCollisionObject::CF_CHARACTER_OBJECT);
@@ -554,10 +554,10 @@ void Scene::Update( uint32_t UpdateTime )
     // Update camera positions.
     for( uint32_t c = 0; c < cameras.size(); c++ )
     {
-        for( uint32_t w = 0; w < Inst->Windows.size(); w++ )
-            for( uint32_t r = 0; r < Inst->Windows[w]->RenderTargets.size(); r++ )
+        for( uint32_t w = 0; w < context->Windows.size(); w++ )
+            for( uint32_t r = 0; r < context->Windows[w]->RenderTargets.size(); r++ )
             {
-                if( Inst->Windows[w]->RenderTargets[r]->View == cameras[c] )
+                if( context->Windows[w]->RenderTargets[r]->View == cameras[c] )
                 {
                     Matrix44 cmatrix = cameras[c]->getPose();
                     ALfloat ListenerOri[] = { -cmatrix._21, cmatrix._22, -cmatrix._23, -cmatrix._31, cmatrix._32, -cmatrix._33 };

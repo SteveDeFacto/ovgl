@@ -53,13 +53,13 @@ AudioInstance* AudioBuffer::CreateAudioInstance( Emitter* emitter, bool loop )
     instance->voices.push_back( voice );
     if( emitter )
     {
-        for( uint32_t w = 0; w < Inst->Windows.size(); w++ )
+        for( uint32_t w = 0; w < context->Windows.size(); w++ )
         {
-            for( uint32_t r = 0; r < Inst->Windows[w]->RenderTargets.size(); r++ )
+            for( uint32_t r = 0; r < context->Windows[w]->RenderTargets.size(); r++ )
             {
                 for( uint32_t c = 0; c < emitter->scene->cameras.size(); c++ )
                 {
-                    if( Inst->Windows[w]->RenderTargets[r]->View == emitter->scene->cameras[c] )
+                    if( context->Windows[w]->RenderTargets[r]->View == emitter->scene->cameras[c] )
                     {
                         emitter->scene->cameras[c]->voices.push_back( voice );
                     }

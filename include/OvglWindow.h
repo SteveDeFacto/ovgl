@@ -31,9 +31,9 @@ namespace Ovgl
         class DLLEXPORT Window
 		{
 		public:
-			Window( Ovgl::Instance* inst, const std::string& name );
+            Window( Ovgl::Context* context, const std::string& name );
 			~Window();
-			Instance* inst;
+            Context* context;
             SDL_Window* hWnd;
             std::vector< RenderTarget* > RenderTargets;
             std::string title;

@@ -28,7 +28,7 @@ namespace Ovgl
 {
 	extern "C"
 	{
-		class Instance;
+        class Context;
 		class AudioBuffer;
 		class AudioInstance;
 		class AudioVoice;
@@ -37,7 +37,7 @@ namespace Ovgl
         class DLLEXPORT AudioBuffer
 		{
 		public:
-			Instance*							Inst;
+            Context*							context;
 			int									format;
 			int									frequency;
 			uint32_t							stereo;

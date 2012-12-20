@@ -18,7 +18,7 @@
 
 #include <Ovgl.h>
 
-Ovgl::Instance*				Inst;
+Ovgl::Context*				context;
 Ovgl::RenderTarget*			RenderTarget;
 Ovgl::Window*				Window;
 Ovgl::MediaLibrary*			MediaLibrary;
@@ -43,7 +43,7 @@ void KeyDown(char key)
 {
     if(key == (char)27)
     {
-        Inst->g_Quit = true;
+        context->g_Quit = true;
     }
     if( key == 'W')
         Camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * Camera->getPose() ) );
@@ -63,11 +63,11 @@ void KeyDown(char key)
 
 int main()
 {
-    // Create Main Instance
-    Inst = new Ovgl::Instance( 0 );
+    // Create Main Context
+    context = new Ovgl::Context( 0 );
 
     // Create Window
-    Window = new Ovgl::Window( Inst, "Test");
+    Window = new Ovgl::Window( context, "Test");
     Window->LockMouse(true);
     Window->SetFullscreen( false );
     Window->SetVSync( false );
@@ -75,7 +75,7 @@ int main()
     Window->On_KeyDown = KeyDown;
 
     // Create Render Target
-    RenderTarget = new Ovgl::RenderTarget(Inst, Window, Ovgl::URect(0.0f, 0.0f, 1.0f, 1.0f), 0);
+    RenderTarget = new Ovgl::RenderTarget( context, Window, Ovgl::URect( 0.0f, 0.0f, 1.0f, 1.0f ), 0 );
     RenderTarget->bloom = 4;
     RenderTarget->autoLuminance = true;
     RenderTarget->motionBlur = true;
@@ -83,7 +83,7 @@ int main()
     RenderTarget->debugMode = false;
 
     // Create Media Library
-    MediaLibrary = new Ovgl::MediaLibrary(Inst, "");
+    MediaLibrary = new Ovgl::MediaLibrary( context, "" );
 
     // Create empty scene
     Scene = MediaLibrary->CreateScene();
@@ -123,9 +123,9 @@ int main()
     // Set scene sky box
     Scene->sky_box = Texture1;
 
-    Inst->Start();
+    context->Start();
 
     // Release all
-    delete Inst;
+    delete context;
     return 0;
 }

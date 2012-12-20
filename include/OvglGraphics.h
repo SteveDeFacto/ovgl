@@ -42,15 +42,15 @@ public:
     /**
             * This is the constuctor for a window based render target.
             */
-    RenderTarget( Ovgl::Instance* Instance, Ovgl::Window* window, const Ovgl::URect& viewport, uint32_t flags );
+    RenderTarget( Ovgl::Context* context, Ovgl::Window* window, const Ovgl::URect& viewport, uint32_t flags );
     /**
             * This is the constuctor for a texture based render target.
             */
-    RenderTarget( Ovgl::Instance* Instance, Ovgl::Texture* texture, const Ovgl::URect& viewport, uint32_t flags );
+    RenderTarget( Ovgl::Context* context, Ovgl::Texture* texture, const Ovgl::URect& viewport, uint32_t flags );
     /**
-            * This is a pointer to the instance which owns this render target.
+            * This is a pointer to the context which owns this render target.
             */
-    Instance* Inst;
+    Context* context;
     /**
             * This is a pointer to the camera which the render target will render from.
             */

@@ -55,7 +55,7 @@ namespace Ovgl
 		class CMesh;
 		class AudioEmitter;
 		class AudioVoice;
-		class Instance;
+        class Context;
 		class Shader;
 		class Joint;
 		class Vector3;
@@ -415,9 +415,9 @@ namespace Ovgl
 		{
 		public:
 			/**
-			* This is a pointer to the Ovgl instance that created the scene.
+            * This is a pointer to the context that created the scene.
 			*/
-			Instance*								Inst;
+            Context*								context;
 			/**
 			* This is a pointer to the bullet scene.
 			*/

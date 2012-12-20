@@ -36,7 +36,7 @@ namespace Ovgl
 	class Animation;
 	class CMesh;
 	class Mesh;
-	class Instance;
+    class Context;
 	class Scene;
 	class Matrix44;
 	class Vector3;

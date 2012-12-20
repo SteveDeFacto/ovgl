@@ -1,5 +1,5 @@
 /**
-* @file OvglInstance.cpp
+* @file OvglContext.cpp
 * Copyright 2011 Steven Batchelor
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,9 +28,9 @@
 
 namespace Ovgl
 {
-void BuildDefaultMedia( Instance* inst )
+void BuildDefaultMedia( Context* context )
 {
-    inst->DefaultMedia = new MediaLibrary(inst, "");
+    context->DefaultMedia = new MediaLibrary(context, "");
 
     Shader* DefaultEffect = new Shader;
     Shader* SkyboxEffect = new Shader;
@@ -40,13 +40,13 @@ void BuildDefaultMedia( Instance* inst )
     Shader* BrightnessEffect = new Shader;
     Shader* MotionBlurEffect = new Shader;
 
-    DefaultEffect->MLibrary = inst->DefaultMedia;
-    SkyboxEffect->MLibrary = inst->DefaultMedia;
-    BlurEffect->MLibrary = inst->DefaultMedia;
-    BloomEffect->MLibrary = inst->DefaultMedia;
-    AddEffect->MLibrary = inst->DefaultMedia;
-    BrightnessEffect->MLibrary = inst->DefaultMedia;
-    MotionBlurEffect->MLibrary = inst->DefaultMedia;
+    DefaultEffect->MLibrary = context->DefaultMedia;
+    SkyboxEffect->MLibrary = context->DefaultMedia;
+    BlurEffect->MLibrary = context->DefaultMedia;
+    BloomEffect->MLibrary = context->DefaultMedia;
+    AddEffect->MLibrary = context->DefaultMedia;
+    BrightnessEffect->MLibrary = context->DefaultMedia;
+    MotionBlurEffect->MLibrary = context->DefaultMedia;
 
     // Define debugging variables
     CGerror error;
@@ -139,12 +139,12 @@ void BuildDefaultMedia( Instance* inst )
             "   }"
             "}";
 
-    DefaultEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
+    DefaultEffect->effect = cgCreateEffect(context->CgContext,shader.c_str(), NULL);
     string = cgGetLastErrorString(&error);
     if(error)
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(inst->CgContext);
+        string = cgGetLastListing(context->CgContext);
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -197,12 +197,12 @@ void BuildDefaultMedia( Instance* inst )
             "   }"
             "}";
 
-    SkyboxEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
+    SkyboxEffect->effect = cgCreateEffect(context->CgContext,shader.c_str(), NULL);
     string = cgGetLastErrorString(&error);
     if(error)
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(inst->CgContext);
+        string = cgGetLastListing(context->CgContext);
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -276,12 +276,12 @@ void BuildDefaultMedia( Instance* inst )
             "   }"
             "}";
 
-    BlurEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
+    BlurEffect->effect = cgCreateEffect(context->CgContext,shader.c_str(), NULL);
     string = cgGetLastErrorString(&error);
     if(error)
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(inst->CgContext);
+        string = cgGetLastListing(context->CgContext);
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -318,12 +318,12 @@ void BuildDefaultMedia( Instance* inst )
             "   }"
             "}";
 
-    BloomEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
-    string = cgGetLastErrorString(&error);
-    if(error)
+    BloomEffect->effect = cgCreateEffect( context->CgContext,shader.c_str(), NULL );
+    string = cgGetLastErrorString( &error );
+    if( error )
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(inst->CgContext);
+        string = cgGetLastListing( context->CgContext );
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -359,13 +359,13 @@ void BuildDefaultMedia( Instance* inst )
             "   }"
             "}";
 
-    AddEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
-    string = cgGetLastErrorString(&error);
+    AddEffect->effect = cgCreateEffect( context->CgContext,shader.c_str(), NULL );
+    string = cgGetLastErrorString( &error );
     if(error)
     {
-        fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(inst->CgContext);
-        fprintf(stderr, "Compiler: %s\n", string);
+        fprintf( stderr, "Error: %s\n", string );
+        string = cgGetLastListing( context->CgContext );
+        fprintf( stderr, "Compiler: %s\n", string );
     }
 
     shader =
@@ -400,12 +400,12 @@ void BuildDefaultMedia( Instance* inst )
             "   }"
             "}";
 
-    BrightnessEffect->effect = cgCreateEffect(inst->CgContext,shader.c_str(), NULL);
-    string = cgGetLastErrorString(&error);
+    BrightnessEffect->effect = cgCreateEffect( context->CgContext,shader.c_str(), NULL );
+    string = cgGetLastErrorString( &error );
     if(error)
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(inst->CgContext);
+        string = cgGetLastListing( context->CgContext );
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -459,34 +459,34 @@ void BuildDefaultMedia( Instance* inst )
             "   }"
             "}";
 
-    MotionBlurEffect->effect = cgCreateEffect(inst->CgContext, shader.c_str(), NULL);
+    MotionBlurEffect->effect = cgCreateEffect( context->CgContext, shader.c_str(), NULL );
     string = cgGetLastErrorString(&error);
     if(error)
     {
-        fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(inst->CgContext);
-        fprintf(stderr, "Compiler: %s\n", string);
+        fprintf( stderr, "Error: %s\n", string );
+        string = cgGetLastListing( context->CgContext );
+        fprintf( stderr, "Compiler: %s\n", string );
     }
 
-    inst->DefaultMedia->Shaders.push_back( DefaultEffect );
-    inst->DefaultMedia->Shaders.push_back( SkyboxEffect );
-    inst->DefaultMedia->Shaders.push_back( BlurEffect );
-    inst->DefaultMedia->Shaders.push_back( BloomEffect );
-    inst->DefaultMedia->Shaders.push_back( AddEffect );
-    inst->DefaultMedia->Shaders.push_back( BrightnessEffect );
-    inst->DefaultMedia->Shaders.push_back( MotionBlurEffect );
+    context->DefaultMedia->Shaders.push_back( DefaultEffect );
+    context->DefaultMedia->Shaders.push_back( SkyboxEffect );
+    context->DefaultMedia->Shaders.push_back( BlurEffect );
+    context->DefaultMedia->Shaders.push_back( BloomEffect );
+    context->DefaultMedia->Shaders.push_back( AddEffect );
+    context->DefaultMedia->Shaders.push_back( BrightnessEffect );
+    context->DefaultMedia->Shaders.push_back( MotionBlurEffect );
 
     // Create Default Material
     Material* DefaultMaterial = new Material;
 
     DefaultMaterial->ShaderProgram = DefaultEffect;
-    DefaultMaterial->MLibrary = inst->DefaultMedia;
+    DefaultMaterial->MLibrary = context->DefaultMedia;
     DefaultMaterial->setEffectTexture("txDiffuse", DefaultMaterial->MLibrary->CreateTexture( 256, 256) );
     DefaultMaterial->setEffectTexture("txEnvironment", DefaultMaterial->MLibrary->CreateCubemap( 256, 256) );
     DefaultMaterial->NoZBuffer = false;
     DefaultMaterial->NoZWrite = false;
     DefaultMaterial->PostRender = false;
-    inst->DefaultMedia->Materials.push_back(DefaultMaterial);
+    context->DefaultMedia->Materials.push_back(DefaultMaterial);
 
     // Create Sky Box
     std::vector< Vertex > vertices(8);
@@ -560,7 +560,7 @@ void BuildDefaultMedia( Instance* inst )
 
     Mesh* mesh = new Mesh;
     mesh->skeleton = new Skeleton;
-    mesh->media_library = inst->DefaultMedia;
+    mesh->media_library = context->DefaultMedia;
     mesh->vertices = vertices;
     mesh->faces = faces;
     mesh->attributes = attributes;
@@ -572,13 +572,13 @@ void BuildDefaultMedia( Instance* inst )
     bone->mesh = new Mesh;
     bone->convex = NULL;
     mesh->skeleton->bones.push_back(bone);
-    SDL_GL_MakeCurrent(NULL, inst->hWnd);
+    SDL_GL_MakeCurrent(NULL, context->hWnd);
     mesh->update();
     SDL_GL_MakeCurrent(NULL, NULL);
-    inst->DefaultMedia->Meshes.push_back(mesh);
+    context->DefaultMedia->Meshes.push_back(mesh);
 }
 
-Instance::Instance( uint32_t flags )
+Context::Context( uint32_t flags )
 {
     g_Quit = false;
 
@@ -642,7 +642,7 @@ Instance::Instance( uint32_t flags )
     BuildDefaultMedia( this );
 }
 
-Instance::~Instance()
+Context::~Context()
 {
     for( uint32_t i = 0; i < MediaLibraries.size(); i++ )
     {
@@ -733,7 +733,7 @@ void Texture::Release()
     delete this;
 }
 
-void Instance::Start()
+void Context::Start()
 {
     uint32_t previousTime = SDL_GetTicks();
 
@@ -820,11 +820,11 @@ Rect::Rect( int32_t left, int32_t top, int32_t right, int32_t bottom )
     this->bottom = bottom;
 }
 
-Font::Font( Instance* instance, const std::string& file, uint32_t size )
+Font::Font( Context* context, const std::string& file, uint32_t size )
 {
     this->size = size;
     FT_Face ftface;
-    FT_New_Face( instance->ftlibrary, file.c_str(), 0, &ftface );
+    FT_New_Face( context->ftlibrary, file.c_str(), 0, &ftface );
 
     for(int i = 0; i < 256; i++)
     {

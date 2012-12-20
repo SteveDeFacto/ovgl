@@ -26,10 +26,10 @@
 
 namespace Ovgl
 {
-MediaLibrary::MediaLibrary( Instance* instance, const std::string& file )
+MediaLibrary::MediaLibrary( Context* pcontext, const std::string& file )
 {
-    Inst = instance;
-    instance->MediaLibraries.push_back(this);
+    context = pcontext;
+    context->MediaLibraries.push_back(this);
 }
 
 void MediaLibrary::Release()
@@ -659,7 +659,7 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& front, cons
     // Create array of cube faces.
     std::string CubeFaces[6] = {front, back, top, bottom, left, right};
 
-    SDL_GL_MakeCurrent(NULL, Inst->hWnd);
+    SDL_GL_MakeCurrent(NULL, context->hWnd);
 
     glGenTextures(1, &texture->Image);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture->Image);
@@ -796,7 +796,7 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
             textura[j*4+3] = pixeles[j*4+3];
         }
 
-        SDL_GL_MakeCurrent(NULL, Inst->hWnd);
+        SDL_GL_MakeCurrent(NULL, context->hWnd);
 
         // Create OpenGL texture
         glGenTextures( 1, &texture->Image );
@@ -838,14 +838,14 @@ Ovgl::Shader* Ovgl::MediaLibrary::ImportShader( const std::string& file )
     const char* string;
 
     // Create effect
-    shader->effect = cgCreateEffectFromFile( Inst->CgContext, file.c_str(), NULL );
+    shader->effect = cgCreateEffectFromFile( context->CgContext, file.c_str(), NULL );
 
     // Check for errors
     string = cgGetLastErrorString(&error);
     if(error)
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(Inst->CgContext);
+        string = cgGetLastListing(context->CgContext);
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -859,9 +859,9 @@ Ovgl::Shader* Ovgl::MediaLibrary::ImportShader( const std::string& file )
 Ovgl::Scene* Ovgl::MediaLibrary::CreateScene()
 {
     Ovgl::Scene* scene = new Ovgl::Scene;
-    scene->Inst = Inst;
+    scene->context = context;
     scene->sky_box = NULL;
-    scene->DynamicsWorld = new btDiscreteDynamicsWorld(Inst->PhysicsDispatcher,Inst->PhysicsBroadphase,Inst->PhysicsSolver,Inst->PhysicsConfiguration);
+    scene->DynamicsWorld = new btDiscreteDynamicsWorld( context->PhysicsDispatcher, context->PhysicsBroadphase, context->PhysicsSolver, context->PhysicsConfiguration );
     scene->DynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.00001f;
     scene->DynamicsWorld->setGravity(btVector3( 0.0f, -9.8f, 0.0f ));
     btContactSolverInfo& info = scene->DynamicsWorld->getSolverInfo();
@@ -874,12 +874,12 @@ Ovgl::Material* Ovgl::MediaLibrary::CreateMaterial( )
 {
     Ovgl::Material* material = new Ovgl::Material;
     material->MLibrary = this;
-    material->ShaderProgram = Inst->DefaultMedia->Shaders[0];
+    material->ShaderProgram = context->DefaultMedia->Shaders[0];
     material->NoZBuffer = false;
     material->NoZWrite = false;
     material->PostRender = false;
-    material->setEffectTexture("txDiffuse", Inst->DefaultMedia->Textures[0] );
-    material->setEffectTexture("txEnvironment", Inst->DefaultMedia->Textures[1] );
+    material->setEffectTexture("txDiffuse", context->DefaultMedia->Textures[0] );
+    material->setEffectTexture("txEnvironment", context->DefaultMedia->Textures[1] );
     Materials.push_back(material);
     return material;
 }
@@ -959,7 +959,7 @@ Ovgl::Texture* Ovgl::MediaLibrary::CreateCubemap( uint32_t width, uint32_t heigh
 Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportAudio( const std::string& file )
 {
     Ovgl::AudioBuffer* buffer = new Ovgl::AudioBuffer;
-    buffer->Inst = Inst;
+    buffer->context = context;
     AVFrame* frame = avcodec_alloc_frame();
     AVFormatContext* formatContext = NULL;
     avformat_open_input(&formatContext, file.c_str(), NULL, NULL);

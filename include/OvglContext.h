@@ -1,5 +1,5 @@
 /**
-* @file OvglInstance.h
+* @file OvglContext.h
 * Copyright 2011 Steven Batchelor
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -126,7 +126,7 @@ namespace Ovgl
 		class Scene;
 		class Mesh;
 		class Emitter;
-		class Instance;
+        class Context;
 		class Interface;
 		class RenderTarget;
 		class Effect;
@@ -169,7 +169,7 @@ namespace Ovgl
         class DLLEXPORT Font
         {
         public:
-            Font( Instance* instance,  const std::string& file, uint32_t size );
+            Font( Context* context,  const std::string& file, uint32_t size );
             uint32_t								charset[256];
             uint32_t								charoffsets[256];
             uint32_t                                size;
@@ -208,12 +208,12 @@ namespace Ovgl
 			void Release();
 		};
 
-		// Instance Class
-        class DLLEXPORT Instance
+        // Context Class
+        class DLLEXPORT Context
 		{
 		public:
-			Instance( uint32_t flags );
-			~Instance();
+            Context( uint32_t flags );
+            ~Context();
 			bool									g_Quit;
             SDL_GLContext							hWnd;
 			SDL_Window*								ContextWindow;

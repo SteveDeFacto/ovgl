@@ -30,15 +30,15 @@ namespace Ovgl
 		class AudioBuffer;
 		class Scene;
 		class Mesh;
-		class Instance;
+        class Context;
 		class Shader;
 		class Texture;
 
         class DLLEXPORT MediaLibrary
 		{
 		public:
-			MediaLibrary( Ovgl::Instance* instance, const std::string& file );
-			Instance* Inst;
+            MediaLibrary( Ovgl::Context* context, const std::string& file );
+            Context* context;
 			std::vector< Scene* > Scenes;
 			std::vector< Shader* > Shaders;
 			std::vector< Material* > Materials;
