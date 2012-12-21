@@ -59,43 +59,43 @@ public:
     /**
             * This frame buffer is used to provide multi sampling.
             */
-    GLuint MultiSampleFrameBuffer;
+    uint32_t MultiSampleFrameBuffer;
     /**
             * This frame buffer is used to apply effects.
             */
-    GLuint EffectFrameBuffer;
+    uint32_t EffectFrameBuffer;
     /**
             * Depth buffer used for rendering.
             */
-    GLuint DepthBuffer;
+    uint32_t DepthBuffer;
     /**
             * Color buffer used for rendering.
             */
-    GLuint ColorBuffer;
+    uint32_t ColorBuffer;
     /**
             *
             */
-    GLuint color_texture;
+    uint32_t color_texture;
     /**
             *
             */
-    GLuint depth_texture;
+    uint32_t depth_texture;
     /**
             * This is the primary texture.
             */
-    GLuint PrimaryTex;
+    uint32_t PrimaryTex;
     /**
             * This is the secondary texture.
             */
-    GLuint SecondaryTex;
+    uint32_t SecondaryTex;
     /**
             * This is the primary bloom texture.
             */
-    GLuint PrimaryBloomTex;
+    uint32_t PrimaryBloomTex;
     /**
             * This is the secondary bloom texture.
             */
-    GLuint SecondaryBloomTex;
+    uint32_t SecondaryBloomTex;
     /**
             * Pointer to window if this is a window based render target.
             */

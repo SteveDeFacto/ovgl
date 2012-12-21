@@ -23,7 +23,6 @@
 #endif
 
 #include <bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h>
-
 namespace Ovgl
 {
 	enum ObjectFlags

@@ -21,6 +21,9 @@
 #include "OvglGraphics.h"
 #include "OvglWindow.h"
 #include <SDL2/SDL.h>
+#include <GL/glew.h>
+#include <Cg/cg.h>
+#include <Cg/cgGL.h>
 
 namespace Ovgl
 {

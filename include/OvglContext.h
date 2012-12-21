@@ -44,48 +44,8 @@
 #include <fstream>
 #include <map>
 #include <vector>
-#include <string>
+#include <string.h>
 #include <set>
-
-// GLEW Headers
-#include <GL/glew.h>
-
-// OpenAl Headers
-#include <AL/al.h>
-#include <AL/alc.h>
-
-// Cg Headers
-#include <Cg/cg.h>
-#include <Cg/cgGL.h>
-
-// Bullet Headers
-#include <bullet/btBulletDynamicsCommon.h>
-#include <bullet/BulletDynamics/Character/btKinematicCharacterController.h>
-#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
-#include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
-
-// Assimp Headers
-#include <assimp/cimport.h>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-
-// FreeType Headers
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <freetype/freetype.h>
-#include <freetype/ftoutln.h>
-#include <freetype/fttrigon.h>
-#include <freetype/ftglyph.h>
-
-// FreeImage Headers
-#include <FreeImage.h>
-
-// FFMPEG Headers
-extern "C"
-{
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
-}
 
 typedef void *SDL_GLContext;
 class SDL_Window;
@@ -95,6 +55,35 @@ void SDL_GetWindowPosition( SDL_Window * window, int *x, int *y );
 void SDL_GetWindowSize( SDL_Window * window, int *x, int *y );
 int SDL_GL_MakeCurrent( SDL_Window * window, SDL_GLContext context );
 }
+typedef struct _CGeffect *CGeffect;
+typedef struct _CGparameter *CGparameter;
+typedef struct _CGcontext *CGcontext;
+typedef struct ALCdevice_struct ALCdevice;
+typedef struct ALCcontext_struct ALCcontext;
+typedef struct FT_LibraryRec_  *FT_Library;
+typedef float btScalar;
+
+class btDefaultCollisionConfiguration;
+class btCollisionDispatcher;
+class btBroadphaseInterface;
+class btSequentialImpulseConstraintSolver;
+class btDiscreteDynamicsWorld;
+class btManifoldPoint;
+class btCollisionObject;
+class btBroadphaseProxy;
+class btGeneric6DofConstraint;
+class btKinematicCharacterController;
+class btPairCachingGhostObject;
+
+struct	ContactResultCallback
+{
+    short int	m_collisionFilterGroup;
+    short int	m_collisionFilterMask;
+    ContactResultCallback();
+    virtual ~ContactResultCallback();
+    virtual bool needsCollision(btBroadphaseProxy* proxy0) const;
+    virtual	btScalar	addSingleResult(btManifoldPoint& cp, const btCollisionObject* colObj0,int partId0,int index0,const btCollisionObject* colObj1,int partId1,int index1);
+};
 
 namespace Ovgl
 {

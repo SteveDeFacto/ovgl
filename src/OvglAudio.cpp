@@ -23,6 +23,8 @@
 #include "OvglScene.h"
 #include "OvglAudio.h"
 #include "OvglWindow.h"
+#include <AL/al.h>
+#include <AL/alc.h>
 
 namespace Ovgl
 {

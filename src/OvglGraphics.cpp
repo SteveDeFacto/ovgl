@@ -25,6 +25,10 @@
 #include "OvglMesh.h"
 #include "OvglWindow.h"
 #include "OvglSkeleton.h"
+#include <GL/glew.h>
+#include <Cg/cg.h>
+#include <Cg/cgGL.h>
+
 
 namespace Ovgl
 {

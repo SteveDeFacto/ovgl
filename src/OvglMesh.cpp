@@ -22,6 +22,13 @@
 #include "OvglMedia.h"
 #include "OvglScene.h"
 #include "OvglSkeleton.h"
+#include <GL/glew.h>
+#include <Cg/cg.h>
+#include <Cg/cgGL.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletDynamics/Character/btKinematicCharacterController.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
 
 namespace Ovgl
 {

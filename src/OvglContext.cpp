@@ -26,6 +26,28 @@
 #include "OvglWindow.h"
 #include "OvglSkeleton.h"
 #include <SDL2/SDL.h>
+#include <GL/glew.h>
+#include <Cg/cg.h>
+#include <Cg/cgGL.h>
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <FreeImage.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletDynamics/Character/btKinematicCharacterController.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
+#include <freetype/fttrigon.h>
+#include <freetype/ftglyph.h>
+
+extern "C"
+{
+    #include <libavcodec/avcodec.h>
+    #include <libavformat/avformat.h>
+}
 
 namespace Ovgl
 {
