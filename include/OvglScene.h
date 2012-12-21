@@ -30,7 +30,7 @@ namespace Ovgl
 	{
 		OBJECT_DISABLE_COLLISION = 1,
 		OBJECT_DISABLE_GRAVITY = 2,
-		OBJECT_KINEMATIC = 4,
+        OBJECT_KINEMATIC = 4
 	};
 
 	// This class is used with bullet as a callback to disable collisions between bones which are contacting each other during the creation of a skeleton.
@@ -69,7 +69,7 @@ namespace Ovgl
 		{
 		public:
 			uint32_t type;
-			Ovgl::CMesh* CollisionMesh;
+            Ovgl::CMesh* cmesh;
 			Ovgl::Prop* prop;
 			Ovgl::Actor* actor;
 			Ovgl::Vector3 loc_point;
@@ -77,7 +77,7 @@ namespace Ovgl
 		};
 
 		/**
-		* Constraint form bounds between objects in the physics scene.
+        * Constraints form bounds between objects in the physics scene.
 		* @brief Scene constraint class.
 		*/
         class DLLEXPORT Constraint
@@ -103,7 +103,7 @@ namespace Ovgl
 			/**
 			* This is a pointer to the physics scene object that represents the camera within the scene.
 			*/
-			CMesh* CollisionMesh;
+            CMesh* cmesh;
 			/**
 			* This matrix defines the perspective of the camera.
 			*/
@@ -140,7 +140,7 @@ namespace Ovgl
 			/**
 			* This is a pointer to the physics scene object that represents the light with in the scene.
 			*/
-			CMesh* CollisionMesh;
+            CMesh* cmesh;
 			/**
 			* This is the color of the light that will be cast on objects.
 			*/
@@ -246,7 +246,7 @@ namespace Ovgl
 			/**
 			* This is a pointer to the physics object that represents this object within the scene.
 			*/
-			CMesh* CollisionMesh;
+            CMesh* cmesh;
 			/**
 			* The mesh that is displayed for this object.
 			*/
@@ -284,7 +284,7 @@ namespace Ovgl
 			/**
 			* This is a pointer to the physics scene object that represents the emitter with in the scene.
 			*/
-			CMesh* CollisionMesh;
+            CMesh* cmesh;
 			/**
 			* Sets the pose of this emitter.
 			* @param matrix The matrix which defines the new pose for this emitter.

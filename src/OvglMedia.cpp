@@ -151,7 +151,7 @@ void MediaLibrary::Save( const std::string& file )
                     }
                 }
                 fwrite( &mesh_index, 4, 1, output );
-                uint32_t bodyflags = Scenes[s]->objects[o]->CollisionMesh->get_flags();
+                uint32_t bodyflags = Scenes[s]->objects[o]->cmesh->get_flags();
                 fwrite( &bodyflags, 4, 1, output );
             }
             uint32_t light_count = Scenes[s]->lights.size();
@@ -303,7 +303,7 @@ void MediaLibrary::Load( const std::string& file )
                 Object* object = scene->CreateObject( Meshes[mesh_index + mesh_offset], matrix );
                 uint32_t bone_flags;
                 fread( &bone_flags, 4, 1, input );
-                object->CollisionMesh->set_flags(bone_flags);
+                object->cmesh->set_flags(bone_flags);
             }
 
             uint32_t light_count;

@@ -25,6 +25,7 @@
 #include "OvglScene.h"
 #include "OvglWindow.h"
 #include "OvglSkeleton.h"
+#include <SDL2/SDL.h>
 
 namespace Ovgl
 {

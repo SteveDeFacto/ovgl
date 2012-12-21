@@ -35,6 +35,7 @@ class Vector4;
 class Texture;
 class URect;
 class Font;
+class Event;
 
 class DLLEXPORT RenderTarget
 {
@@ -172,7 +173,7 @@ public:
     */
     void RenderMesh( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender );
 
-    void DoEvent(SDL_Event event);
+    void DoEvent(Event event);
     void (*On_KeyDown)(char);
     void (*On_KeyUp)(char);
     void (*On_MouseMove)(long, long);
@@ -205,7 +206,7 @@ public:
     std::vector<Interface*>     children;
     void set_text( const std::string& text );
     void render( const Ovgl::Rect& adjustedrect );
-    void DoEvent( SDL_Event event, const Rect& adjustedrect);
+    void DoEvent( Event event, const Rect& adjustedrect);
     void (*On_KeyDown)(char);
     void (*On_KeyUp)(char);
     void (*On_MouseMove)(long, long);

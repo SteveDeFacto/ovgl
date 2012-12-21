@@ -20,6 +20,7 @@
 #include "OvglMath.h"
 #include "OvglGraphics.h"
 #include "OvglWindow.h"
+#include <SDL2/SDL.h>
 
 namespace Ovgl
 {
@@ -78,9 +79,6 @@ unsigned char SFKeyToASCII(SDL_Keycode keycode)
     case SDLK_BACKSLASH:
         return 92;
         break;
-//    case sf::Keyboard::Tilde:
-//        return 152;
-//        break;
     case SDLK_EQUALS:
         return 61;
         break;
@@ -373,116 +371,136 @@ void Window::LockMouse( bool state )
 
 void Window::DoEvents()
 {
-    SDL_Event Event;
-    while(SDL_PollEvent(&Event))
+    SDL_Event sdl_event;
+    Event event;
+    while(SDL_PollEvent(&sdl_event))
     {
-        switch (Event.type)
+        switch (sdl_event.type)
         {
         case SDL_KEYDOWN:
-            Event.key.keysym.sym = SFKeyToASCII(Event.key.keysym.sym);
+            event.type = OVGL_KEYDOWN;
+            event.key = SFKeyToASCII(sdl_event.key.keysym.sym);
             if(On_KeyDown)
             {
-                On_KeyDown( Event.key.keysym.sym );
+                On_KeyDown( event.key );
             }
             for( uint32_t r = 0; r < RenderTargets.size(); r++ )
             {
-                RenderTargets[r]->DoEvent(Event);
+                RenderTargets[r]->DoEvent(event);
             }
             break;
 
         case SDL_KEYUP:
-            Event.key.keysym.sym = SFKeyToASCII(Event.key.keysym.sym);
+            event.type = OVGL_KEYUP;
+            event.key = SFKeyToASCII(sdl_event.key.keysym.sym);
             if(On_KeyUp)
             {
-                On_KeyUp( Event.key.keysym.sym );
+                On_KeyUp( event.key );
             }
             for( uint32_t r = 0; r < RenderTargets.size(); r++ )
             {
-                RenderTargets[r]->DoEvent(Event);
+                RenderTargets[r]->DoEvent(event);
             }
             break;
         case SDL_MOUSEMOTION:
+            event.type = OVGL_MOUSEMOTION;
+            event.mouse_x = sdl_event.motion.x;
+            event.mouse_y = sdl_event.motion.y;
             if(!lockmouse)
             {
                 if(On_MouseMove)
                 {
-                    On_MouseMove( Event.motion.x, Event.motion.y );
+                    On_MouseMove( event.mouse_x, event.mouse_y );
                 }
                 for( uint32_t r = 0; r < RenderTargets.size(); r++ )
                 {
-                    RenderTargets[r]->DoEvent(Event);
+                    RenderTargets[r]->DoEvent(event);
                 }
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
+            event.type = OVGL_MOUSEBUTTONDOWN;
+            event.mouse_x = sdl_event.motion.x;
+            event.mouse_y = sdl_event.motion.y;
+            event.button = sdl_event.button.button;
             if(!lockmouse)
             {
                 if(On_MouseDown)
                 {
-                    On_MouseDown( Event.motion.x, Event.motion.y, Event.button.button );
+                    On_MouseDown( event.mouse_x, event.mouse_y, event.button );
                 }
                 for( uint32_t r = 0; r < RenderTargets.size(); r++ )
                 {
-                    RenderTargets[r]->DoEvent(Event);
+                    RenderTargets[r]->DoEvent(event);
                 }
             }
             else
             {
                 if(On_MouseDown)
                 {
-                    On_MouseDown( 0, 0, Event.button.button );
+                    On_MouseDown( 0, 0, event.button );
                 }
             }
             break;
         case SDL_MOUSEBUTTONUP:
+            event.type = OVGL_MOUSEBUTTONUP;
+            event.mouse_x = sdl_event.motion.x;
+            event.mouse_y = sdl_event.motion.y;
+            event.button = sdl_event.button.button;
             if(!lockmouse)
             {
                 if(On_MouseUp)
                 {
-                    On_MouseUp( Event.motion.x, Event.motion.y, Event.button.button );
+                    On_MouseUp( event.mouse_x, event.mouse_y, event.button );
                 }
                 for( uint32_t r = 0; r < RenderTargets.size(); r++ )
                 {
-                    RenderTargets[r]->DoEvent(Event);
+                    RenderTargets[r]->DoEvent(event);
                 }
             }
             else
             {
                 if(On_MouseUp)
                 {
-                    On_MouseUp( 0, 0, Event.button.button );
+                    On_MouseUp( 0, 0, event.button );
                 }
             }
             break;
         case SDL_WINDOWEVENT:
-            switch (Event.window.event)
+            event.type = OVGL_WINDOWEVENT;
+            switch (sdl_event.window.event)
             {
             case SDL_WINDOWEVENT_ENTER:
+                event.window_event = OVGL_WINDOWEVENT_ENTER;
                 if(On_MouseOver)
                 {
                     On_MouseOver();
                 }
                 break;
             case SDL_WINDOWEVENT_LEAVE:
+                event.window_event = OVGL_WINDOWEVENT_LEAVE;
                 if(On_MouseOut)
                 {
                     On_MouseOut();
                 }
                 break;
             case SDL_WINDOWEVENT_RESIZED:
+                event.window_event = OVGL_WINDOWEVENT_RESIZED;
                 for(uint32_t i = 0; i < RenderTargets.size(); i++)
                 {
                     RenderTargets[i]->Update();
                 }
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
+                event.window_event = OVGL_WINDOWEVENT_FOCUS_GAINED;
                 active = true;
                 break;
             case SDL_WINDOWEVENT_FOCUS_LOST:
+                event.window_event = OVGL_WINDOWEVENT_FOCUS_LOST;
                 active = false;
                 break;
             case SDL_WINDOWEVENT_CLOSE:
-                SDL_QuitSubSystem(SDL_INIT_VIDEO);
+                event.window_event = OVGL_WINDOWEVENT_CLOSE;
                 context->g_Quit = true;
                 break;
             }

@@ -70,18 +70,18 @@ Camera* Scene::CreateCamera( const Matrix44& matrix )
     btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, Sphere, btVector3(0,0,0) );
 
     // Create a new collision mesh.
-    CMesh* CollisionMesh = new CMesh;
+    CMesh* cmesh = new CMesh;
 
     // Link scene to collision mesh.
-    CollisionMesh->scene = this;
+    cmesh->scene = this;
 
     // Create a dynamic object, set it to not respond to contact, and link it to the camera.
-    CollisionMesh->actor = new btRigidBody(rbInfo);
-    CollisionMesh->actor->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
-    camera->CollisionMesh = CollisionMesh;
+    cmesh->actor = new btRigidBody(rbInfo);
+    cmesh->actor->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+    camera->cmesh = cmesh;
 
     // Add dynamic object to physics scene.
-    DynamicsWorld->addRigidBody(CollisionMesh->actor, btBroadphaseProxy::KinematicFilter, 0);
+    DynamicsWorld->addRigidBody(cmesh->actor, btBroadphaseProxy::KinematicFilter, 0);
 
     // Add camera to scene list of cameras.
     cameras.push_back( camera );
@@ -108,18 +108,18 @@ Light* Scene::CreateLight( const Matrix44& matrix, const Vector4& color )
     btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, Sphere, btVector3(0,0,0) );
 
     // Create a new collision mesh.
-    CMesh* CollisionMesh = new CMesh;
+    CMesh* cmesh = new CMesh;
 
     // Link scene to collision mesh.
-    CollisionMesh->scene = this;
+    cmesh->scene = this;
 
     // Create a dynamic object, set it to not respond to contact, and link it to the light.
-    CollisionMesh->actor = new btRigidBody(rbInfo);
-    CollisionMesh->actor->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
-    light->CollisionMesh = CollisionMesh;
+    cmesh->actor = new btRigidBody(rbInfo);
+    cmesh->actor->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+    light->cmesh = cmesh;
 
     // Add dynamic object to physics scene.
-    DynamicsWorld->addRigidBody(CollisionMesh->actor, btBroadphaseProxy::KinematicFilter, 0);
+    DynamicsWorld->addRigidBody(cmesh->actor, btBroadphaseProxy::KinematicFilter, 0);
 
     // Set light colors.
     light->color.x = color.x;
@@ -151,18 +151,18 @@ Emitter* Scene::CreateEmitter( const Matrix44& matrix )
     btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, Sphere, btVector3(0,0,0) );
 
     // Create a new collision mesh.
-    CMesh* CollisionMesh = new CMesh;
+    CMesh* cmesh = new CMesh;
 
     // Link scene to collision mesh.
-    CollisionMesh->scene = this;
+    cmesh->scene = this;
 
     // Create a dynamic object, set it to not respond to contact, and link it to the emitter.
-    CollisionMesh->actor = new btRigidBody(rbInfo);
-    CollisionMesh->actor->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
-    emitter->CollisionMesh = CollisionMesh;
+    cmesh->actor = new btRigidBody(rbInfo);
+    cmesh->actor->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+    emitter->cmesh = cmesh;
 
     // Add dynamic object to physics scene.
-    DynamicsWorld->addRigidBody(CollisionMesh->actor, btBroadphaseProxy::KinematicFilter, 0);
+    DynamicsWorld->addRigidBody(cmesh->actor, btBroadphaseProxy::KinematicFilter, 0);
 
     // Add emitter to scene list of emitters.
     this->emitters.push_back( emitter );
@@ -193,11 +193,11 @@ Prop* Scene::CreateProp( Mesh* mesh, const Matrix44& matrix )
         btVector3 localInertia(0,0,0);
         mesh->skeleton->bones[i]->convex->calculateLocalInertia(1, localInertia);
         btRigidBody::btRigidBodyConstructionInfo rbInfo( mesh->skeleton->bones[i]->volume, MotionState, mesh->skeleton->bones[i]->convex, localInertia );
-        CMesh* CollisionMesh = new CMesh;
-        CollisionMesh->scene = this;
-        CollisionMesh->actor = new btRigidBody(rbInfo);
-        DynamicsWorld->addRigidBody(CollisionMesh->actor, btBroadphaseProxy::DefaultFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::StaticFilter | btBroadphaseProxy::CharacterFilter);
-        prop->bones.push_back(CollisionMesh);
+        CMesh* cmesh = new CMesh;
+        cmesh->scene = this;
+        cmesh->actor = new btRigidBody(rbInfo);
+        DynamicsWorld->addRigidBody(cmesh->actor, btBroadphaseProxy::DefaultFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::StaticFilter | btBroadphaseProxy::CharacterFilter);
+        prop->bones.push_back(cmesh);
     }
     prop->constraints.resize(prop->bones.size());
     prop->CreateJoints( prop->mesh->skeleton->root_bone );
@@ -232,12 +232,12 @@ Object* Scene::CreateObject( Mesh* mesh, const Matrix44& matrix )
     Transform.setFromOpenGLMatrix((float*)&matrix);
     btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
     btRigidBody::btRigidBodyConstructionInfo rbInfo( 0, MotionState, mesh->triangle_mesh, btVector3(0,0,0) );
-    CMesh* CollisionMesh = new CMesh;
-    CollisionMesh->scene = this;
-    CollisionMesh->actor = new btRigidBody(rbInfo);
-    CollisionMesh->actor->setCollisionFlags( CollisionMesh->actor->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    object->CollisionMesh = CollisionMesh;
-    DynamicsWorld->addRigidBody(CollisionMesh->actor, btBroadphaseProxy::StaticFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::CharacterFilter);
+    CMesh* cmesh = new CMesh;
+    cmesh->scene = this;
+    cmesh->actor = new btRigidBody(rbInfo);
+    cmesh->actor->setCollisionFlags( cmesh->actor->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+    object->cmesh = cmesh;
+    DynamicsWorld->addRigidBody(cmesh->actor, btBroadphaseProxy::StaticFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::CharacterFilter);
     this->objects.push_back( object );
     return object;
 };
@@ -346,14 +346,14 @@ void Object::setPose( const Matrix44& matrix )
 {
     btTransform Transform;
     Transform.setFromOpenGLMatrix( (float*)&matrix );
-    CollisionMesh->actor->setWorldTransform(Transform);
+    cmesh->actor->setWorldTransform(Transform);
 }
 
 void Camera::setPose( const Matrix44& matrix )
 {
     btTransform Transform;
     Transform.setFromOpenGLMatrix( (float*)&matrix );
-    CollisionMesh->actor->setWorldTransform(Transform);
+    cmesh->actor->setWorldTransform(Transform);
 }
 
 Matrix44 Prop::getPose()
@@ -366,28 +366,28 @@ Matrix44 Prop::getPose()
 Matrix44 Object::getPose()
 {
     Matrix44 matrix;
-    CollisionMesh->actor->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
+    cmesh->actor->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
     return matrix;
 };
 
 Matrix44 Emitter::getPose()
 {
     Matrix44 matrix;
-    CollisionMesh->actor->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
+    cmesh->actor->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
     return matrix;
 };
 
 Matrix44 Camera::getPose()
 {
     Matrix44 matrix;
-    CollisionMesh->actor->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
+    cmesh->actor->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
     return matrix;
 }
 
 Matrix44 Light::getPose()
 {
     Matrix44 matrix;
-    CollisionMesh->actor->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
+    cmesh->actor->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
     return matrix;
 }
 
@@ -628,8 +628,8 @@ void Emitter::Release()
             scene->emitters.erase( scene->emitters.begin() + l );
         }
     }
-    delete CollisionMesh->actor->getCollisionShape();
-    delete CollisionMesh;
+    delete cmesh->actor->getCollisionShape();
+    delete cmesh;
     delete this;
 }
 
@@ -642,8 +642,8 @@ void Light::Release()
             scene->lights.erase( scene->lights.begin() + l );
         }
     }
-    delete CollisionMesh->actor->getCollisionShape();
-    delete CollisionMesh;
+    delete cmesh->actor->getCollisionShape();
+    delete cmesh;
     delete this;
 }
 
@@ -656,8 +656,8 @@ void Camera::Release()
             scene->cameras.erase( scene->cameras.begin() + c );
         }
     }
-    delete CollisionMesh->actor->getCollisionShape();
-    delete CollisionMesh;
+    delete cmesh->actor->getCollisionShape();
+    delete cmesh;
     delete this;
 }
 
@@ -686,7 +686,7 @@ void Object::Release()
             scene->objects.erase( scene->objects.begin() + i );
         }
     }
-    delete CollisionMesh;
+    delete cmesh;
     delete this;
 }
 

@@ -82,7 +82,7 @@ int main()
     RenderTarget->multiSample = true;
     RenderTarget->debugMode = false;
 
-    // Create Media Library
+    // Create media library
     MediaLibrary = new Ovgl::MediaLibrary(context, "");
 
     // Create empty scene

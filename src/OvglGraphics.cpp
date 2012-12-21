@@ -1031,16 +1031,16 @@ void RenderTarget::Update()
     SDL_GL_MakeCurrent( NULL, NULL );
 }
 
-void RenderTarget::DoEvent(SDL_Event event)
+void RenderTarget::DoEvent(Event event)
 {
     Ovgl::Rect adjustedrect;
     adjustedrect = WindowAdjustedRect( hWin, &rect);
     switch (event.type)
     {
-    case SDL_KEYDOWN:
+    case OVGL_KEYDOWN:
         if(On_KeyDown)
         {
-            On_KeyDown( event.key.keysym.sym);
+            On_KeyDown( event.key);
         }
         for( uint32_t i = 0; i < Interfaces.size(); i++ )
         {
@@ -1048,83 +1048,83 @@ void RenderTarget::DoEvent(SDL_Event event)
         }
         break;
 
-    case SDL_KEYUP:
+    case OVGL_KEYUP:
         if(On_KeyUp)
         {
-            On_KeyUp( event.key.keysym.sym );
+            On_KeyUp( event.key );
         }
         for( uint32_t i = 0; i < Interfaces.size(); i++ )
         {
             Interfaces[i]->DoEvent(event, adjustedrect);
         }
         break;
-    case SDL_MOUSEMOTION:
-        if( event.motion.x > adjustedrect.left && event.motion.x < adjustedrect.right )
-            if( event.motion.y > adjustedrect.top && event.motion.y < adjustedrect.bottom )
+    case OVGL_MOUSEMOTION:
+        if( event.mouse_x > adjustedrect.left && event.mouse_x < adjustedrect.right )
+            if( event.mouse_y > adjustedrect.top && event.mouse_y < adjustedrect.bottom )
             {
-                event.motion.x -= adjustedrect.left;
-                event.motion.y -= adjustedrect.top;
+                event.mouse_x -= adjustedrect.left;
+                event.mouse_y -= adjustedrect.top;
                 if(On_MouseMove)
                 {
-                    On_MouseMove( event.motion.x, event.motion.y );
+                    On_MouseMove( event.mouse_x, event.mouse_y );
                 }
                 for( uint32_t i = 0; i < Interfaces.size(); i++ )
                 {
                     Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
-                    if( event.motion.x > interfacerect.left && event.motion.x < interfacerect.right )
-                        if( event.motion.y > interfacerect.top && event.motion.y < interfacerect.bottom )
+                    if( event.mouse_x > interfacerect.left && event.mouse_x < interfacerect.right )
+                        if( event.mouse_y > interfacerect.top && event.mouse_y < interfacerect.bottom )
                         {
-                            SDL_Event interfaceevent = event;
-                            interfaceevent.motion.x -= interfacerect.left;
-                            interfaceevent.motion.y -= interfacerect.top;
+                            Event interfaceevent = event;
+                            interfaceevent.mouse_x -= interfacerect.left;
+                            interfaceevent.mouse_y -= interfacerect.top;
                             Interfaces[i]->DoEvent(interfaceevent, interfacerect);
                         }
                 }
             }
         break;
-    case SDL_MOUSEBUTTONDOWN:
-        if( event.motion.x > adjustedrect.left && event.motion.x < adjustedrect.right )
-            if( event.motion.y > adjustedrect.top && event.motion.y < adjustedrect.bottom )
+    case OVGL_MOUSEBUTTONDOWN:
+        if( event.mouse_x > adjustedrect.left && event.mouse_x < adjustedrect.right )
+            if( event.mouse_y > adjustedrect.top && event.mouse_y < adjustedrect.bottom )
             {
-                event.motion.x -= adjustedrect.left;
-                event.motion.y -= adjustedrect.top;
+                event.mouse_x -= adjustedrect.left;
+                event.mouse_y -= adjustedrect.top;
                 if(On_MouseDown)
                 {
-                    On_MouseDown( event.motion.x, event.motion.y, (int)event.button.button );
+                    On_MouseDown( event.mouse_x, event.mouse_y, event.button );
                 }
                 for( uint32_t i = 0; i < Interfaces.size(); i++ )
                 {
                     Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
-                    if( event.motion.x > interfacerect.left && event.motion.x < interfacerect.right )
-                        if( event.motion.y > interfacerect.top && event.motion.y < interfacerect.bottom )
+                    if( event.mouse_x > interfacerect.left && event.mouse_x < interfacerect.right )
+                        if( event.mouse_y > interfacerect.top && event.mouse_y < interfacerect.bottom )
                         {
-                            SDL_Event interfaceevent = event;
-                            interfaceevent.motion.x -= interfacerect.left;
-                            interfaceevent.motion.y -= interfacerect.top;
+                            Event interfaceevent = event;
+                            interfaceevent.mouse_x -= interfacerect.left;
+                            interfaceevent.mouse_y -= interfacerect.top;
                             Interfaces[i]->DoEvent(interfaceevent, interfacerect);
                         }
                 }
             }
         break;
-    case SDL_MOUSEBUTTONUP:
-        if( event.motion.x > adjustedrect.left && event.motion.x < adjustedrect.right )
-            if( event.motion.y > adjustedrect.top && event.motion.y < adjustedrect.bottom )
+    case OVGL_MOUSEBUTTONUP:
+        if( event.mouse_x > adjustedrect.left && event.mouse_x < adjustedrect.right )
+            if( event.mouse_y > adjustedrect.top && event.mouse_y < adjustedrect.bottom )
             {
-                event.motion.x -= adjustedrect.left;
-                event.motion.y -= adjustedrect.top;
+                event.mouse_x -= adjustedrect.left;
+                event.mouse_y -= adjustedrect.top;
                 if(On_MouseUp)
                 {
-                    On_MouseUp( event.motion.x, event.motion.y, event.button.button );
+                    On_MouseUp( event.mouse_x, event.mouse_y, event.button );
                 }
                 for( uint32_t i = 0; i < Interfaces.size(); i++ )
                 {
                     Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
-                    if( event.motion.x > interfacerect.left && event.motion.x < interfacerect.right )
-                        if( event.motion.y > interfacerect.top && event.motion.y < interfacerect.bottom )
+                    if( event.mouse_x > interfacerect.left && event.mouse_x < interfacerect.right )
+                        if( event.mouse_y > interfacerect.top && event.mouse_y < interfacerect.bottom )
                         {
-                            SDL_Event interfaceevent = event;
-                            interfaceevent.motion.x -= interfacerect.left;
-                            interfaceevent.motion.y -= interfacerect.top;
+                            Event interfaceevent = event;
+                            interfaceevent.mouse_x -= interfacerect.left;
+                            interfaceevent.mouse_y -= interfacerect.top;
                             Interfaces[i]->DoEvent(interfaceevent, interfacerect);
                         }
                 }
@@ -1350,26 +1350,26 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
     }
 }
 
-void Interface::DoEvent(SDL_Event event, const Rect& adjustedrect)
+void Interface::DoEvent(Event event, const Rect& adjustedrect)
 {
     switch (event.type)
     {
-    case SDL_KEYDOWN:
+    case OVGL_KEYDOWN:
         if(On_KeyDown)
         {
-            On_KeyDown( event.key.keysym.sym );
+            On_KeyDown( event.key );
         }
         break;
-    case SDL_KEYUP:
+    case OVGL_KEYUP:
         if(On_KeyUp)
         {
-            On_KeyUp( event.key.keysym.sym );
+            On_KeyUp( event.key );
         }
         break;
-    case SDL_MOUSEMOTION:
+    case OVGL_MOUSEMOTION:
         if(On_MouseMove)
         {
-            On_MouseMove( event.motion.x, event.motion.y );
+            On_MouseMove( event.mouse_x, event.mouse_y );
         }
         for( uint32_t c = 0; c < children.size(); c++ )
         {
@@ -1378,20 +1378,20 @@ void Interface::DoEvent(SDL_Event event, const Rect& adjustedrect)
             childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset ;
             childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset ;
             childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset ;
-            if( event.motion.x > childrect.left && event.motion.x < childrect.right )
-                if( event.motion.y > childrect.top && event.motion.y < childrect.bottom )
+            if( event.mouse_x > childrect.left && event.mouse_x < childrect.right )
+                if( event.mouse_y > childrect.top && event.mouse_y < childrect.bottom )
                 {
-                    SDL_Event interfaceevent = event;
-                    interfaceevent.motion.x -= childrect.left;
-                    interfaceevent.motion.y -= childrect.top;
+                    Event interfaceevent = event;
+                    interfaceevent.mouse_x -= childrect.left;
+                    interfaceevent.mouse_y -= childrect.top;
                     children[c]->DoEvent(interfaceevent, childrect);
                 }
         }
         break;
-    case SDL_MOUSEBUTTONDOWN:
+    case OVGL_MOUSEBUTTONDOWN:
         if(On_MouseDown)
         {
-            On_MouseDown( event.motion.x, event.motion.y, event.button.button );
+            On_MouseDown( event.mouse_x, event.mouse_y, event.button );
         }
         for( uint32_t c = 0; c < children.size(); c++ )
         {
@@ -1400,20 +1400,20 @@ void Interface::DoEvent(SDL_Event event, const Rect& adjustedrect)
             childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset ;
             childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset ;
             childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset ;
-            if( event.motion.x > childrect.left && event.motion.x < childrect.right )
-                if( event.motion.y > childrect.top && event.motion.y < childrect.bottom )
+            if( event.mouse_x > childrect.left && event.mouse_x < childrect.right )
+                if( event.mouse_y > childrect.top && event.mouse_y < childrect.bottom )
                 {
-                    SDL_Event interfaceevent = event;
-                    interfaceevent.motion.x -= childrect.left;
-                    interfaceevent.motion.y -= childrect.top;
+                    Event interfaceevent = event;
+                    interfaceevent.mouse_x -= childrect.left;
+                    interfaceevent.mouse_y -= childrect.top;
                     children[c]->DoEvent(interfaceevent, childrect);
                 }
         }
         break;
-    case SDL_MOUSEBUTTONUP:
+    case OVGL_MOUSEBUTTONUP:
         if(On_MouseUp)
         {
-            On_MouseUp( event.motion.x, event.motion.y, event.button.button );
+            On_MouseUp( event.mouse_x, event.mouse_y, event.button );
         }
         for( uint32_t c = 0; c < children.size(); c++ )
         {
@@ -1422,12 +1422,12 @@ void Interface::DoEvent(SDL_Event event, const Rect& adjustedrect)
             childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset ;
             childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset ;
             childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset ;
-            if( event.motion.x > childrect.left && event.motion.x < childrect.right )
-                if( event.motion.y > childrect.top && event.motion.y < childrect.bottom )
+            if( event.mouse_x > childrect.left && event.mouse_x < childrect.right )
+                if( event.mouse_y > childrect.top && event.mouse_y < childrect.bottom )
                 {
-                    SDL_Event interfaceevent = event;
-                    interfaceevent.motion.x -= childrect.left;
-                    interfaceevent.motion.y -= childrect.top;
+                    Event interfaceevent = event;
+                    interfaceevent.mouse_x -= childrect.left;
+                    interfaceevent.mouse_y -= childrect.top;
                     children[c]->DoEvent(interfaceevent, childrect);
                 }
         }

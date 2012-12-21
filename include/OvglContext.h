@@ -50,9 +50,6 @@
 // GLEW Headers
 #include <GL/glew.h>
 
-// SDL Headers
-#include <SDL2/SDL.h>
-
 // OpenAl Headers
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -90,14 +87,47 @@ extern "C"
     #include <libavformat/avformat.h>
 }
 
-//typedef void *SDL_GLContext;
-//
-//typedef void *SDL_Event;
-//
-//typedef void *SDL_Window;
+typedef void *SDL_GLContext;
+class SDL_Window;
+extern "C"
+{
+void SDL_GetWindowPosition( SDL_Window * window, int *x, int *y );
+void SDL_GetWindowSize( SDL_Window * window, int *x, int *y );
+int SDL_GL_MakeCurrent( SDL_Window * window, SDL_GLContext context );
+}
 
 namespace Ovgl
 {
+    typedef enum
+    {
+        OVGL_KEYDOWN,
+        OVGL_KEYUP,
+        OVGL_MOUSEMOTION,
+        OVGL_MOUSEBUTTONDOWN,
+        OVGL_MOUSEBUTTONUP,
+        OVGL_MOUSEWHEEL,
+        OVGL_WINDOWEVENT
+    } OVGL_EventType;
+
+    typedef enum
+    {
+        OVGL_WINDOWEVENT_NONE,
+        OVGL_WINDOWEVENT_SHOWN,
+        OVGL_WINDOWEVENT_HIDDEN,
+        OVGL_WINDOWEVENT_EXPOSED,
+        OVGL_WINDOWEVENT_MOVED,
+        OVGL_WINDOWEVENT_RESIZED,
+        OVGL_WINDOWEVENT_SIZE_CHANGED,
+        OVGL_WINDOWEVENT_MINIMIZED,
+        OVGL_WINDOWEVENT_MAXIMIZED,
+        OVGL_WINDOWEVENT_RESTORED,
+        OVGL_WINDOWEVENT_ENTER,
+        OVGL_WINDOWEVENT_LEAVE,
+        OVGL_WINDOWEVENT_FOCUS_GAINED,
+        OVGL_WINDOWEVENT_FOCUS_LOST,
+        OVGL_WINDOWEVENT_CLOSE
+    } OVGL_WindowEvent;
+
 	extern "C"
 	{
 		class Matrix22;
@@ -128,10 +158,22 @@ namespace Ovgl
 		class Emitter;
         class Context;
 		class Interface;
-		class RenderTarget;
+        class RenderTarget;
 		class Effect;
+        class Event;
 		class MediaLibrary;
 		class Window;
+
+        class DLLEXPORT Event
+        {
+        public:
+            OVGL_EventType type;
+            OVGL_WindowEvent window_event;
+            unsigned char key;
+            uint32_t mouse_x;
+            uint32_t mouse_y;
+            uint32_t button;
+        };
 
         class DLLEXPORT UDim
         {
