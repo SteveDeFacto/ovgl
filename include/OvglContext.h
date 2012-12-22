@@ -47,6 +47,7 @@
 #include <string.h>
 #include <set>
 
+// Predefine some third party classes and structures which we will need later.
 typedef void *SDL_GLContext;
 class SDL_Window;
 extern "C"
@@ -62,7 +63,7 @@ typedef struct ALCdevice_struct ALCdevice;
 typedef struct ALCcontext_struct ALCcontext;
 typedef struct FT_LibraryRec_  *FT_Library;
 typedef float btScalar;
-
+struct	ContactResultCallback;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
@@ -74,16 +75,6 @@ class btBroadphaseProxy;
 class btGeneric6DofConstraint;
 class btKinematicCharacterController;
 class btPairCachingGhostObject;
-
-struct	ContactResultCallback
-{
-    short int	m_collisionFilterGroup;
-    short int	m_collisionFilterMask;
-    ContactResultCallback();
-    virtual ~ContactResultCallback();
-    virtual bool needsCollision(btBroadphaseProxy* proxy0) const;
-    virtual	btScalar	addSingleResult(btManifoldPoint& cp, const btCollisionObject* colObj0,int partId0,int index0,const btCollisionObject* colObj1,int partId1,int index1);
-};
 
 namespace Ovgl
 {
@@ -119,6 +110,8 @@ namespace Ovgl
 
 	extern "C"
 	{
+
+        // Predefine some OVGL classes.
 		class Matrix22;
 		class Matrix33;
 		class Matrix34;
@@ -153,6 +146,11 @@ namespace Ovgl
 		class MediaLibrary;
 		class Window;
 
+        /**
+        * This class is used to store and pass event information from the windows to the hierarchical GUI elements.
+        * Primarily for user input such a keyboard events and mouse events.
+        * @brief This class represents events.
+        */
         class DLLEXPORT Event
         {
         public:
@@ -164,6 +162,11 @@ namespace Ovgl
             uint32_t button;
         };
 
+        /**
+        * A UDim(unified dimension) represents both a floating point scale and a per pixel offset.
+        * This allows for dynamic resizing of GUI elements.
+        * @brief This class represents both scale and offset.
+        */
         class DLLEXPORT UDim
         {
         public:
@@ -175,6 +178,11 @@ namespace Ovgl
             float                                   scale;
         };
 
+        /**
+        * The URect class contains four UDims. This allows for dynamic resizing of a rectangle which
+        * can represent the position and size of a two dimensional GUI element.
+        * @brief Two dimensional dynamically resizing rectangle.
+        */
         class DLLEXPORT URect
         {
         public:
@@ -186,6 +194,11 @@ namespace Ovgl
             UDim                    				bottom;
         };
 
+        /**
+        * The Rect class contains four integers which represent an absolutely positioned two dimensional
+        * rectagle. It can be used to store the position and size of a GUI element.
+        * @brief Two dimensional absolutely positioned rectangle.
+        */
         class DLLEXPORT Rect
 		{
 		public:
@@ -197,6 +210,10 @@ namespace Ovgl
             int32_t                                 bottom;
 		};
 
+        /**
+        * This class contains pre-rendered text characters.
+        * @brief The style of text to render.
+        */
         class DLLEXPORT Font
         {
         public:
@@ -206,6 +223,10 @@ namespace Ovgl
             uint32_t                                size;
         };
 
+        /**
+        * A texture is a two dimensional image stored in a chuck of memory on the graphics card.
+        * @brief Two dimensional image.
+        */
         class DLLEXPORT Texture
 		{
 		public:
@@ -216,6 +237,11 @@ namespace Ovgl
 			void Release();
 		};
 
+        /**
+        * A shader is a small program used to process geometry and pixel information.
+        * In other words is decides how objects are rendered to the screen.
+        * @brief Small program used for rendering surfaces.
+        */
         class DLLEXPORT Shader
 		{
 		public:
@@ -224,6 +250,11 @@ namespace Ovgl
 			void Release();
 		};
 
+        /**
+        * Stores the all the informaton to render a surface such as textures, variables, and shaders.
+        * You can think if it as the material which the surface is made out of.
+        * @brief The material
+        */
         class DLLEXPORT Material
 		{
 		public:
@@ -239,7 +270,11 @@ namespace Ovgl
 			void Release();
 		};
 
-        // Context Class
+        /**
+        * The context is the base class from which all other classes originate.
+        * This class is basically responsible for managing and storing all sub classes and information.
+        * @brief Base class which manages all sub classes.
+        */
         class DLLEXPORT Context
 		{
 		public:
