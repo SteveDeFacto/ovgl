@@ -32,22 +32,22 @@
 #include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
 
-//#ifdef btCollisionObject
-//typedef btCollisionObject btCollisionObjectWrapper;
-//#endif
+// This class is used with bullet as a callback to disable collisions between bones which are contacting each other during the creation of a skeleton.
+// Doing this is necessary to prevent a bug where dynamic objects will flail wildly until they fling themselves into the unknown.
 
-//#define btCollisionObject btCollisionObjectWrapper
+#ifndef btCollisionObject
+typedef btCollisionObject btCollisionObjectWrapper;
+#endif
 
-	// This class is used with bullet as a callback to disable collisions between bones which are contacting each other during the creation of a skeleton.
-	// Doing this is necessary to prevent a bug where dynamic objects will flail wildly until they fling themselves into the unknown.
-	class DisablePairCollision : public btCollisionWorld::ContactResultCallback
-	{
-	public:
-        virtual	btScalar addSingleResult(btManifoldPoint& cp,	const btCollisionObject* colObj0, int partId0, int index0,const btCollisionObject* colObj1, int partId1, int index1);
+class DisablePairCollision : public btCollisionWorld::ContactResultCallback
+{
+public:
+    virtual	btScalar addSingleResult(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0, int partId0, int index0,const btCollisionObjectWrapper* colObj1, int partId1, int index1);
 
-        btDiscreteDynamicsWorld* DynamicsWorld;
-	};
-btScalar DisablePairCollision::addSingleResult(btManifoldPoint& cp,	const btCollisionObject* colObj0,int partId0,int index0,const btCollisionObject* colObj1,int partId1,int index1)
+    btDiscreteDynamicsWorld* DynamicsWorld;
+};
+
+btScalar DisablePairCollision::addSingleResult(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0,int partId0,int index0,const btCollisionObjectWrapper* colObj1,int partId1,int index1)
 {
     // Create an identity matrix.
     btTransform frame;
