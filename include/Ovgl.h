@@ -47,4 +47,15 @@
 #include "OvglSkeleton.h"
 #include "OvglWindow.h"
 
+// Need to redirect WinMain to the main function to enable code to work the same across all platforms.
+#ifdef _WIN32
+#include <windows.h>
+int main();
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow)
+{
+    main();
+    return 0;
+}
+#endif
+
 #endif

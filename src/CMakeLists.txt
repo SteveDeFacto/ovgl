@@ -95,6 +95,8 @@ target_link_libraries( Ovgl
 "avutil")
 ENDIF(WIN32)
 
+set_target_properties( Ovgl PROPERTIES LINK_INTERFACE_LIBRARIES "" )
+
 add_definitions( -DNOMINMAX )
 
 if(OVGL_BUILD_DOC)

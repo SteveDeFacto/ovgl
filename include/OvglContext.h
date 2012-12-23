@@ -48,14 +48,50 @@
 #include <set>
 
 // Predefine some third party classes and structures which we will need later.
-typedef void *SDL_GLContext;
-class SDL_Window;
+
 extern "C"
 {
-void SDL_GetWindowPosition( SDL_Window * window, int *x, int *y );
-void SDL_GetWindowSize( SDL_Window * window, int *x, int *y );
-int SDL_GL_MakeCurrent( SDL_Window * window, SDL_GLContext context );
+#ifndef SDLCALL
+#if defined(__WIN32__) && !defined(__GNUC__)
+#define SDLCALL __cdecl
+#else
+#define SDLCALL
+#endif
+#endif
+
+#ifndef DECLSPEC
+# if defined(__BEOS__) || defined(__HAIKU__)
+#  if defined(__GNUC__)
+#   define DECLSPEC	__declspec(dllexport)
+#  else
+#   define DECLSPEC	__declspec(export)
+#  endif
+# elif defined(__WIN32__)
+#  ifdef __BORLANDC__
+#   ifdef BUILD_SDL
+#    define DECLSPEC
+#   else
+#    define DECLSPEC	__declspec(dllimport)
+#   endif
+#  else
+#   define DECLSPEC	__declspec(dllexport)
+#  endif
+# else
+#  if defined(__GNUC__) && __GNUC__ >= 4
+#   define DECLSPEC	__attribute__ ((visibility("default")))
+#  else
+#   define DECLSPEC
+#  endif
+# endif
+#endif
+
+typedef void *SDL_GLContext;
+struct SDL_Window;
+extern DECLSPEC void SDLCALL SDL_GetWindowPosition( SDL_Window * window, int *x, int *y );
+extern DECLSPEC void SDLCALL SDL_GetWindowSize( SDL_Window * window, int *w, int *h );
+extern DECLSPEC int SDLCALL SDL_GL_MakeCurrent(SDL_Window * window, SDL_GLContext context);
 }
+
 typedef struct _CGeffect *CGeffect;
 typedef struct _CGparameter *CGparameter;
 typedef struct _CGcontext *CGcontext;
@@ -63,15 +99,15 @@ typedef struct ALCdevice_struct ALCdevice;
 typedef struct ALCcontext_struct ALCcontext;
 typedef struct FT_LibraryRec_  *FT_Library;
 typedef float btScalar;
-struct	ContactResultCallback;
+//struct	ContactResultCallback;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 class btManifoldPoint;
-class btCollisionObject;
-class btBroadphaseProxy;
+//class btCollisionObject;
+struct btBroadphaseProxy;
 class btGeneric6DofConstraint;
 class btKinematicCharacterController;
 class btPairCachingGhostObject;
@@ -157,9 +193,9 @@ namespace Ovgl
             OVGL_EventType type;
             OVGL_WindowEvent window_event;
             unsigned char key;
-            uint32_t mouse_x;
-            uint32_t mouse_y;
-            uint32_t button;
+            int32_t mouse_x;
+            int32_t mouse_y;
+            int32_t button;
         };
 
         /**
