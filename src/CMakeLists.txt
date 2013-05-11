@@ -2,37 +2,35 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(Ovgl)
 
-set(LIBRARY_OUTPUT_PATH "./../lib")
-set(CMAKE_DEBUG_POSTFIX "_d")
+set(LIBRARY_OUTPUT_PATH "./../bin")
 
 IF(WIN32)
-    include_directories(
-    "${SDL_DIR}/include"
-    "${OPENAL_DIR}/include"
-    "${CG_DIR}/include"
-    "${ASSIMP_DIR}/include"
-    "${BULLET_DIR}/include"
-    "${BULLET_DIR}/include/bullet"
-    "${GLEW_DIR}/include"
+	include_directories(
+	"${SDL_DIR}/include"
+	"${OPENAL_DIR}/include"
+	"${CG_DIR}/include"
+	"${ASSIMP_DIR}/include"
+	"${BULLET_DIR}/include"
+	"${BULLET_DIR}/include/bullet"
+	"${GLEW_DIR}/include"
 	"${FREETYPE_DIR}/include"
+	"${FREETYPE_DIR}/include/freetype2"
 	"${FREEIMAGE_DIR}/include"
 	"${FFMPEG_DIR}/include"
-	"./../dependencies/FreeType/include/freetype2"
-	"./../include"
-	"./../dependencies/Bullet/include/bullet")
+	"./../include")
 
-    link_directories(
-    "${SDL_DIR}/lib"
-    "${OPENAL_DIR}/lib"
-    "${CG_DIR}/lib"
-    "${ASSIMP_DIR}/lib"
-    "${BULLET_DIR}/lib"
-    "${GLEW_DIR}/lib"
+	link_directories(
+	"${SDL_DIR}/lib"
+	"${OPENAL_DIR}/lib"
+	"${CG_DIR}/lib"
+	"${ASSIMP_DIR}/lib"
+	"${BULLET_DIR}/lib"
+	"${GLEW_DIR}/lib"
 	"${FREETYPE_DIR}/lib"
 	"${FREEIMAGE_DIR}/lib"
 	"${FFMPEG_DIR}/lib")
 ELSEIF(UNIX)
-    include_directories( "/usr/include/freetype2" "./../include" "/usr/include/bullet")
+	include_directories( "/usr/include/freetype2" "./../include" "/usr/include/bullet")
 ENDIF(WIN32)
 
 add_library( Ovgl SHARED
