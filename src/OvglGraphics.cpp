@@ -901,23 +901,19 @@ void RenderTarget::Render()
 
 
     }
-	        glDepthMask (GL_TRUE);
-        glClear( GL_DEPTH_BUFFER_BIT );
-	            glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
-            glClear( GL_COLOR_BUFFER_BIT );
 
-	        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glColor3f(1.0f, 1.0f, 1.0f);
-        glDisable(GL_MULTISAMPLE);
-        glDisable (GL_DEPTH_TEST);
-        glDepthMask (GL_FALSE);
-        glDisable( GL_LIGHTING );
-        glEnable(GL_TEXTURE_2D);
-        glMatrixMode( GL_MODELVIEW );
-        glLoadIdentity();
-        glMatrixMode( GL_PROJECTION );
-        glLoadIdentity();
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glDisable(GL_MULTISAMPLE);
+	glDisable (GL_DEPTH_TEST);
+	glDepthMask (GL_FALSE);
+	glDisable( GL_LIGHTING );
+	glEnable(GL_TEXTURE_2D);
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
+	glMatrixMode( GL_PROJECTION );
+	glLoadIdentity();
 
 	glViewport( 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top );
 
