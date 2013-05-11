@@ -899,20 +899,54 @@ void RenderTarget::Render()
         glVertex2i( adjustedrect.right, adjustedrect.bottom );
         glEnd();
 
-        glEnable(GL_BLEND);
-        glEnable(GL_STENCIL_TEST);
-        for( uint32_t i = 0; i < Interfaces.size(); i++ )
-        {
-            Ovgl::Rect interfacerect;
-            interfacerect.left = ((adjustedrect.right - adjustedrect.left) * Interfaces[i]->rect.left.scale) + Interfaces[i]->rect.left.offset + adjustedrect.left;
-            interfacerect.top = ((adjustedrect.bottom - adjustedrect.top) * Interfaces[i]->rect.top.scale) + Interfaces[i]->rect.top.offset + adjustedrect.top;
-            interfacerect.right = ((adjustedrect.right - adjustedrect.left) * Interfaces[i]->rect.right.scale) + Interfaces[i]->rect.right.offset + adjustedrect.left;
-            interfacerect.bottom = ((adjustedrect.bottom - adjustedrect.top) * Interfaces[i]->rect.bottom.scale) + Interfaces[i]->rect.bottom.offset + adjustedrect.top;
-            Interfaces[i]->render( interfacerect );
-        }
-        glDisable(GL_STENCIL_TEST);
-        glDisable(GL_BLEND);
+
     }
+	        glDepthMask (GL_TRUE);
+        glClear( GL_DEPTH_BUFFER_BIT );
+	            glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+            glClear( GL_COLOR_BUFFER_BIT );
+
+	        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glColor3f(1.0f, 1.0f, 1.0f);
+        glDisable(GL_MULTISAMPLE);
+        glDisable (GL_DEPTH_TEST);
+        glDepthMask (GL_FALSE);
+        glDisable( GL_LIGHTING );
+        glEnable(GL_TEXTURE_2D);
+        glMatrixMode( GL_MODELVIEW );
+        glLoadIdentity();
+        glMatrixMode( GL_PROJECTION );
+        glLoadIdentity();
+
+	glViewport( 0, 0, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top );
+
+	// Get viewport
+	GLint iViewport[4];
+	glGetIntegerv( GL_VIEWPORT, iViewport );
+
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
+	glMatrixMode( GL_PROJECTION );
+	glLoadIdentity();
+
+	// Set up the orthographic projection
+	glOrtho( iViewport[0], iViewport[0] + iViewport[2], iViewport[1] + iViewport[3], iViewport[1], -1, 1 );
+
+	glEnable(GL_BLEND);
+	glEnable(GL_STENCIL_TEST);
+	for( uint32_t i = 0; i < Interfaces.size(); i++ )
+	{
+		Ovgl::Rect interfacerect;
+		interfacerect.left = ((adjustedrect.right - adjustedrect.left) * Interfaces[i]->rect.left.scale) + Interfaces[i]->rect.left.offset + adjustedrect.left;
+		interfacerect.top = ((adjustedrect.bottom - adjustedrect.top) * Interfaces[i]->rect.top.scale) + Interfaces[i]->rect.top.offset + adjustedrect.top;
+		interfacerect.right = ((adjustedrect.right - adjustedrect.left) * Interfaces[i]->rect.right.scale) + Interfaces[i]->rect.right.offset + adjustedrect.left;
+		interfacerect.bottom = ((adjustedrect.bottom - adjustedrect.top) * Interfaces[i]->rect.bottom.scale) + Interfaces[i]->rect.bottom.offset + adjustedrect.top;
+		Interfaces[i]->render( interfacerect );
+	}
+	glDisable(GL_STENCIL_TEST);
+	glDisable(GL_BLEND);
+
     SDL_GL_MakeCurrent( NULL, NULL);
 }
 
@@ -1182,6 +1216,7 @@ Interface::Interface( RenderTarget* parent, const URect& rect )
     tiley = false;
     wordbreak = true;
     color = Vector4( 1.0f, 1.0f, 1.0f, 1.0f );
+	text_color = Vector4( 0.0f, 0.0f, 0.0f, 1.0f );
     align = 0;
     hscroll = 0;
     vscroll = 0;

@@ -32,6 +32,7 @@ namespace Ovgl
 		{
 		public:
             Window( Ovgl::Context* context, const std::string& name );
+			Window( Ovgl::Context* pcontext, const std::string& name, unsigned int width, unsigned int height );
 			~Window();
             Context* context;
             SDL_Window* hWnd;

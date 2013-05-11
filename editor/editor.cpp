@@ -18,57 +18,56 @@
 
 #include <Ovgl.h>
 
+// Declare pointers we will use later
 Ovgl::Context*				context;
-Ovgl::RenderTarget*			RenderTarget;
-Ovgl::Window*				Window;
-Ovgl::Window*				Window2;
-Ovgl::MediaLibrary*			MediaLibrary;
-Ovgl::Scene*				Scene;
-Ovgl::Actor*				Actor;
-Ovgl::Actor*				Actor2;
-Ovgl::Camera*				Camera;
-Ovgl::Emitter*				Emitter;
-Ovgl::Texture*				Texture1;
-Ovgl::Texture*				Texture2;
-Ovgl::Texture*				Texture3;
-Ovgl::Mesh*					Mesh;
-Ovgl::Mesh*					Mesh2;
-Ovgl::Object*				Object;
-Ovgl::Light*				Light;
-Ovgl::Interface*			Interface;
-Ovgl::Interface*			Interface2;
-Ovgl::Interface*			Interface3;
+Ovgl::RenderTarget*			render_target;
+Ovgl::Window*				window;
+Ovgl::MediaLibrary*			media_library;
+Ovgl::Scene*				scene;
+Ovgl::Actor*				actor;
+Ovgl::Actor*				actor2;
+Ovgl::Camera*				camera;
+Ovgl::Emitter*				emitter;
+Ovgl::Texture*				texture1;
+Ovgl::Texture*				texture2;
+Ovgl::Texture*				texture3;
+Ovgl::Mesh*					mesh;
+Ovgl::Mesh*					mesh2;
+Ovgl::Object*				object;
+Ovgl::Light*				light;
+Ovgl::Interface*			interface1;
+Ovgl::Interface*			interface2;
+Ovgl::Interface*			interface3;
 
 void MouseMove(long x, long y)
 {
-	Camera->setPose( ((Ovgl::MatrixRotationY(x / 1000.0f ) * Ovgl::MatrixRotationX( -y / 1000.0f)) * Camera->getPose() ) );
+	camera->setPose( ((Ovgl::MatrixRotationY(x / 1000.0f ) * Ovgl::MatrixRotationX( -y / 1000.0f)) * camera->getPose() ) );
 }
 
 void KeyDown(char key)
 {
-	if(key == (char)27)
+	switch(key)
 	{
+	case (char)27: // If escape is pressed tell the context to quit
         context->g_Quit = true;
-	}
-	if( key == 'W')
-        Camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * Camera->getPose() ) );
-	if( key == 'S')
-		Camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, -0.1f ) * Camera->getPose() ) );
-	if( key == 'A')
-	{
-        //Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 1, 6, false);
-        Camera->setPose( (Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
-	}
-	if( key == 'D')
-	{
-        //Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
-        Camera->setPose( (Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * Camera->getPose() ) );
-	}
+		break;
 
-    if( key == 'F')
-    {
-        Window->SetFullscreen( !Window->fullscreen );
-    }
+	case 'W': // If the W key is pressed move camera forward
+        camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * camera->getPose() ) );
+		break;
+
+	case 'S': // If the S key is pressed move camera back
+		camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, -0.1f ) * camera->getPose() ) );
+		break;
+
+	case 'A': // If the A key is pressed move camera left
+        camera->setPose( (Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * camera->getPose() ) );
+		break;
+
+	case 'D': // If the D key is pressed move camera right
+        camera->setPose( (Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * camera->getPose() ) );
+		break;
+	}
 }
 int main()
 {
@@ -76,66 +75,95 @@ int main()
     context = new Ovgl::Context( 0 );
 
     // Create Window
-    Window = new Ovgl::Window( context, "Test");
-    Window->LockMouse( true );
-    Window->SetVSync( true );
-    Window->On_MouseMove = MouseMove;
-    Window->On_KeyDown = KeyDown;
+    window = new Ovgl::Window( context, "Test");
+
+	// Lock mouse to center of window
+    window->LockMouse( true );
+
+	// Vertical synchronization to prevent screen tearing
+    window->SetVSync( true );
+
+	// Set mouse move event callback function
+    window->On_MouseMove = MouseMove;
+
+	// Set key down event callback function
+    window->On_KeyDown = KeyDown;
 
     // Create Render Target
-    RenderTarget = new Ovgl::RenderTarget( context, Window, Ovgl::URect(0, 0, 1.0f, 1.0f), 0);
-    RenderTarget->bloom = 4;
-    RenderTarget->autoLuminance = true;
-    RenderTarget->motionBlur = true;
-    RenderTarget->multiSample = true;
-    RenderTarget->debugMode = false;
+    render_target = new Ovgl::RenderTarget( context, window, Ovgl::URect(0, 0, 1.0f, 1.0f), 0);
+
+	// Blurs bloom across four angles
+    render_target->bloom = 4;
+
+	// Auto adjust brightness
+    render_target->autoLuminance = true;
+
+	// Use motion bluring
+    render_target->motionBlur = true;
+
+	// Multi sample to smooth edges
+    render_target->multiSample = true;
 
     // Create Media Library
-    MediaLibrary = new Ovgl::MediaLibrary(context, "");
+    media_library = new Ovgl::MediaLibrary(context, "");
 
     // Create empty scene
-    Scene = MediaLibrary->CreateScene();
+    scene = media_library->CreateScene();
 
     // Add light to scene.
-    Light = Scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 1.0f, 1.0f, 1.0f, 1.0f ));
+    light = scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 5.0f, 5.0f, 5.0f, 1.0f ));
 
     // Add camera to scene
-    Camera = Scene->CreateCamera(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
+    camera = scene->CreateCamera(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
 
     // Set camera as view for render target
-    RenderTarget->View = Camera;
+    render_target->View = camera;
 
-    // Create cubemap texture
-    Texture1 = MediaLibrary->ImportCubeMap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
+    // Import cubemap texture
+    texture1 = media_library->ImportCubeMap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
                                             "../media/textures/skybox/bottom.png", "../media/textures/skybox/left.png", "../media/textures/skybox/right.png");
-    // Create 2D texture
-    Texture2 = MediaLibrary->ImportTexture("../media/textures/Grass.png");
+    // Import grass texture
+    texture2 = media_library->ImportTexture("../media/textures/Grass.png");
 
-    Texture3 = MediaLibrary->ImportTexture("../media/textures/white marble.png");
+	// Import margle texture
+    texture3 = media_library->ImportTexture("../media/textures/white marble.png");
 
     // Import mesh
-    Mesh = MediaLibrary->ImportModel( "../media/meshes/plane.dae", true );
-    Mesh2 = MediaLibrary->ImportModel( "../media/meshes/test.dae", true );
+    mesh = media_library->ImportModel( "../media/meshes/plane.dae", true );
 
-    MediaLibrary->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);
+	// Import another mesh
+    mesh2 = media_library->ImportModel( "../media/meshes/test.dae", true );
+
+	// Import and play audio
+    media_library->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);
 
     // Add object to scene
-    Object = Scene->CreateObject(Mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
-    Object->materials[0]->setEffectTexture("txDiffuse", Texture2);
+    object = scene->CreateObject(mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
+
+	// Bind texture to effect
+    object->materials[0]->setEffectTexture("txDiffuse", texture2);
 
     // Add actor to scene
-    Actor = Scene->CreateActor(Mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
-    Actor->PlayAnimation( &Mesh2->skeleton->animations[0], 0, 10, true);
+    actor = scene->CreateActor(mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
 
-    Actor2 = Scene->CreateActor(Mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
-    Actor2->PlayAnimation( &Mesh2->skeleton->animations[0], 5, 6, false);
+	// Play an animation
+    actor->PlayAnimation( &mesh2->skeleton->animations[0], 0, 10, true);
+
+	// Add another actor to scene
+    actor2 = scene->CreateActor(mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+
+	// Play an animation
+    actor2->PlayAnimation( &mesh2->skeleton->animations[0], 5, 6, false);
 
     // Set scene sky box
-    Scene->sky_box = Texture1;
+    scene->sky_box = texture1;
 
+	// Start main loop 
     context->Start();
 
 	// Release all
     delete context;
+
+	// No errors happend so return zero
 	return 0;
 }

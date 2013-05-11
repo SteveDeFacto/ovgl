@@ -358,6 +358,30 @@ Window::Window( Context* pcontext, const std::string& name )
     context->Windows.push_back(this);
 };
 
+Window::Window( Context* pcontext, const std::string& name, unsigned int width, unsigned int height )
+{
+    context = pcontext;
+    fullscreen = false;
+    sizing = false;
+    active = true;
+    lockmouse = false;
+    title = name.c_str();
+    On_KeyDown = NULL;
+    On_KeyUp = NULL;
+    On_MouseMove = NULL;
+    On_MouseDown = NULL;
+    On_MouseUp = NULL;
+    On_MouseOver = NULL;
+    On_MouseOut = NULL;
+    hWnd = SDL_CreateWindow( name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,  width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
+    SDL_GL_MakeCurrent(hWnd, context->hWnd);
+    glDisable(GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable (GL_CULL_FACE);
+    SDL_GL_MakeCurrent(0, 0);
+    context->Windows.push_back(this);
+};
+
 void Window::LockMouse( bool state )
 {
     if( state )
