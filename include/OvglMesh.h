@@ -87,7 +87,7 @@ namespace Ovgl
 		public:
 			Mesh();
 			~Mesh();
-			MediaLibrary*						media_library;
+			Resource*							media_library;
 			std::vector< Vertex >				vertices;
 			std::vector< Face >					faces;
 			std::vector< uint32_t >				attributes;

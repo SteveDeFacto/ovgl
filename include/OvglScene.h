@@ -22,15 +22,6 @@
 #  define DLLEXPORT
 #endif
 
-//#include <bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h>
-//
-//
-//class btCollisionObjectWrapper;
-//
-//class btCollisionWorld;
-//struct	ContactResultCallback;
-
-
 namespace Ovgl
 {
 	enum ObjectFlags
@@ -350,7 +341,7 @@ namespace Ovgl
 			*/
 			Vector3 velocity;
 			/**
-			*
+			* The actor's current position
 			*/
 			Vector3 position;
 			/**
@@ -373,16 +364,28 @@ namespace Ovgl
 			* This will be true if the actor is standing on the ground.
 			*/
 			bool onGround;
-
+			/**
+			* Represents the physical pose of the actor
+			*/
 			Pose* pose;
-
 			/**
 			* Returns the current post of this actor.
 			*/
 			Matrix44 getPose();
-
+			/**
+			* Updates the pose based on the time specified. This function is then called on all child bones and
+			* the traformational matrix is then passed down.
+			* @param bone The bone to update
+			* @param matrix The root bone to update
+			*/
 			void UpdateAnimation( Bone* bone, Ovgl::Matrix44* matrix, double time );
-
+			/**
+			* Plays an animation from the start to the end times.
+			* @param anim The animation to play
+			* @param start The point at which we want the animation to start
+			* @param end The point at which we want the animation to end
+			* @param repeat Specifies whether the animation repeats
+			*/
 			AnimationInstance* PlayAnimation(  Animation* anim, double start, double end, bool repeat );
 			/**
 			* Tells the actor where to look.

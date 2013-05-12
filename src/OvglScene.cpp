@@ -18,7 +18,7 @@
 
 #include "OvglContext.h"
 #include "OvglMath.h"
-#include "OvglMedia.h"
+#include "OvglResource.h"
 #include "OvglGraphics.h"
 #include "OvglAudio.h"
 #include "OvglScene.h"
@@ -198,7 +198,7 @@ Prop* Scene::CreateProp( Mesh* mesh, const Matrix44& matrix )
     prop->materials.resize(mesh->subset_count);
     for( uint32_t s = 0; s < prop->materials.size(); s++)
     {
-        prop->materials[s] = context->DefaultMedia->Materials[0];
+        prop->materials[s] = context->default_media->Materials[0];
     }
     for( uint32_t i = 0; i < mesh->skeleton->bones.size(); i++ )
     {
@@ -242,7 +242,7 @@ Object* Scene::CreateObject( Mesh* mesh, const Matrix44& matrix )
     object->materials.resize(mesh->subset_count);
     for( uint32_t s = 0; s < object->materials.size(); s++)
     {
-        object->materials[s] = context->DefaultMedia->Materials[0];
+        object->materials[s] = context->default_media->Materials[0];
     }
     btTransform Transform;
     Transform.setFromOpenGLMatrix((float*)&matrix);
@@ -293,7 +293,7 @@ Actor* Scene::CreateActor( Mesh* mesh, float radius, float height, const Matrix4
         actor->materials.resize( mesh->subset_count );
         for( uint32_t i = 0; i < mesh->subset_count; i++ )
         {
-            actor->materials[i] = context->DefaultMedia->Materials[0];
+            actor->materials[i] = context->default_media->Materials[0];
         }
     }
     actor->crouch = false;
@@ -570,10 +570,10 @@ void Scene::Update( uint32_t UpdateTime )
     // Update camera positions.
     for( uint32_t c = 0; c < cameras.size(); c++ )
     {
-        for( uint32_t w = 0; w < context->Windows.size(); w++ )
-            for( uint32_t r = 0; r < context->Windows[w]->RenderTargets.size(); r++ )
+        for( uint32_t w = 0; w < context->windows.size(); w++ )
+            for( uint32_t r = 0; r < context->windows[w]->RenderTargets.size(); r++ )
             {
-                if( context->Windows[w]->RenderTargets[r]->View == cameras[c] )
+                if( context->windows[w]->RenderTargets[r]->View == cameras[c] )
                 {
                     Matrix44 cmatrix = cameras[c]->getPose();
                     ALfloat ListenerOri[] = { -cmatrix._21, cmatrix._22, -cmatrix._23, -cmatrix._31, cmatrix._32, -cmatrix._33 };

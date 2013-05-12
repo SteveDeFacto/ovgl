@@ -18,7 +18,7 @@
 
 #include "OvglContext.h"
 #include "OvglMath.h"
-#include "OvglMedia.h"
+#include "OvglResource.h"
 #include "OvglAudio.h"
 #include "OvglScene.h"
 #include "OvglMesh.h"
@@ -36,6 +36,12 @@
 #include <bullet/BulletDynamics/Character/btKinematicCharacterController.h>
 #include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
+#include <freetype/fttrigon.h>
+#include <freetype/ftglyph.h>
 
 extern "C"
 {
@@ -45,13 +51,13 @@ extern "C"
 
 namespace Ovgl
 {
-MediaLibrary::MediaLibrary( Context* pcontext, const std::string& file )
+Resource::Resource( Context* pcontext, const std::string& file )
 {
     context = pcontext;
-    context->MediaLibraries.push_back(this);
+    context->media_libraries.push_back(this);
 }
 
-void MediaLibrary::Release()
+Resource::~Resource()
 {
     for( uint32_t i = 0; i < AudioBuffers.size(); i++ )
     {
@@ -77,10 +83,9 @@ void MediaLibrary::Release()
     {
         Textures[i]->Release();
     }
-    delete this;
 }
 
-void MediaLibrary::Save( const std::string& file )
+void Resource::Save( const std::string& file )
 {
     if(!file.empty())
     {
@@ -208,7 +213,7 @@ void MediaLibrary::Save( const std::string& file )
     }
 }
 
-void MediaLibrary::Load( const std::string& file )
+void Resource::Load( const std::string& file )
 {
     if(!file.empty())
     {
@@ -350,7 +355,7 @@ void MediaLibrary::Load( const std::string& file )
     }
 }
 
-Mesh* MediaLibrary::ImportModel( const std::string& file, bool z_up )
+Mesh* Resource::ImportModel( const std::string& file, bool z_up )
 {
     if(!file.empty())
     {
@@ -667,10 +672,10 @@ Mesh* MediaLibrary::ImportModel( const std::string& file, bool z_up )
     return NULL;
 }
 
-Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& front, const std::string& back, const std::string& top, const std::string& bottom, const std::string& left, const std::string& right )
+Texture* Resource::ImportCubeMap( const std::string& front, const std::string& back, const std::string& top, const std::string& bottom, const std::string& left, const std::string& right )
 {
     // Create new texture
-    Ovgl::Texture* texture = new Ovgl::Texture;
+    Texture* texture = new Texture;
 
     // Set the texture's media library handle to this media library
     texture->MLibrary = this;
@@ -747,7 +752,7 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportCubeMap( const std::string& front, cons
     return texture;
 }
 
-Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
+Texture* Resource::ImportTexture( const std::string& file )
 {
     struct stat stFileInfo;
     int intStat = stat(file.c_str(), &stFileInfo);
@@ -847,7 +852,7 @@ Ovgl::Texture* Ovgl::MediaLibrary::ImportTexture( const std::string& file )
     }
 }
 
-Ovgl::Shader* Ovgl::MediaLibrary::ImportShader( const std::string& file )
+Shader* Resource::ImportShader( const std::string& file )
 {
     Ovgl::Shader* shader = new Ovgl::Shader;
     shader->MLibrary = this;
@@ -875,7 +880,7 @@ Ovgl::Shader* Ovgl::MediaLibrary::ImportShader( const std::string& file )
     return shader;
 }
 
-Ovgl::Scene* Ovgl::MediaLibrary::CreateScene()
+Scene* Resource::CreateScene()
 {
     Ovgl::Scene* scene = new Ovgl::Scene;
     scene->context = context;
@@ -889,21 +894,21 @@ Ovgl::Scene* Ovgl::MediaLibrary::CreateScene()
     return scene;
 }
 
-Ovgl::Material* Ovgl::MediaLibrary::CreateMaterial( )
+Material* Resource::CreateMaterial( )
 {
-    Ovgl::Material* material = new Ovgl::Material;
+    Material* material = new Material;
     material->MLibrary = this;
-    material->ShaderProgram = context->DefaultMedia->Shaders[0];
+    material->ShaderProgram = context->default_media->Shaders[0];
     material->NoZBuffer = false;
     material->NoZWrite = false;
     material->PostRender = false;
-    material->setEffectTexture("txDiffuse", context->DefaultMedia->Textures[0] );
-    material->setEffectTexture("txEnvironment", context->DefaultMedia->Textures[1] );
+    material->setEffectTexture("txDiffuse", context->default_media->Textures[0] );
+    material->setEffectTexture("txEnvironment", context->default_media->Textures[1] );
     Materials.push_back(material);
     return material;
 }
 
-Ovgl::Texture* Ovgl::MediaLibrary::CreateTexture( uint32_t width, uint32_t height )
+Texture* Resource::CreateTexture( uint32_t width, uint32_t height )
 {
     // Create new texture
     Ovgl::Texture* texture = new Ovgl::Texture;
@@ -936,7 +941,7 @@ Ovgl::Texture* Ovgl::MediaLibrary::CreateTexture( uint32_t width, uint32_t heigh
     return texture;
 }
 
-Ovgl::Texture* Ovgl::MediaLibrary::CreateCubemap( uint32_t width, uint32_t height )
+Texture* Resource::CreateCubemap( uint32_t width, uint32_t height )
 {
     // Create new texture
     Ovgl::Texture* texture = new Ovgl::Texture;
@@ -975,7 +980,7 @@ Ovgl::Texture* Ovgl::MediaLibrary::CreateCubemap( uint32_t width, uint32_t heigh
     return texture;
 }
 
-Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportAudio( const std::string& file )
+AudioBuffer* Resource::ImportAudio( const std::string& file )
 {
     Ovgl::AudioBuffer* buffer = new Ovgl::AudioBuffer;
     buffer->context = context;
@@ -1049,5 +1054,34 @@ Ovgl::AudioBuffer* Ovgl::MediaLibrary::ImportAudio( const std::string& file )
 
     AudioBuffers.push_back(buffer);
     return buffer;
+}
+
+Font::Font( Resource* resource, const std::string& file, uint32_t size )
+{
+    this->size = size;
+    FT_Face ftface;
+    FT_New_Face( resource->context->ftlibrary, file.c_str(), 0, &ftface );
+
+    for(int i = 0; i < 256; i++)
+    {
+        FT_Set_Pixel_Sizes( ftface, 0, size);
+        FT_Load_Char(ftface, i, FT_LOAD_RENDER);
+        FT_Glyph ftglyph;
+        FT_Get_Glyph( ftface->glyph, &ftglyph );
+        FT_BitmapGlyph bmglyph = (FT_BitmapGlyph)ftglyph;
+        charoffsets[i] = bmglyph->top;
+        glGenTextures( 1, &charset[i] );
+        glBindTexture( GL_TEXTURE_2D, charset[i] );
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        GLint swizzleMask[] = {GL_ONE, GL_ONE, GL_ONE, GL_ALPHA};
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, ftface->glyph->bitmap.width, ftface->glyph->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE, ftface->glyph->bitmap.buffer );
+        glBindTexture( GL_TEXTURE_2D, 0 );
+    }
+	resource->Fonts.push_back(this);
 }
 }

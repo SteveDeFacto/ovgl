@@ -22,7 +22,7 @@
 Ovgl::Context*				context;
 Ovgl::RenderTarget*			render_target;
 Ovgl::Window*				window;
-Ovgl::MediaLibrary*			media_library;
+Ovgl::Resource*				resource;
 Ovgl::Scene*				scene;
 Ovgl::Actor*				actor;
 Ovgl::Actor*				actor2;
@@ -78,10 +78,10 @@ int main()
     window = new Ovgl::Window( context, "Test");
 
 	// Lock mouse to center of window
-    window->LockMouse( true );
+    window->set_lock_mouse( true );
 
 	// Vertical synchronization to prevent screen tearing
-    window->SetVSync( true );
+    window->set_vsync( true );
 
 	// Set mouse move event callback function
     window->On_MouseMove = MouseMove;
@@ -105,10 +105,10 @@ int main()
     render_target->multiSample = true;
 
     // Create Media Library
-    media_library = new Ovgl::MediaLibrary(context, "");
+    resource = new Ovgl::Resource(context, "");
 
     // Create empty scene
-    scene = media_library->CreateScene();
+    scene = resource->CreateScene();
 
     // Add light to scene.
     light = scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 5.0f, 5.0f, 5.0f, 1.0f ));
@@ -120,22 +120,22 @@ int main()
     render_target->View = camera;
 
     // Import cubemap texture
-    texture1 = media_library->ImportCubeMap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
+    texture1 = resource->ImportCubeMap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
                                             "../media/textures/skybox/bottom.png", "../media/textures/skybox/left.png", "../media/textures/skybox/right.png");
     // Import grass texture
-    texture2 = media_library->ImportTexture("../media/textures/Grass.png");
+    texture2 = resource->ImportTexture("../media/textures/Grass.png");
 
 	// Import margle texture
-    texture3 = media_library->ImportTexture("../media/textures/white marble.png");
+    texture3 = resource->ImportTexture("../media/textures/white marble.png");
 
     // Import mesh
-    mesh = media_library->ImportModel( "../media/meshes/plane.dae", true );
+    mesh = resource->ImportModel( "../media/meshes/plane.dae", true );
 
 	// Import another mesh
-    mesh2 = media_library->ImportModel( "../media/meshes/test.dae", true );
+    mesh2 = resource->ImportModel( "../media/meshes/test.dae", true );
 
 	// Import and play audio
-    media_library->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);
+    resource->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);
 
     // Add object to scene
     object = scene->CreateObject(mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
@@ -159,7 +159,7 @@ int main()
     scene->sky_box = texture1;
 
 	// Start main loop 
-    context->Start();
+    context->start();
 
 	// Release all
     delete context;

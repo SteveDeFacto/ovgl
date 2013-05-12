@@ -21,7 +21,7 @@
 Ovgl::Context*				context;
 Ovgl::RenderTarget*			render_target;
 Ovgl::Window*				window;
-Ovgl::MediaLibrary*			media_library;
+Ovgl::Resource*				resource;
 Ovgl::Texture*				texture1;
 Ovgl::Interface*			interface1;
 Ovgl::Font*					font1;
@@ -37,11 +37,14 @@ int main()
     // Create Render Target
     render_target = new Ovgl::RenderTarget( context, window, Ovgl::URect( 0.0f, 0.0f, 1.0f, 1.0f ), 0 );
 
+	// Create Resource Manager
+    resource = new Ovgl::Resource(context, "");
+
 	// Create an interface
 	interface1 = new Ovgl::Interface( render_target, Ovgl::URect( 0.0f, 0.0f, 1.0f, 1.0f ) );
 
 	// Load a font
-	font1 = new Ovgl::Font(context, "../../media/fonts/ArchitectsDaughter.ttf", 48);
+	font1 = new Ovgl::Font(resource, "../../media/fonts/ArchitectsDaughter.ttf", 48);
 
 	// Set interface font
 	interface1->font = font1;
@@ -50,7 +53,7 @@ int main()
 	interface1->set_text("Hello World!");
 
 	// Start main loop 
-    context->Start();
+    context->start();
 
     // Release all
     delete context;

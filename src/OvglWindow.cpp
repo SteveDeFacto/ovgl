@@ -340,7 +340,7 @@ Window::Window( Context* pcontext, const std::string& name )
     fullscreen = false;
     sizing = false;
     active = true;
-    lockmouse = false;
+    lock_mouse = false;
     title = name.c_str();
     On_KeyDown = NULL;
     On_KeyUp = NULL;
@@ -355,7 +355,7 @@ Window::Window( Context* pcontext, const std::string& name )
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable (GL_CULL_FACE);
     SDL_GL_MakeCurrent(0, 0);
-    context->Windows.push_back(this);
+    context->windows.push_back(this);
 };
 
 Window::Window( Context* pcontext, const std::string& name, unsigned int width, unsigned int height )
@@ -364,7 +364,7 @@ Window::Window( Context* pcontext, const std::string& name, unsigned int width, 
     fullscreen = false;
     sizing = false;
     active = true;
-    lockmouse = false;
+    lock_mouse = false;
     title = name.c_str();
     On_KeyDown = NULL;
     On_KeyUp = NULL;
@@ -379,24 +379,24 @@ Window::Window( Context* pcontext, const std::string& name, unsigned int width, 
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable (GL_CULL_FACE);
     SDL_GL_MakeCurrent(0, 0);
-    context->Windows.push_back(this);
+    context->windows.push_back(this);
 };
 
-void Window::LockMouse( bool state )
+void Window::set_lock_mouse( bool state )
 {
     if( state )
     {
-        lockmouse = true;
+        lock_mouse = true;
         SDL_SetRelativeMouseMode(SDL_TRUE);
     }
     else
     {
-        lockmouse = false;
+        lock_mouse = false;
         SDL_SetRelativeMouseMode(SDL_FALSE);
     }
 }
 
-void Window::DoEvents()
+void Window::do_events()
 {
     SDL_Event sdl_event;
     Event event;
@@ -433,7 +433,7 @@ void Window::DoEvents()
             event.type = OVGL_MOUSEMOTION;
             event.mouse_x = sdl_event.motion.x;
             event.mouse_y = sdl_event.motion.y;
-            if(!lockmouse)
+            if(!lock_mouse)
             {
                 if(On_MouseMove)
                 {
@@ -450,7 +450,7 @@ void Window::DoEvents()
             event.mouse_x = sdl_event.motion.x;
             event.mouse_y = sdl_event.motion.y;
             event.button = sdl_event.button.button;
-            if(!lockmouse)
+            if(!lock_mouse)
             {
                 if(On_MouseDown)
                 {
@@ -474,7 +474,7 @@ void Window::DoEvents()
             event.mouse_x = sdl_event.motion.x;
             event.mouse_y = sdl_event.motion.y;
             event.button = sdl_event.button.button;
-            if(!lockmouse)
+            if(!lock_mouse)
             {
                 if(On_MouseUp)
                 {
@@ -536,7 +536,7 @@ void Window::DoEvents()
             break;
         }
     }
-    if(lockmouse && active)
+    if(lock_mouse && active)
     {
 
         int32_t cx, cy;
@@ -555,7 +555,7 @@ void Window::DoEvents()
     SDL_GL_SwapWindow(hWnd);
 }
 
-void Window::SetFullscreen( bool state )
+void Window::set_fullscreen( bool state )
 {
     if(state)
     {
@@ -569,7 +569,7 @@ void Window::SetFullscreen( bool state )
     }
 }
 
-void Window::SetVSync( bool state )
+void Window::set_vsync( bool state )
 {
     vsync = state;
     SDL_GL_SetSwapInterval(state);

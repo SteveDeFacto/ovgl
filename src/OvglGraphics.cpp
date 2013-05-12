@@ -18,7 +18,7 @@
 
 #include "OvglContext.h"
 #include "OvglMath.h"
-#include "OvglMedia.h"
+#include "OvglResource.h"
 #include "OvglGraphics.h"
 #include "OvglScene.h"
 #include "OvglAudio.h"
@@ -344,15 +344,15 @@ void RenderTarget::AutoLuminance()
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
 
     // Set texture
-    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[5]->effect, "txDiffuse" );
+    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->Shaders[5]->effect, "txDiffuse" );
     cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
     cgGLEnableTextureParameter( CgFSTexture );
 
     // Set brightness
-    CGparameter CgBrightness = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[5]->effect, "Brightness" );
+    CGparameter CgBrightness = cgGetNamedEffectParameter( context->default_media->Shaders[5]->effect, "Brightness" );
     cgGLSetParameter1f( CgBrightness, 1.0f / eye_luminance );
 
-    CGtechnique tech = cgGetFirstTechnique( context->DefaultMedia->Shaders[5]->effect );
+    CGtechnique tech = cgGetFirstTechnique( context->default_media->Shaders[5]->effect );
     CGpass pass;
     pass = cgGetFirstPass(tech);
     while (pass)
@@ -393,7 +393,7 @@ void RenderTarget::Bloom()
 
     glViewport( 0, 0, width, height );
 
-    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[3]->effect, "txDiffuse" );
+    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->Shaders[3]->effect, "txDiffuse" );
     cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
     cgGLEnableTextureParameter( CgFSTexture );
 
@@ -405,7 +405,7 @@ void RenderTarget::Bloom()
     glEnableVertexAttribArray( 0 );
     glEnableVertexAttribArray( 1 );
 
-    tech = cgGetFirstTechnique( context->DefaultMedia->Shaders[3]->effect );
+    tech = cgGetFirstTechnique( context->default_media->Shaders[3]->effect );
     pass = cgGetFirstPass(tech);
     while (pass)
     {
@@ -424,7 +424,7 @@ void RenderTarget::Bloom()
         pass = cgGetNextPass(pass);
     }
 
-    tech = cgGetFirstTechnique( context->DefaultMedia->Shaders[3]->effect );
+    tech = cgGetFirstTechnique( context->default_media->Shaders[3]->effect );
     pass = cgGetFirstPass(tech);
     while (pass)
     {
@@ -456,18 +456,18 @@ void RenderTarget::Bloom()
         if( flipflop )
         {
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, SecondaryBloomTex, 0);
-            CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[2]->effect, "txDiffuse" );
+            CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->default_media->Shaders[2]->effect, "txDiffuse" );
             cgGLSetTextureParameter( CgFSTexture2, PrimaryBloomTex );
             cgGLEnableTextureParameter( CgFSTexture2 );
         }
         else
         {
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryBloomTex, 0);
-            CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[2]->effect, "txDiffuse" );
+            CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->default_media->Shaders[2]->effect, "txDiffuse" );
             cgGLSetTextureParameter( CgFSTexture2, SecondaryBloomTex );
             cgGLEnableTextureParameter( CgFSTexture2 );
         }
-        CGparameter CgDirection2 = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[2]->effect, "direction" );
+        CGparameter CgDirection2 = cgGetNamedEffectParameter( context->default_media->Shaders[2]->effect, "direction" );
         cgGLSetParameter2f( CgDirection2, x, y );
 
         // Set vertex attributes
@@ -478,7 +478,7 @@ void RenderTarget::Bloom()
         glEnableVertexAttribArray( 0 );
         glEnableVertexAttribArray( 1 );
 
-        tech = cgGetFirstTechnique( context->DefaultMedia->Shaders[2]->effect );
+        tech = cgGetFirstTechnique( context->default_media->Shaders[2]->effect );
         pass = cgGetFirstPass(tech);
         while (pass)
         {
@@ -511,11 +511,11 @@ void RenderTarget::Bloom()
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
     glViewport( 0, 0, width, height );
-    CGparameter CgFSTextureA = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[4]->effect, "txDiffuse1" );
+    CGparameter CgFSTextureA = cgGetNamedEffectParameter( context->default_media->Shaders[4]->effect, "txDiffuse1" );
     cgGLSetTextureParameter( CgFSTextureA, PrimaryTex);
     cgGLEnableTextureParameter( CgFSTextureA );
 
-    CGparameter CgFSTextureB = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[4]->effect, "txDiffuse2" );
+    CGparameter CgFSTextureB = cgGetNamedEffectParameter( context->default_media->Shaders[4]->effect, "txDiffuse2" );
     cgGLSetTextureParameter( CgFSTextureB, PrimaryBloomTex );
     cgGLEnableTextureParameter( CgFSTextureB );
 
@@ -527,7 +527,7 @@ void RenderTarget::Bloom()
     glEnableVertexAttribArray( 0 );
     glEnableVertexAttribArray( 1 );
 
-    tech = cgGetFirstTechnique( context->DefaultMedia->Shaders[4]->effect );
+    tech = cgGetFirstTechnique( context->default_media->Shaders[4]->effect );
     pass = cgGetFirstPass(tech);
     while (pass)
     {
@@ -558,25 +558,25 @@ void RenderTarget::MotionBlur( )
     glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, SecondaryTex, 0);
 
-    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[6]->effect, "sceneSampler" );
+    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->Shaders[6]->effect, "sceneSampler" );
     cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
     cgGLEnableTextureParameter( CgFSTexture );
 
-    CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[6]->effect, "depthTexture" );
+    CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->default_media->Shaders[6]->effect, "depthTexture" );
     cgGLSetTextureParameter( CgFSTexture2, depth_texture );
     cgGLEnableTextureParameter( CgFSTexture2 );
 
     Matrix44 viewProj = MatrixInverse( Vector4(0,0,0,0),(View->projMat * MatrixInverse( Vector4(0,0,0,0),View->getPose()) ));
     static Matrix44 previous_viewProj;
-    CGparameter CgViewProjMatrix = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[6]->effect, "g_ViewProjectionInverseMatrix" );
+    CGparameter CgViewProjMatrix = cgGetNamedEffectParameter( context->default_media->Shaders[6]->effect, "g_ViewProjectionInverseMatrix" );
     Matrix44 tViewProj = MatrixTranspose(viewProj);
     cgGLSetMatrixParameterfc( CgViewProjMatrix, (float*)&tViewProj );
 
-    CGparameter CgPreviousViewProjMatrix = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[6]->effect, "g_previousViewProjectionMatrix" );
+    CGparameter CgPreviousViewProjMatrix = cgGetNamedEffectParameter( context->default_media->Shaders[6]->effect, "g_previousViewProjectionMatrix" );
     Matrix44 tPreviousViewProj = MatrixTranspose(previous_viewProj);
     cgGLSetMatrixParameterfc( CgPreviousViewProjMatrix, (float*)&tPreviousViewProj );
 
-    CGtechnique tech = cgGetFirstTechnique( context->DefaultMedia->Shaders[6]->effect );
+    CGtechnique tech = cgGetFirstTechnique( context->default_media->Shaders[6]->effect );
     CGpass pass;
     pass = cgGetFirstPass(tech);
     while (pass)
@@ -651,7 +651,7 @@ void RenderTarget::Render()
     // Get the window's rect
     Ovgl::Rect WindowRect;
     Ovgl::Rect adjustedrect;
-
+	
     if(hWin)
     {
         SDL_GetWindowPosition( hWin->hWnd, &WindowRect.left, &WindowRect.top );
@@ -716,23 +716,23 @@ void RenderTarget::Render()
             glDisable(GL_MULTISAMPLE);
 
             // Set skybox shader View variable
-            CGparameter CgView = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[1]->effect, "View" );
+            CGparameter CgView = cgGetNamedEffectParameter( context->default_media->Shaders[1]->effect, "View" );
             Matrix44 tinvView = MatrixTranspose( MatrixInverse( Vector4(0,0,0,0), View->getPose()) );
             cgGLSetMatrixParameterfc( CgView, (float*)&tinvView );
 
             // Set skybox shader Projection variable
-            CGparameter CgProjection = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[1]->effect, "Projection" );
+            CGparameter CgProjection = cgGetNamedEffectParameter( context->default_media->Shaders[1]->effect, "Projection" );
             Matrix44 tView = MatrixTranspose( View->projMat);
             cgGLSetMatrixParameterfc( CgProjection, (float*)&tView );
 
             // Set skybox texture
-            CGparameter CgFSTexture = cgGetNamedEffectParameter( context->DefaultMedia->Shaders[1]->effect, "txSkybox" );
+            CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->Shaders[1]->effect, "txSkybox" );
             cgGLSetTextureParameter( CgFSTexture, scene->sky_box->Image );
             cgGLEnableTextureParameter( CgFSTexture );
 
             // Bind vertex and index buffers
-            glBindBuffer( GL_ARRAY_BUFFER, context->DefaultMedia->Meshes[0]->vertex_buffer );
-            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, context->DefaultMedia->Meshes[0]->index_buffers[0] );
+            glBindBuffer( GL_ARRAY_BUFFER, context->default_media->Meshes[0]->vertex_buffer );
+            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, context->default_media->Meshes[0]->index_buffers[0] );
 
             // Set vertex attributes
             glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
@@ -749,7 +749,7 @@ void RenderTarget::Render()
             glEnableVertexAttribArray( 4 );
 
             // Draw skybox
-            CGtechnique tech = cgGetFirstTechnique( context->DefaultMedia->Shaders[1]->effect );
+            CGtechnique tech = cgGetFirstTechnique( context->default_media->Shaders[1]->effect );
             CGpass pass = cgGetFirstPass(tech);
             while (pass)
             {

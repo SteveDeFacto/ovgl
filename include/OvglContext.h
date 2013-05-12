@@ -179,7 +179,7 @@ namespace Ovgl
         class RenderTarget;
 		class Effect;
         class Event;
-		class MediaLibrary;
+		class Resource;
 		class Window;
 
         /**
@@ -247,66 +247,6 @@ namespace Ovgl
 		};
 
         /**
-        * This class contains pre-rendered text characters.
-        * @brief The style of text to render.
-        */
-        class DLLEXPORT Font
-        {
-        public:
-            Font( Context* context,  const std::string& file, uint32_t size );
-            uint32_t								charset[256];
-            uint32_t								charoffsets[256];
-            uint32_t                                size;
-        };
-
-        /**
-        * A texture is a two dimensional image stored in a chuck of memory on the graphics card.
-        * @brief Two dimensional image.
-        */
-        class DLLEXPORT Texture
-		{
-		public:
-			MediaLibrary*							MLibrary;
-			uint32_t								Image;
-			std::string								File;
-			bool									HasAlpha;
-			void Release();
-		};
-
-        /**
-        * A shader is a small program used to process geometry and pixel information.
-        * In other words is decides how objects are rendered to the screen.
-        * @brief Small program used for rendering surfaces.
-        */
-        class DLLEXPORT Shader
-		{
-		public:
-			MediaLibrary*							MLibrary;
-            CGeffect                                effect;
-			void Release();
-		};
-
-        /**
-        * Stores the all the informaton to render a surface such as textures, variables, and shaders.
-        * You can think if it as the material which the surface is made out of.
-        * @brief The material
-        */
-        class DLLEXPORT Material
-		{
-		public:
-			MediaLibrary*							MLibrary;
-			Shader*									ShaderProgram;
-			bool									PostRender;
-			bool									NoZBuffer;
-			bool									NoZWrite;
-			std::vector< std::pair< CGparameter, std::vector< float > > > Variables;
-			std::vector< std::pair< CGparameter, Ovgl::Texture* > > Textures;
-            void setEffectVariable(const std::string& variable, const std::vector< float >& data);
-            void setEffectTexture(const std::string& variable, Texture* texture);
-			void Release();
-		};
-
-        /**
         * The context is the base class from which all other classes originate.
         * This class is basically responsible for managing and storing all sub classes and information.
         * @brief Base class which manages all sub classes.
@@ -318,7 +258,7 @@ namespace Ovgl
             ~Context();
 			bool									g_Quit;
             SDL_GLContext							hWnd;
-			SDL_Window*								ContextWindow;
+			SDL_Window*								context_window;
 			_CGcontext*								CgContext;
 			btDefaultCollisionConfiguration*		PhysicsConfiguration;
 			btCollisionDispatcher*					PhysicsDispatcher;
@@ -326,14 +266,11 @@ namespace Ovgl
 			btSequentialImpulseConstraintSolver*	PhysicsSolver;
 			ALCdevice*								aldevice;
 			ALCcontext*								alcontext;
-			MediaLibrary*							DefaultMedia;
-			std::vector< MediaLibrary* >			MediaLibraries;
-			std::vector< Window* >					Windows;
+			Resource*								default_media;
+			std::vector< Resource* >				media_libraries;
+			std::vector< Window* >					windows;
             FT_Library                              ftlibrary;
-			Window*									CreateOWindow( const std::string& name );
-            void									Start();
-			RenderTarget*							CreateRenderTarget( Ovgl::Window* window, Ovgl::Vector4* rect, uint32_t flags );
-			MediaLibrary*							CreateMediaLibrary( const std::string& file );
+            void									start();
 		};
 	}
 }

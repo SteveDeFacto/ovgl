@@ -18,7 +18,7 @@
 
 #include "OvglContext.h"
 #include "OvglMath.h"
-#include "OvglMedia.h"
+#include "OvglResource.h"
 #include "OvglGraphics.h"
 #include "OvglAudio.h"
 #include "OvglMesh.h"
@@ -53,7 +53,7 @@ namespace Ovgl
 {
 void BuildDefaultMedia( Context* context )
 {
-    context->DefaultMedia = new MediaLibrary(context, "");
+    context->default_media = new Resource(context, "");
 
     Shader* DefaultEffect = new Shader;
     Shader* SkyboxEffect = new Shader;
@@ -63,13 +63,13 @@ void BuildDefaultMedia( Context* context )
     Shader* BrightnessEffect = new Shader;
     Shader* MotionBlurEffect = new Shader;
 
-    DefaultEffect->MLibrary = context->DefaultMedia;
-    SkyboxEffect->MLibrary = context->DefaultMedia;
-    BlurEffect->MLibrary = context->DefaultMedia;
-    BloomEffect->MLibrary = context->DefaultMedia;
-    AddEffect->MLibrary = context->DefaultMedia;
-    BrightnessEffect->MLibrary = context->DefaultMedia;
-    MotionBlurEffect->MLibrary = context->DefaultMedia;
+    DefaultEffect->MLibrary = context->default_media;
+    SkyboxEffect->MLibrary = context->default_media;
+    BlurEffect->MLibrary = context->default_media;
+    BloomEffect->MLibrary = context->default_media;
+    AddEffect->MLibrary = context->default_media;
+    BrightnessEffect->MLibrary = context->default_media;
+    MotionBlurEffect->MLibrary = context->default_media;
 
     // Define debugging variables
     CGerror error;
@@ -491,25 +491,25 @@ void BuildDefaultMedia( Context* context )
         fprintf( stderr, "Compiler: %s\n", string );
     }
 
-    context->DefaultMedia->Shaders.push_back( DefaultEffect );
-    context->DefaultMedia->Shaders.push_back( SkyboxEffect );
-    context->DefaultMedia->Shaders.push_back( BlurEffect );
-    context->DefaultMedia->Shaders.push_back( BloomEffect );
-    context->DefaultMedia->Shaders.push_back( AddEffect );
-    context->DefaultMedia->Shaders.push_back( BrightnessEffect );
-    context->DefaultMedia->Shaders.push_back( MotionBlurEffect );
+    context->default_media->Shaders.push_back( DefaultEffect );
+    context->default_media->Shaders.push_back( SkyboxEffect );
+    context->default_media->Shaders.push_back( BlurEffect );
+    context->default_media->Shaders.push_back( BloomEffect );
+    context->default_media->Shaders.push_back( AddEffect );
+    context->default_media->Shaders.push_back( BrightnessEffect );
+    context->default_media->Shaders.push_back( MotionBlurEffect );
 
     // Create Default Material
     Material* DefaultMaterial = new Material;
 
     DefaultMaterial->ShaderProgram = DefaultEffect;
-    DefaultMaterial->MLibrary = context->DefaultMedia;
+    DefaultMaterial->MLibrary = context->default_media;
     DefaultMaterial->setEffectTexture("txDiffuse", DefaultMaterial->MLibrary->CreateTexture( 256, 256) );
     DefaultMaterial->setEffectTexture("txEnvironment", DefaultMaterial->MLibrary->CreateCubemap( 256, 256) );
     DefaultMaterial->NoZBuffer = false;
     DefaultMaterial->NoZWrite = false;
     DefaultMaterial->PostRender = false;
-    context->DefaultMedia->Materials.push_back(DefaultMaterial);
+    context->default_media->Materials.push_back(DefaultMaterial);
 
     // Create Sky Box
     std::vector< Vertex > vertices(8);
@@ -583,7 +583,7 @@ void BuildDefaultMedia( Context* context )
 
     Mesh* mesh = new Mesh;
     mesh->skeleton = new Skeleton;
-    mesh->media_library = context->DefaultMedia;
+    mesh->media_library = context->default_media;
     mesh->vertices = vertices;
     mesh->faces = faces;
     mesh->attributes = attributes;
@@ -598,7 +598,7 @@ void BuildDefaultMedia( Context* context )
     SDL_GL_MakeCurrent(NULL, context->hWnd);
     mesh->update();
     SDL_GL_MakeCurrent(NULL, NULL);
-    context->DefaultMedia->Meshes.push_back(mesh);
+    context->default_media->Meshes.push_back(mesh);
 }
 
 Context::Context( uint32_t flags )
@@ -616,8 +616,8 @@ Context::Context( uint32_t flags )
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    ContextWindow = SDL_CreateWindow("ContextWindow", 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
-    hWnd = SDL_GL_CreateContext(ContextWindow);
+    context_window = SDL_CreateWindow("ContextWindow", 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+    hWnd = SDL_GL_CreateContext(context_window);
 	if(!hWnd)
     {
 		fprintf(stderr, "Error: %s\n", "Could not create GL Context.");
@@ -667,19 +667,20 @@ Context::Context( uint32_t flags )
 
 Context::~Context()
 {
-    for( uint32_t i = 0; i < MediaLibraries.size(); i++ )
+    for( uint32_t i = 0; i < media_libraries.size(); i++ )
     {
-        MediaLibraries[i]->Release();
+        delete media_libraries[i];
     }
-    for( uint32_t i = 0; i < Windows.size(); i++ )
+    for( uint32_t i = 0; i < windows.size(); i++ )
     {
-        delete Windows[i];
+        delete windows[i];
     }
     delete PhysicsSolver;
     delete PhysicsBroadphase;
     delete PhysicsDispatcher;
     delete PhysicsConfiguration;
     cgDestroyContext(CgContext);
+	SDL_GL_DeleteContext(hWnd);
     SDL_Quit();
     alcMakeContextCurrent(NULL);
     alcDestroyContext(alcontext);
@@ -756,7 +757,7 @@ void Texture::Release()
     delete this;
 }
 
-void Context::Start()
+void Context::start()
 {
     uint32_t previousTime = SDL_GetTicks();
 
@@ -765,23 +766,23 @@ void Context::Start()
     {
         uint32_t currentTime = SDL_GetTicks();
         uint32_t elapsedTime = currentTime - previousTime;
-        for( uint32_t ml = 0; ml < MediaLibraries.size(); ml++ )
+        for( uint32_t ml = 0; ml < media_libraries.size(); ml++ )
         {
-            for( uint32_t s = 0; s < MediaLibraries[ml]->Scenes.size(); s++ )
+            for( uint32_t s = 0; s < media_libraries[ml]->Scenes.size(); s++ )
             {
-                MediaLibraries[ml]->Scenes[s]->Update(elapsedTime);
+                media_libraries[ml]->Scenes[s]->Update(elapsedTime);
             }
         }
-        for( uint32_t w = 0; w < Windows.size(); w++ )
+        for( uint32_t w = 0; w < windows.size(); w++ )
         {
-            for( uint32_t r = 0; r < Windows[w]->RenderTargets.size(); r++ )
+            for( uint32_t r = 0; r < windows[w]->RenderTargets.size(); r++ )
             {
-                Windows[w]->RenderTargets[r]->Render();
+                windows[w]->RenderTargets[r]->Render();
             }
         }
-        for( uint32_t w = 0; w < Windows.size(); w++ )
+        for( uint32_t w = 0; w < windows.size(); w++ )
         {
-            Windows[w]->DoEvents();
+            windows[w]->do_events();
         }
         previousTime = currentTime;
     }
@@ -843,31 +844,5 @@ Rect::Rect( int32_t left, int32_t top, int32_t right, int32_t bottom )
     this->bottom = bottom;
 }
 
-Font::Font( Context* context, const std::string& file, uint32_t size )
-{
-    this->size = size;
-    FT_Face ftface;
-    FT_New_Face( context->ftlibrary, file.c_str(), 0, &ftface );
 
-    for(int i = 0; i < 256; i++)
-    {
-        FT_Set_Pixel_Sizes( ftface, 0, size);
-        FT_Load_Char(ftface, i, FT_LOAD_RENDER);
-        FT_Glyph ftglyph;
-        FT_Get_Glyph( ftface->glyph, &ftglyph );
-        FT_BitmapGlyph bmglyph = (FT_BitmapGlyph)ftglyph;
-        charoffsets[i] = bmglyph->top;
-        glGenTextures( 1, &charset[i] );
-        glBindTexture( GL_TEXTURE_2D, charset[i] );
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        GLint swizzleMask[] = {GL_ONE, GL_ONE, GL_ONE, GL_ALPHA};
-        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, ftface->glyph->bitmap.width, ftface->glyph->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE, ftface->glyph->bitmap.buffer );
-        glBindTexture( GL_TEXTURE_2D, 0 );
-    }
-}
 }

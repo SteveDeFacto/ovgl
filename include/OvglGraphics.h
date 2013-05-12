@@ -36,6 +36,7 @@ class Texture;
 class URect;
 class Font;
 class Event;
+class Material;
 
 class DLLEXPORT RenderTarget
 {

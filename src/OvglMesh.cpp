@@ -19,7 +19,7 @@
 #include "OvglContext.h"
 #include "OvglMath.h"
 #include "OvglMesh.h"
-#include "OvglMedia.h"
+#include "OvglResource.h"
 #include "OvglScene.h"
 #include "OvglSkeleton.h"
 #include <GL/glew.h>
