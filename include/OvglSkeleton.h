@@ -123,8 +123,8 @@ namespace Ovgl
 			std::vector< Joint* >							joints;
 			Joint*											root_joint;
 			void animate( Animation* anim, float time );
-			void UpdateTransforms( Joint* pNode );
-			void Evaluate( Animation* anim, float pTime );
+			void update_transforms( Joint* pNode );
+			void evaluate( Animation* anim, float pTime );
 		};
 
         class DLLEXPORT Skeleton

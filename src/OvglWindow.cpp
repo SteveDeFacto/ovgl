@@ -27,7 +27,7 @@
 
 namespace Ovgl
 {
-unsigned char SFKeyToASCII(SDL_Keycode keycode)
+unsigned char SDLKeyToASCII(SDL_Keycode keycode)
 {
     switch (keycode)
     {
@@ -342,15 +342,15 @@ Window::Window( Context* pcontext, const std::string& name )
     active = true;
     lock_mouse = false;
     title = name.c_str();
-    On_KeyDown = NULL;
-    On_KeyUp = NULL;
-    On_MouseMove = NULL;
-    On_MouseDown = NULL;
-    On_MouseUp = NULL;
-    On_MouseOver = NULL;
-    On_MouseOut = NULL;
-    hWnd = SDL_CreateWindow( name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
-    SDL_GL_MakeCurrent(hWnd, context->hWnd);
+    on_key_down = NULL;
+    on_key_up = NULL;
+    on_mouse_move = NULL;
+    on_mouse_down = NULL;
+    on_mouse_up = NULL;
+    on_mouse_over = NULL;
+    on_mouse_out = NULL;
+    sdl_window = SDL_CreateWindow( name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
+    SDL_GL_MakeCurrent(sdl_window, context->gl_context);
     glDisable(GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable (GL_CULL_FACE);
@@ -366,21 +366,30 @@ Window::Window( Context* pcontext, const std::string& name, unsigned int width, 
     active = true;
     lock_mouse = false;
     title = name.c_str();
-    On_KeyDown = NULL;
-    On_KeyUp = NULL;
-    On_MouseMove = NULL;
-    On_MouseDown = NULL;
-    On_MouseUp = NULL;
-    On_MouseOver = NULL;
-    On_MouseOut = NULL;
-    hWnd = SDL_CreateWindow( name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,  width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
-    SDL_GL_MakeCurrent(hWnd, context->hWnd);
+    on_key_down = NULL;
+    on_key_up = NULL;
+    on_mouse_move = NULL;
+    on_mouse_down = NULL;
+    on_mouse_up = NULL;
+    on_mouse_over = NULL;
+    on_mouse_out = NULL;
+    sdl_window = SDL_CreateWindow( name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,  width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
+    SDL_GL_MakeCurrent(sdl_window, context->gl_context);
     glDisable(GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable (GL_CULL_FACE);
     SDL_GL_MakeCurrent(0, 0);
     context->windows.push_back(this);
 };
+
+Window::~Window()
+{
+	for( uint32_t r = 0; r < render_targets.size(); r++ )
+	{
+		delete render_targets[r];
+	}
+    SDL_DestroyWindow(sdl_window);
+}
 
 void Window::set_lock_mouse( bool state )
 {
@@ -406,27 +415,27 @@ void Window::do_events()
         {
         case SDL_KEYDOWN:
             event.type = OVGL_KEYDOWN;
-            event.key = SFKeyToASCII(sdl_event.key.keysym.sym);
-            if(On_KeyDown)
+            event.key = SDLKeyToASCII(sdl_event.key.keysym.sym);
+            if(on_key_down)
             {
-                On_KeyDown( event.key );
+                on_key_down( event.key );
             }
-            for( uint32_t r = 0; r < RenderTargets.size(); r++ )
+            for( uint32_t r = 0; r < render_targets.size(); r++ )
             {
-                RenderTargets[r]->DoEvent(event);
+                render_targets[r]->do_event(event);
             }
             break;
 
         case SDL_KEYUP:
             event.type = OVGL_KEYUP;
-            event.key = SFKeyToASCII(sdl_event.key.keysym.sym);
-            if(On_KeyUp)
+            event.key = SDLKeyToASCII(sdl_event.key.keysym.sym);
+            if(on_key_up)
             {
-                On_KeyUp( event.key );
+                on_key_up( event.key );
             }
-            for( uint32_t r = 0; r < RenderTargets.size(); r++ )
+            for( uint32_t r = 0; r < render_targets.size(); r++ )
             {
-                RenderTargets[r]->DoEvent(event);
+                render_targets[r]->do_event(event);
             }
             break;
         case SDL_MOUSEMOTION:
@@ -435,13 +444,13 @@ void Window::do_events()
             event.mouse_y = sdl_event.motion.y;
             if(!lock_mouse)
             {
-                if(On_MouseMove)
+                if(on_mouse_move)
                 {
-                    On_MouseMove( event.mouse_x, event.mouse_y );
+                    on_mouse_move( event.mouse_x, event.mouse_y );
                 }
-                for( uint32_t r = 0; r < RenderTargets.size(); r++ )
+                for( uint32_t r = 0; r < render_targets.size(); r++ )
                 {
-                    RenderTargets[r]->DoEvent(event);
+                    render_targets[r]->do_event(event);
                 }
             }
             break;
@@ -452,20 +461,20 @@ void Window::do_events()
             event.button = sdl_event.button.button;
             if(!lock_mouse)
             {
-                if(On_MouseDown)
+                if(on_mouse_down)
                 {
-                    On_MouseDown( event.mouse_x, event.mouse_y, event.button );
+                    on_mouse_down( event.mouse_x, event.mouse_y, event.button );
                 }
-                for( uint32_t r = 0; r < RenderTargets.size(); r++ )
+                for( uint32_t r = 0; r < render_targets.size(); r++ )
                 {
-                    RenderTargets[r]->DoEvent(event);
+                    render_targets[r]->do_event(event);
                 }
             }
             else
             {
-                if(On_MouseDown)
+                if(on_mouse_down)
                 {
-                    On_MouseDown( 0, 0, event.button );
+                    on_mouse_down( 0, 0, event.button );
                 }
             }
             break;
@@ -476,20 +485,20 @@ void Window::do_events()
             event.button = sdl_event.button.button;
             if(!lock_mouse)
             {
-                if(On_MouseUp)
+                if(on_mouse_up)
                 {
-                    On_MouseUp( event.mouse_x, event.mouse_y, event.button );
+                    on_mouse_up( event.mouse_x, event.mouse_y, event.button );
                 }
-                for( uint32_t r = 0; r < RenderTargets.size(); r++ )
+                for( uint32_t r = 0; r < render_targets.size(); r++ )
                 {
-                    RenderTargets[r]->DoEvent(event);
+                    render_targets[r]->do_event(event);
                 }
             }
             else
             {
-                if(On_MouseUp)
+                if(on_mouse_up)
                 {
-                    On_MouseUp( 0, 0, event.button );
+                    on_mouse_up( 0, 0, event.button );
                 }
             }
             break;
@@ -499,23 +508,23 @@ void Window::do_events()
             {
             case SDL_WINDOWEVENT_ENTER:
                 event.window_event = OVGL_WINDOWEVENT_ENTER;
-                if(On_MouseOver)
+                if(on_mouse_over)
                 {
-                    On_MouseOver();
+                    on_mouse_over();
                 }
                 break;
             case SDL_WINDOWEVENT_LEAVE:
                 event.window_event = OVGL_WINDOWEVENT_LEAVE;
-                if(On_MouseOut)
+                if(on_mouse_out)
                 {
-                    On_MouseOut();
+                    on_mouse_out();
                 }
                 break;
             case SDL_WINDOWEVENT_RESIZED:
                 event.window_event = OVGL_WINDOWEVENT_RESIZED;
-                for(uint32_t i = 0; i < RenderTargets.size(); i++)
+                for(uint32_t i = 0; i < render_targets.size(); i++)
                 {
-                    RenderTargets[i]->Update();
+                    render_targets[i]->Update();
                 }
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
@@ -528,7 +537,7 @@ void Window::do_events()
                 break;
             case SDL_WINDOWEVENT_CLOSE:
                 event.window_event = OVGL_WINDOWEVENT_CLOSE;
-                context->g_Quit = true;
+                context->g_quit = true;
                 break;
             }
             break;
@@ -540,31 +549,31 @@ void Window::do_events()
     {
 
         int32_t cx, cy;
-        SDL_GetWindowSize( hWnd, &cx, &cy);
+        SDL_GetWindowSize( sdl_window, &cx, &cy);
         cx /= 2;
         cy /= 2;
 
         int32_t mx, my;
         SDL_GetRelativeMouseState( &mx, &my );
-        if(On_MouseMove)
+        if(on_mouse_move)
         {
-            On_MouseMove( mx, my );
+            on_mouse_move( mx, my );
         }
-        SDL_WarpMouseInWindow(hWnd,cx, cy);
+        SDL_WarpMouseInWindow(sdl_window, cx, cy);
     }
-    SDL_GL_SwapWindow(hWnd);
+    SDL_GL_SwapWindow(sdl_window);
 }
 
 void Window::set_fullscreen( bool state )
 {
     if(state)
     {
-        SDL_SetWindowFullscreen(hWnd, SDL_TRUE);
+        SDL_SetWindowFullscreen(sdl_window, SDL_TRUE);
         fullscreen = true;
     }
     else
     {
-        SDL_SetWindowFullscreen(hWnd, SDL_FALSE);
+        SDL_SetWindowFullscreen(sdl_window, SDL_FALSE);
         fullscreen = false;
     }
 }
@@ -573,10 +582,5 @@ void Window::set_vsync( bool state )
 {
     vsync = state;
     SDL_GL_SetSwapInterval(state);
-}
-
-Window::~Window()
-{
-    SDL_DestroyWindow(hWnd);
 }
 }

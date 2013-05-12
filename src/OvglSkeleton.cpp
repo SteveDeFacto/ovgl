@@ -36,7 +36,7 @@ Skeleton::~Skeleton()
 {
 }
 
-void Pose::Evaluate( Animation* anim, float pTime )
+void Pose::evaluate( Animation* anim, float pTime )
 {
     float time = 0.0f;
     time = pTime;
@@ -128,8 +128,8 @@ void Pose::Evaluate( Animation* anim, float pTime )
 
 void Pose::animate( Animation* anim, float time )
 {
-    Evaluate( anim, time );
-    UpdateTransforms( root_joint );
+    evaluate( anim, time );
+    update_transforms( root_joint );
     for(uint32_t b = 0; b < matrices.size(); b++)
     {
         matrices[b] = joints[b]->global_transform;
@@ -137,7 +137,7 @@ void Pose::animate( Animation* anim, float time )
     }
 }
 
-void Pose::UpdateTransforms(Joint* pNode)
+void Pose::update_transforms(Joint* pNode)
 {
     pNode->global_transform = pNode->local_transform;
     Joint* parent = pNode->parent;
@@ -149,7 +149,7 @@ void Pose::UpdateTransforms(Joint* pNode)
 
     for( uint32_t i = 0; i < pNode->children.size(); i++)
     {
-        UpdateTransforms( pNode->children[i]);
+        update_transforms( pNode->children[i]);
     }
 }
 }

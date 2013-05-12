@@ -35,8 +35,8 @@ namespace Ovgl
 			Window( Ovgl::Context* pcontext, const std::string& name, unsigned int width, unsigned int height );
 			~Window();
             Context* context;
-            SDL_Window* hWnd;
-            std::vector< RenderTarget* > RenderTargets;
+            SDL_Window* sdl_window;
+            std::vector< RenderTarget* > render_targets;
             std::string title;
 			bool sizing;
 			bool active;
@@ -49,13 +49,13 @@ namespace Ovgl
 			void set_vsync( bool state );
 			void set_fullscreen( bool state );
 			void set_lock_mouse( bool state );
-			void (*On_KeyDown)(char);
-			void (*On_KeyUp)(char);
-			void (*On_MouseMove)(long, long);
-			void (*On_MouseDown)(long, long, int);
-			void (*On_MouseUp)(long, long, int);
-            void (*On_MouseOver)();
-            void (*On_MouseOut)();
+			void (*on_key_down)(char);
+			void (*on_key_up)(char);
+			void (*on_mouse_move)(long, long);
+			void (*on_mouse_down)(long, long, int);
+			void (*on_mouse_up)(long, long, int);
+            void (*on_mouse_over)();
+            void (*on_mouse_out)();
 		};
 	}
 }

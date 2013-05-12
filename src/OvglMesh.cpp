@@ -161,11 +161,11 @@ Mesh::Mesh()
 Mesh::~Mesh()
 {
     delete triangle_mesh;
-    for( uint32_t m = 0; m < media_library->Meshes.size(); m++ )
+    for( uint32_t m = 0; m < media_library->meshes.size(); m++ )
     {
-        if( media_library->Meshes[m] == this )
+        if( media_library->meshes[m] == this )
         {
-            media_library->Meshes.erase( media_library->Meshes.begin() + m );
+            media_library->meshes.erase( media_library->meshes.begin() + m );
         }
     }
     glDeleteBuffers( 1, &vertex_buffer );

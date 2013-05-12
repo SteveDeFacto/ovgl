@@ -13,7 +13,7 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* @brief None.
+* @brief This header defines all mesh functions and classes used in Ovgl.
 */
 
 #ifdef _WIN32
@@ -87,7 +87,7 @@ namespace Ovgl
 		public:
 			Mesh();
 			~Mesh();
-			Resource*							media_library;
+			ResourceManager*					media_library;
 			std::vector< Vertex >				vertices;
 			std::vector< Face >					faces;
 			std::vector< uint32_t >				attributes;

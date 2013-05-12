@@ -147,7 +147,7 @@ namespace Ovgl
 	extern "C"
 	{
 
-        // Predefine some OVGL classes.
+        // Declare needed classes
 		class Matrix22;
 		class Matrix33;
 		class Matrix34;
@@ -179,7 +179,7 @@ namespace Ovgl
         class RenderTarget;
 		class Effect;
         class Event;
-		class Resource;
+		class ResourceManager;
 		class Window;
 
         /**
@@ -193,9 +193,9 @@ namespace Ovgl
             OVGL_EventType type;
             OVGL_WindowEvent window_event;
             unsigned char key;
-            int32_t mouse_x;
-            int32_t mouse_y;
-            int32_t button;
+            int32_t									mouse_x;
+            int32_t									mouse_y;
+            int32_t									button;
         };
 
         /**
@@ -256,18 +256,18 @@ namespace Ovgl
 		public:
             Context( uint32_t flags );
             ~Context();
-			bool									g_Quit;
-            SDL_GLContext							hWnd;
+			bool									g_quit;
+            SDL_GLContext							gl_context;
 			SDL_Window*								context_window;
-			_CGcontext*								CgContext;
-			btDefaultCollisionConfiguration*		PhysicsConfiguration;
-			btCollisionDispatcher*					PhysicsDispatcher;
-			btBroadphaseInterface*					PhysicsBroadphase;
-			btSequentialImpulseConstraintSolver*	PhysicsSolver;
+			_CGcontext*								cg_context;
+			btDefaultCollisionConfiguration*		physics_configuration;
+			btCollisionDispatcher*					physics_dispatcher;
+			btBroadphaseInterface*					physics_broadphase;
+			btSequentialImpulseConstraintSolver*	physics_solver;
 			ALCdevice*								aldevice;
 			ALCcontext*								alcontext;
-			Resource*								default_media;
-			std::vector< Resource* >				media_libraries;
+			ResourceManager*						default_media;
+			std::vector< ResourceManager* >			media_libraries;
 			std::vector< Window* >					windows;
             FT_Library                              ftlibrary;
             void									start();

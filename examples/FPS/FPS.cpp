@@ -84,10 +84,10 @@ int main()
     window->SetVSync( true );
 
 	// Set mouse move event callback function
-    window->On_MouseMove = MouseMove;
+    window->on_mouse_move = MouseMove;
 
 	// Set key down event callback function
-    window->On_KeyDown = KeyDown;
+    window->on_key_down = KeyDown;
 
     // Create Render Target
     render_target = new Ovgl::RenderTarget( context, window, Ovgl::URect(0, 0, 1.0f, 1.0f), 0);

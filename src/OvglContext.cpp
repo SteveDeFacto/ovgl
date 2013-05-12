@@ -53,7 +53,7 @@ namespace Ovgl
 {
 void BuildDefaultMedia( Context* context )
 {
-    context->default_media = new Resource(context, "");
+    context->default_media = new ResourceManager(context, "");
 
     Shader* DefaultEffect = new Shader;
     Shader* SkyboxEffect = new Shader;
@@ -162,12 +162,12 @@ void BuildDefaultMedia( Context* context )
             "   }"
             "}";
 
-    DefaultEffect->effect = cgCreateEffect(context->CgContext,shader.c_str(), NULL);
+    DefaultEffect->effect = cgCreateEffect(context->cg_context,shader.c_str(), NULL);
     string = cgGetLastErrorString(&error);
     if(error)
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(context->CgContext);
+        string = cgGetLastListing(context->cg_context);
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -220,12 +220,12 @@ void BuildDefaultMedia( Context* context )
             "   }"
             "}";
 
-    SkyboxEffect->effect = cgCreateEffect(context->CgContext,shader.c_str(), NULL);
+    SkyboxEffect->effect = cgCreateEffect(context->cg_context,shader.c_str(), NULL);
     string = cgGetLastErrorString(&error);
     if(error)
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(context->CgContext);
+        string = cgGetLastListing(context->cg_context);
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -299,12 +299,12 @@ void BuildDefaultMedia( Context* context )
             "   }"
             "}";
 
-    BlurEffect->effect = cgCreateEffect(context->CgContext,shader.c_str(), NULL);
+    BlurEffect->effect = cgCreateEffect(context->cg_context,shader.c_str(), NULL);
     string = cgGetLastErrorString(&error);
     if(error)
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(context->CgContext);
+        string = cgGetLastListing(context->cg_context);
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -341,12 +341,12 @@ void BuildDefaultMedia( Context* context )
             "   }"
             "}";
 
-    BloomEffect->effect = cgCreateEffect( context->CgContext,shader.c_str(), NULL );
+    BloomEffect->effect = cgCreateEffect( context->cg_context,shader.c_str(), NULL );
     string = cgGetLastErrorString( &error );
     if( error )
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing( context->CgContext );
+        string = cgGetLastListing( context->cg_context );
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -382,12 +382,12 @@ void BuildDefaultMedia( Context* context )
             "   }"
             "}";
 
-    AddEffect->effect = cgCreateEffect( context->CgContext,shader.c_str(), NULL );
+    AddEffect->effect = cgCreateEffect( context->cg_context,shader.c_str(), NULL );
     string = cgGetLastErrorString( &error );
     if(error)
     {
         fprintf( stderr, "Error: %s\n", string );
-        string = cgGetLastListing( context->CgContext );
+        string = cgGetLastListing( context->cg_context );
         fprintf( stderr, "Compiler: %s\n", string );
     }
 
@@ -423,12 +423,12 @@ void BuildDefaultMedia( Context* context )
             "   }"
             "}";
 
-    BrightnessEffect->effect = cgCreateEffect( context->CgContext,shader.c_str(), NULL );
+    BrightnessEffect->effect = cgCreateEffect( context->cg_context,shader.c_str(), NULL );
     string = cgGetLastErrorString( &error );
     if(error)
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing( context->CgContext );
+        string = cgGetLastListing( context->cg_context );
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
@@ -482,34 +482,34 @@ void BuildDefaultMedia( Context* context )
             "   }"
             "}";
 
-    MotionBlurEffect->effect = cgCreateEffect( context->CgContext, shader.c_str(), NULL );
+    MotionBlurEffect->effect = cgCreateEffect( context->cg_context, shader.c_str(), NULL );
     string = cgGetLastErrorString(&error);
     if(error)
     {
         fprintf( stderr, "Error: %s\n", string );
-        string = cgGetLastListing( context->CgContext );
+        string = cgGetLastListing( context->cg_context );
         fprintf( stderr, "Compiler: %s\n", string );
     }
 
-    context->default_media->Shaders.push_back( DefaultEffect );
-    context->default_media->Shaders.push_back( SkyboxEffect );
-    context->default_media->Shaders.push_back( BlurEffect );
-    context->default_media->Shaders.push_back( BloomEffect );
-    context->default_media->Shaders.push_back( AddEffect );
-    context->default_media->Shaders.push_back( BrightnessEffect );
-    context->default_media->Shaders.push_back( MotionBlurEffect );
+    context->default_media->shaders.push_back( DefaultEffect );
+    context->default_media->shaders.push_back( SkyboxEffect );
+    context->default_media->shaders.push_back( BlurEffect );
+    context->default_media->shaders.push_back( BloomEffect );
+    context->default_media->shaders.push_back( AddEffect );
+    context->default_media->shaders.push_back( BrightnessEffect );
+    context->default_media->shaders.push_back( MotionBlurEffect );
 
     // Create Default Material
     Material* DefaultMaterial = new Material;
 
     DefaultMaterial->ShaderProgram = DefaultEffect;
     DefaultMaterial->MLibrary = context->default_media;
-    DefaultMaterial->setEffectTexture("txDiffuse", DefaultMaterial->MLibrary->CreateTexture( 256, 256) );
-    DefaultMaterial->setEffectTexture("txEnvironment", DefaultMaterial->MLibrary->CreateCubemap( 256, 256) );
+    DefaultMaterial->setEffectTexture("txDiffuse", DefaultMaterial->MLibrary->create_texture( 256, 256) );
+    DefaultMaterial->setEffectTexture("txEnvironment", DefaultMaterial->MLibrary->create_cubemap( 256, 256) );
     DefaultMaterial->NoZBuffer = false;
     DefaultMaterial->NoZWrite = false;
     DefaultMaterial->PostRender = false;
-    context->default_media->Materials.push_back(DefaultMaterial);
+    context->default_media->materials.push_back(DefaultMaterial);
 
     // Create Sky Box
     std::vector< Vertex > vertices(8);
@@ -595,15 +595,15 @@ void BuildDefaultMedia( Context* context )
     bone->mesh = new Mesh;
     bone->convex = NULL;
     mesh->skeleton->bones.push_back(bone);
-    SDL_GL_MakeCurrent(NULL, context->hWnd);
+    SDL_GL_MakeCurrent(NULL, context->gl_context);
     mesh->update();
     SDL_GL_MakeCurrent(NULL, NULL);
-    context->default_media->Meshes.push_back(mesh);
+    context->default_media->meshes.push_back(mesh);
 }
 
 Context::Context( uint32_t flags )
 {
-    g_Quit = false;
+    g_quit = false;
 
     // Initialize SDL
     SDL_Init(SDL_INIT_VIDEO);
@@ -617,14 +617,14 @@ Context::Context( uint32_t flags )
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     context_window = SDL_CreateWindow("ContextWindow", 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
-    hWnd = SDL_GL_CreateContext(context_window);
-	if(!hWnd)
+    gl_context = SDL_GL_CreateContext(context_window);
+	if(!gl_context)
     {
 		fprintf(stderr, "Error: %s\n", "Could not create GL Context.");
 	}
 
     // Initialize GLEW
-    //glewExperimental = GL_TRUE;
+    glewExperimental = GL_TRUE;
     GLenum err = glewInit();
     if (GLEW_OK != err)
     {
@@ -632,12 +632,12 @@ Context::Context( uint32_t flags )
     }
 
     // Initialize CG
-    CgContext = cgCreateContext();
-	if(!CgContext)
+    cg_context = cgCreateContext();
+	if(!cg_context)
 	{
 		fprintf(stderr, "Error: %s\n", cgGetErrorString(cgGetError()));
 	}
-    cgGLRegisterStates(CgContext);
+    cgGLRegisterStates(cg_context);
 
     // Initialize OpenAL
     aldevice = alcOpenDevice(NULL);
@@ -645,12 +645,12 @@ Context::Context( uint32_t flags )
     alcMakeContextCurrent(alcontext);
 
     // Initialize Bullet
-    PhysicsConfiguration = new btDefaultCollisionConfiguration();
-    PhysicsDispatcher = new btCollisionDispatcher(PhysicsConfiguration);
+    physics_configuration = new btDefaultCollisionConfiguration();
+    physics_dispatcher = new btCollisionDispatcher(physics_configuration);
     btVector3 worldMin(-1000,-1000,-1000);
     btVector3 worldMax(1000,1000,1000);
-    PhysicsBroadphase = new btAxisSweep3(worldMin,worldMax);
-    PhysicsSolver = new btSequentialImpulseConstraintSolver;
+    physics_broadphase = new btAxisSweep3(worldMin,worldMax);
+    physics_solver = new btSequentialImpulseConstraintSolver;
 
     // Initialize FFMPEG
     av_register_all();
@@ -675,12 +675,12 @@ Context::~Context()
     {
         delete windows[i];
     }
-    delete PhysicsSolver;
-    delete PhysicsBroadphase;
-    delete PhysicsDispatcher;
-    delete PhysicsConfiguration;
-    cgDestroyContext(CgContext);
-	SDL_GL_DeleteContext(hWnd);
+    delete physics_solver;
+    delete physics_broadphase;
+    delete physics_dispatcher;
+    delete physics_configuration;
+    cgDestroyContext(cg_context);
+	SDL_GL_DeleteContext(gl_context);
     SDL_Quit();
     alcMakeContextCurrent(NULL);
     alcDestroyContext(alcontext);
@@ -733,11 +733,11 @@ void Material::Release()
 
 void Shader::Release()
 {
-    for( uint32_t e = 0; e < MLibrary->Shaders.size(); e++ )
+    for( uint32_t e = 0; e < MLibrary->shaders.size(); e++ )
     {
-        if( MLibrary->Shaders[e] == this )
+        if( MLibrary->shaders[e] == this )
         {
-            MLibrary->Shaders.erase( MLibrary->Shaders.begin() + e );
+            MLibrary->shaders.erase( MLibrary->shaders.begin() + e );
         }
     }
     cgDestroyEffect( effect );
@@ -746,11 +746,11 @@ void Shader::Release()
 
 void Texture::Release()
 {
-    for( uint32_t i = 0; i < MLibrary->Textures.size(); i++ )
+    for( uint32_t i = 0; i < MLibrary->textures.size(); i++ )
     {
-        if( MLibrary->Textures[i] == this )
+        if( MLibrary->textures[i] == this )
         {
-            MLibrary->Textures.erase( MLibrary->Textures.begin() + i );
+            MLibrary->textures.erase( MLibrary->textures.begin() + i );
         }
     }
     glDeleteTextures(1, &Image);
@@ -762,22 +762,22 @@ void Context::start()
     uint32_t previousTime = SDL_GetTicks();
 
     // Main message loop
-    while( !g_Quit )
+    while( !g_quit )
     {
         uint32_t currentTime = SDL_GetTicks();
         uint32_t elapsedTime = currentTime - previousTime;
         for( uint32_t ml = 0; ml < media_libraries.size(); ml++ )
         {
-            for( uint32_t s = 0; s < media_libraries[ml]->Scenes.size(); s++ )
+            for( uint32_t s = 0; s < media_libraries[ml]->scenes.size(); s++ )
             {
-                media_libraries[ml]->Scenes[s]->Update(elapsedTime);
+                media_libraries[ml]->scenes[s]->Update(elapsedTime);
             }
         }
         for( uint32_t w = 0; w < windows.size(); w++ )
         {
-            for( uint32_t r = 0; r < windows[w]->RenderTargets.size(); r++ )
+            for( uint32_t r = 0; r < windows[w]->render_targets.size(); r++ )
             {
-                windows[w]->RenderTargets[r]->Render();
+                windows[w]->render_targets[r]->Render();
             }
         }
         for( uint32_t w = 0; w < windows.size(); w++ )
@@ -843,6 +843,4 @@ Rect::Rect( int32_t left, int32_t top, int32_t right, int32_t bottom )
     this->right = right;
     this->bottom = bottom;
 }
-
-
 }

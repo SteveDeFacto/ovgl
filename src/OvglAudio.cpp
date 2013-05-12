@@ -28,7 +28,7 @@
 
 namespace Ovgl
 {
-AudioInstance* AudioBuffer::CreateAudioInstance( Emitter* emitter, bool loop )
+AudioInstance* AudioBuffer::create_audio_instance( Emitter* emitter, bool loop )
 {
     AudioInstance* instance = new AudioInstance;
     instance->paused = false;
@@ -57,11 +57,11 @@ AudioInstance* AudioBuffer::CreateAudioInstance( Emitter* emitter, bool loop )
     {
         for( uint32_t w = 0; w < context->windows.size(); w++ )
         {
-            for( uint32_t r = 0; r < context->windows[w]->RenderTargets.size(); r++ )
+            for( uint32_t r = 0; r < context->windows[w]->render_targets.size(); r++ )
             {
                 for( uint32_t c = 0; c < emitter->scene->cameras.size(); c++ )
                 {
-                    if( context->windows[w]->RenderTargets[r]->View == emitter->scene->cameras[c] )
+                    if( context->windows[w]->render_targets[r]->view == emitter->scene->cameras[c] )
                     {
                         emitter->scene->cameras[c]->voices.push_back( voice );
                     }
@@ -73,7 +73,7 @@ AudioInstance* AudioBuffer::CreateAudioInstance( Emitter* emitter, bool loop )
     return instance;
 }
 
-void AudioInstance::Play( bool loop )
+void AudioInstance::play( bool loop )
 {
     for( uint32_t i = 0; i < voices.size(); i++ )
     {
@@ -83,7 +83,7 @@ void AudioInstance::Play( bool loop )
 }
 
 
-void AudioInstance::Stop()
+void AudioInstance::stop()
 {
     for( uint32_t i = 0; i < voices.size(); i++ )
     {
@@ -91,7 +91,7 @@ void AudioInstance::Stop()
     }
 }
 
-void AudioInstance::Pause()
+void AudioInstance::pause()
 {
     //if( paused )
     //{
@@ -111,27 +111,27 @@ void AudioInstance::Pause()
     //}
 }
 
-void AudioVoice::Release()
+void AudioVoice::release()
 {
     alDeleteSources( 1, &source );
     delete this;
 }
 
-void AudioInstance::Release()
+void AudioInstance::release()
 {
     for( uint32_t i = 0; i < voices.size(); i++)
     {
-        voices[i]->Release();
+        voices[i]->release();
     }
     voices.clear();
     delete this;
 }
 
-void AudioBuffer::Release()
+void AudioBuffer::release()
 {
     for( uint32_t i = 0; i < audio_instances.size(); i++)
     {
-        audio_instances[i]->Release();
+        audio_instances[i]->release();
     }
     alDeleteBuffers(1, &mono);
     alDeleteBuffers(1, &stereo);

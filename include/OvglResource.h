@@ -13,7 +13,7 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* @brief None.
+* @brief This header defines all resource functions and classes used in Ovgl.
 */
 
 #ifdef _WIN32
@@ -33,6 +33,7 @@ namespace Ovgl
         class Context;
 		class Shader;
 		class Texture;
+		class ResourceManager;
 
 		/**
         * This class contains pre-rendered text characters.
@@ -41,7 +42,7 @@ namespace Ovgl
         class DLLEXPORT Font
         {
         public:
-			Font( Resource* resource, const std::string& file, uint32_t size );
+			Font( ResourceManager* resource_manager, const std::string& file, uint32_t size );
             uint32_t								charset[256];
             uint32_t								charoffsets[256];
             uint32_t                                size;
@@ -54,7 +55,7 @@ namespace Ovgl
         class DLLEXPORT Texture
 		{
 		public:
-			Resource*								MLibrary;
+			ResourceManager*						MLibrary;
 			uint32_t								Image;
 			std::string								File;
 			bool									HasAlpha;
@@ -69,7 +70,7 @@ namespace Ovgl
         class DLLEXPORT Shader
 		{
 		public:
-			Resource*								MLibrary;
+			ResourceManager*						MLibrary;
             CGeffect                                effect;
 			void Release();
 		};
@@ -82,7 +83,7 @@ namespace Ovgl
         class DLLEXPORT Material
 		{
 		public:
-			Resource*								MLibrary;
+			ResourceManager*						MLibrary;
 			Shader*									ShaderProgram;
 			bool									PostRender;
 			bool									NoZBuffer;
@@ -94,33 +95,33 @@ namespace Ovgl
 			void Release();
 		};
 
-        class DLLEXPORT Resource
+        class DLLEXPORT ResourceManager
 		{
 		public:
-            Resource( Ovgl::Context* context, const std::string& file );
-			~Resource();
+            ResourceManager( Ovgl::Context* context, const std::string& file );
+			~ResourceManager();
             Context* context;
-			std::vector< Font* > Fonts;
-			std::vector< Scene* > Scenes;
-			std::vector< Shader* > Shaders;
-			std::vector< Material* > Materials;
-			std::vector< Mesh* > Meshes;
-			std::vector< Texture* > Textures;
-			std::vector< AudioBuffer* > AudioBuffers;
-			Mesh* ImportModel( const std::string& file, bool z_up );
-			Shader* ImportShader( const std::string& file );
-			Texture* ImportTexture( const std::string& file );
-			Texture* ImportCubeMap( const std::string& front, const std::string& back, const std::string& top, const std::string& bottom, const std::string& left, const std::string& right );
-			AudioBuffer* ImportAudio( const std::string& file );
-			Scene* CreateScene();
-			Shader* CreateShader( const std::string& code );
-			Mesh* CreateMesh();
-			Material* CreateMaterial();
-			Texture* CreateTexture( uint32_t width, uint32_t height );
-			Texture* CreateCubemap( uint32_t width, uint32_t height );
-			AudioBuffer* CreateAudioBuffer();
-			void Save( const std::string& file );
-			void Load( const std::string& file );
+			std::vector< Font* > fonts;
+			std::vector< Scene* > scenes;
+			std::vector< Shader* > shaders;
+			std::vector< Material* > materials;
+			std::vector< Mesh* > meshes;
+			std::vector< Texture* > textures;
+			std::vector< AudioBuffer* > sounds;
+			Mesh* import_model( const std::string& file, bool z_up );
+			Shader* import_shader( const std::string& file );
+			Texture* import_texture( const std::string& file );
+			Texture* import_cubemap( const std::string& front, const std::string& back, const std::string& top, const std::string& bottom, const std::string& left, const std::string& right );
+			AudioBuffer* import_audio( const std::string& file );
+			Scene* create_scene();
+			Shader* create_shader( const std::string& code );
+			Mesh* create_mesh();
+			Material* create_material();
+			Texture* create_texture( uint32_t width, uint32_t height );
+			Texture* create_cubemap( uint32_t width, uint32_t height );
+			AudioBuffer* create_audio_buffer();
+			void save_resources( const std::string& file );
+			void load_resources( const std::string& file );
 		};
 	}
 }

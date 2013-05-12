@@ -13,7 +13,7 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* @brief This header defines all math functions used in Ovgl.
+* @brief This header defines all math functions and classes used in Ovgl.
 */
 
 #ifdef _WIN32

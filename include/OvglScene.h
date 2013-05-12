@@ -192,7 +192,7 @@ namespace Ovgl
 			* @param bone Index of the first bone to update. Generally the meshes root_bone.
 			* @param matrix This matrix is the amount of offset that is to be applied to the bone.
 			*/
-			void Update( Bone* bone, Matrix44* matrix );
+			void update( Bone* bone, Matrix44* matrix );
 			/**
 			* This function creates the joints that fuse together bones within the prop. This function will recursivly joints together a parent bone to all child bones and their children until it has gone through the entire tree.
 			* @param bone Index of first bone to joint to it's children. This should generally be the meshes root_bone.

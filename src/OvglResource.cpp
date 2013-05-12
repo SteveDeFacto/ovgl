@@ -51,41 +51,41 @@ extern "C"
 
 namespace Ovgl
 {
-Resource::Resource( Context* pcontext, const std::string& file )
+ResourceManager::ResourceManager( Context* pcontext, const std::string& file )
 {
     context = pcontext;
     context->media_libraries.push_back(this);
 }
 
-Resource::~Resource()
+ResourceManager::~ResourceManager()
 {
-    for( uint32_t i = 0; i < AudioBuffers.size(); i++ )
+    for( uint32_t i = 0; i < sounds.size(); i++ )
     {
-        AudioBuffers[i]->Release();
+        sounds[i]->release();
     }
-    for( uint32_t i = 0; i < Materials.size(); i++ )
+    for( uint32_t i = 0; i < materials.size(); i++ )
     {
-        Materials[i]->Release();
+        materials[i]->Release();
     }
-    for( uint32_t i = 0; i < Meshes.size(); i++ )
+    for( uint32_t i = 0; i < meshes.size(); i++ )
     {
-        delete Meshes[i];
+        delete meshes[i];
     }
-    for( uint32_t i = 0; i < Scenes.size(); i++ )
+    for( uint32_t i = 0; i < scenes.size(); i++ )
     {
-        Scenes[i]->Release();
+        scenes[i]->Release();
     }
-    for( uint32_t i = 0; i < Shaders.size(); i++ )
+    for( uint32_t i = 0; i < shaders.size(); i++ )
     {
-        Shaders[i]->Release();
+        shaders[i]->Release();
     }
-    for( uint32_t i = 0; i < Textures.size(); i++ )
+    for( uint32_t i = 0; i < textures.size(); i++ )
     {
-        Textures[i]->Release();
+        textures[i]->Release();
     }
 }
 
-void Resource::Save( const std::string& file )
+void ResourceManager::save_resources( const std::string& file )
 {
     if(!file.empty())
     {
@@ -94,14 +94,14 @@ void Resource::Save( const std::string& file )
         output = fopen(file.c_str(),"wb");
 
         // Write the number of meshes to the file.
-        uint32_t mesh_count = Meshes.size();
+        uint32_t mesh_count = meshes.size();
         fwrite( &mesh_count, 4, 1, output );
         for( uint32_t m = 0; m < mesh_count; m++ )
         {
             // Get mesh variables.
-            uint32_t vertex_count = Meshes[m]->vertices.size();
-            uint32_t face_count = Meshes[m]->faces.size();
-            uint32_t bone_count = Meshes[m]->skeleton->bones.size();
+            uint32_t vertex_count = meshes[m]->vertices.size();
+            uint32_t face_count = meshes[m]->faces.size();
+            uint32_t bone_count = meshes[m]->skeleton->bones.size();
 
             // Write the number of vertices, faces, and bones.
             fwrite( &vertex_count, 4, 1, output );
@@ -109,87 +109,87 @@ void Resource::Save( const std::string& file )
             fwrite( &bone_count, 4, 1, output );
 
             // Write the vertices, faces, and bones.
-            fwrite( &Meshes[m]->vertices[0], sizeof(Vertex), vertex_count, output);
-            fwrite( &Meshes[m]->faces[0], sizeof(Face), face_count, output);
-            fwrite( &Meshes[m]->attributes[0], sizeof(uint32_t), face_count, output);
+            fwrite( &meshes[m]->vertices[0], sizeof(Vertex), vertex_count, output);
+            fwrite( &meshes[m]->faces[0], sizeof(Face), face_count, output);
+            fwrite( &meshes[m]->attributes[0], sizeof(uint32_t), face_count, output);
 
             // Write bones.
             for( uint32_t i = 0; i < bone_count; i++ )
             {
-                vertex_count = Meshes[m]->skeleton->bones[i]->mesh->vertices.size();
-                face_count = Meshes[m]->skeleton->bones[i]->mesh->faces.size();
+                vertex_count = meshes[m]->skeleton->bones[i]->mesh->vertices.size();
+                face_count = meshes[m]->skeleton->bones[i]->mesh->faces.size();
                 fwrite( &vertex_count, 4, 1, output );
                 fwrite( &face_count, 4, 1, output );
                 if( (vertex_count > 0) & (face_count > 0) )	// If this bone has a collision mesh then load it.
                 {
-                    fwrite( &Meshes[m]->skeleton->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, output );
-                    fwrite( &Meshes[m]->skeleton->bones[i]->mesh->faces[0], sizeof(Face), face_count, output );
+                    fwrite( &meshes[m]->skeleton->bones[i]->mesh->vertices[0], sizeof(Vertex), vertex_count, output );
+                    fwrite( &meshes[m]->skeleton->bones[i]->mesh->faces[0], sizeof(Face), face_count, output );
                 }
-                fwrite( &Meshes[m]->skeleton->bones[i]->matrix, sizeof(Matrix44), 1, output );
-                fwrite( &Meshes[m]->skeleton->bones[i]->length, sizeof(float), 1, output );
-                fwrite( &Meshes[m]->skeleton->bones[i]->min, sizeof(Vector3), 1, output );
-                fwrite( &Meshes[m]->skeleton->bones[i]->max, sizeof(Vector3), 1, output );
-                fwrite( &Meshes[m]->skeleton->bones[i]->parent, sizeof(uint32_t), 1, output );
-                uint32_t child_count = Meshes[m]->skeleton->bones[i]->children.size();
+                fwrite( &meshes[m]->skeleton->bones[i]->matrix, sizeof(Matrix44), 1, output );
+                fwrite( &meshes[m]->skeleton->bones[i]->length, sizeof(float), 1, output );
+                fwrite( &meshes[m]->skeleton->bones[i]->min, sizeof(Vector3), 1, output );
+                fwrite( &meshes[m]->skeleton->bones[i]->max, sizeof(Vector3), 1, output );
+                fwrite( &meshes[m]->skeleton->bones[i]->parent, sizeof(uint32_t), 1, output );
+                uint32_t child_count = meshes[m]->skeleton->bones[i]->children.size();
                 fwrite( &child_count, sizeof(uint32_t), 1, output );
-                if(child_count) fwrite( &Meshes[m]->skeleton->bones[i]->children[0], sizeof(uint32_t), child_count, output );
+                if(child_count) fwrite( &meshes[m]->skeleton->bones[i]->children[0], sizeof(uint32_t), child_count, output );
             }
         }
-        uint32_t scene_count = Scenes.size();
+        uint32_t scene_count = scenes.size();
         fwrite( &scene_count, 4, 1, output );
         for( uint32_t s = 0; s < scene_count; s++ )
         {
-            uint32_t prop_count = Scenes[s]->props.size();
+            uint32_t prop_count = scenes[s]->props.size();
             fwrite( &prop_count, 4, 1, output );
-            for( uint32_t p = 0; p < Scenes[s]->props.size(); p++ )
+            for( uint32_t p = 0; p < scenes[s]->props.size(); p++ )
             {
-                Matrix44 matrix = Scenes[s]->props[p]->getPose();
+                Matrix44 matrix = scenes[s]->props[p]->getPose();
                 fwrite( &matrix, sizeof(Matrix44), 1, output );
                 uint32_t mesh_index = 0;
-                for( uint32_t sm = 0; sm < Meshes.size(); sm++ )
+                for( uint32_t sm = 0; sm < meshes.size(); sm++ )
                 {
-                    if( Scenes[s]->props[p]->mesh == Meshes[sm] )
+                    if( scenes[s]->props[p]->mesh == meshes[sm] )
                     {
                         mesh_index = sm;
                     }
                 }
                 fwrite( &mesh_index, 4, 1, output );
-                for( uint32_t b = 0; b < Scenes[s]->props[p]->bones.size(); b++ )
+                for( uint32_t b = 0; b < scenes[s]->props[p]->bones.size(); b++ )
                 {
-                    uint32_t bodyflags = Scenes[s]->props[p]->bones[b]->get_flags();
+                    uint32_t bodyflags = scenes[s]->props[p]->bones[b]->get_flags();
                     fwrite( &bodyflags, 4, 1, output );
                 }
             }
-            uint32_t object_count = Scenes[s]->objects.size();
+            uint32_t object_count = scenes[s]->objects.size();
             fwrite( &object_count, 4, 1, output );
-            for( uint32_t o = 0; o < Scenes[s]->objects.size(); o++ )
+            for( uint32_t o = 0; o < scenes[s]->objects.size(); o++ )
             {
-                Matrix44 matrix = Scenes[s]->objects[o]->getPose();
+                Matrix44 matrix = scenes[s]->objects[o]->getPose();
                 fwrite( &matrix, sizeof(Matrix44), 1, output );
                 uint32_t mesh_index = 0;
-                for( uint32_t sm = 0; sm < Meshes.size(); sm++ )
+                for( uint32_t sm = 0; sm < meshes.size(); sm++ )
                 {
-                    if( Scenes[s]->objects[o]->mesh == Meshes[sm] )
+                    if( scenes[s]->objects[o]->mesh == meshes[sm] )
                     {
                         mesh_index = sm;
                     }
                 }
                 fwrite( &mesh_index, 4, 1, output );
-                uint32_t bodyflags = Scenes[s]->objects[o]->cmesh->get_flags();
+                uint32_t bodyflags = scenes[s]->objects[o]->cmesh->get_flags();
                 fwrite( &bodyflags, 4, 1, output );
             }
-            uint32_t light_count = Scenes[s]->lights.size();
+            uint32_t light_count = scenes[s]->lights.size();
             fwrite( &light_count, 4, 1, output );
             for( uint32_t l = 0; l < light_count; l++ )
             {
-                Matrix44 matrix = Scenes[s]->lights[l]->getPose();
+                Matrix44 matrix = scenes[s]->lights[l]->getPose();
                 fwrite( &matrix, sizeof(Matrix44), 1, output );
             }
-            uint32_t camera_count = Scenes[s]->cameras.size();
+            uint32_t camera_count = scenes[s]->cameras.size();
             fwrite( &camera_count, 4, 1, output );
             for( uint32_t c = 0; c < camera_count; c++ )
             {
-                Matrix44 matrix = Scenes[s]->cameras[c]->getPose();
+                Matrix44 matrix = scenes[s]->cameras[c]->getPose();
                 fwrite( &matrix, sizeof(Matrix44), 1, output );
             }
             //uint32_t joint_count = Scenes[s]->joints.size();
@@ -204,7 +204,7 @@ void Resource::Save( const std::string& file )
             //	fwrite( &anchor, sizeof(Vector3), 1, output );
             //}
         }
-        uint32_t texture_count = Textures.size();
+        uint32_t texture_count = textures.size();
         fwrite( &texture_count, 4, 1, output );
 
 
@@ -213,12 +213,12 @@ void Resource::Save( const std::string& file )
     }
 }
 
-void Resource::Load( const std::string& file )
+void ResourceManager::load_resources( const std::string& file )
 {
     if(!file.empty())
     {
         // Get the number of meshes currently in memory so we can offset the indices into the array.
-        uint32_t mesh_offset = Meshes.size();
+        uint32_t mesh_offset = meshes.size();
 
         // Open file.
         FILE *input = NULL;
@@ -287,7 +287,7 @@ void Resource::Load( const std::string& file )
             // Update buffers.
             mesh->update();
 
-            Meshes.push_back(mesh);
+            meshes.push_back(mesh);
         }
 
         //Get number of scenes.
@@ -295,7 +295,7 @@ void Resource::Load( const std::string& file )
         fread( &scene_count, 4, 1, input );
         for( uint32_t s = 0; s < scene_count; s++ )
         {
-            Scene* scene = CreateScene();
+            Scene* scene = create_scene();
 
             uint32_t prop_count;
             fread( &prop_count, 4, 1, input );
@@ -306,8 +306,8 @@ void Resource::Load( const std::string& file )
                 fread( &matrix, sizeof(Matrix44), 1, input );
                 uint32_t mesh_index;
                 fread( &mesh_index, 4, 1, input );
-                Prop* prop = scene->CreateProp( Meshes[mesh_index + mesh_offset], matrix );
-                for( uint32_t b = 0; b < Meshes[mesh_index + mesh_offset]->skeleton->bones.size(); b++ )
+                Prop* prop = scene->CreateProp( meshes[mesh_index + mesh_offset], matrix );
+                for( uint32_t b = 0; b < meshes[mesh_index + mesh_offset]->skeleton->bones.size(); b++ )
                 {
                     uint32_t bone_flags;
                     fread( &bone_flags, 4, 1, input );
@@ -324,7 +324,7 @@ void Resource::Load( const std::string& file )
                 fread( &matrix, sizeof(Matrix44), 1, input );
                 uint32_t mesh_index;
                 fread( &mesh_index, 4, 1, input );
-                Object* object = scene->CreateObject( Meshes[mesh_index + mesh_offset], matrix );
+                Object* object = scene->CreateObject( meshes[mesh_index + mesh_offset], matrix );
                 uint32_t bone_flags;
                 fread( &bone_flags, 4, 1, input );
                 object->cmesh->set_flags(bone_flags);
@@ -355,7 +355,7 @@ void Resource::Load( const std::string& file )
     }
 }
 
-Mesh* Resource::ImportModel( const std::string& file, bool z_up )
+Mesh* ResourceManager::import_model( const std::string& file, bool z_up )
 {
     if(!file.empty())
     {
@@ -664,7 +664,7 @@ Mesh* Resource::ImportModel( const std::string& file, bool z_up )
         // Update video memory copies of index and vertex buffers.
         mesh->update();
 
-        Meshes.push_back( mesh );
+        meshes.push_back( mesh );
         return mesh;
     }
 
@@ -672,7 +672,7 @@ Mesh* Resource::ImportModel( const std::string& file, bool z_up )
     return NULL;
 }
 
-Texture* Resource::ImportCubeMap( const std::string& front, const std::string& back, const std::string& top, const std::string& bottom, const std::string& left, const std::string& right )
+Texture* ResourceManager::import_cubemap( const std::string& front, const std::string& back, const std::string& top, const std::string& bottom, const std::string& left, const std::string& right )
 {
     // Create new texture
     Texture* texture = new Texture;
@@ -683,7 +683,7 @@ Texture* Resource::ImportCubeMap( const std::string& front, const std::string& b
     // Create array of cube faces.
     std::string CubeFaces[6] = {front, back, top, bottom, left, right};
 
-    SDL_GL_MakeCurrent(NULL, context->hWnd);
+    SDL_GL_MakeCurrent(NULL, context->gl_context);
 
     glGenTextures(1, &texture->Image);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture->Image);
@@ -746,13 +746,13 @@ Texture* Resource::ImportCubeMap( const std::string& front, const std::string& b
     SDL_GL_MakeCurrent(NULL, NULL);
 
     // Add texture to media library
-    Textures.push_back( texture );
+    textures.push_back( texture );
 
     // Return texture pointer
     return texture;
 }
 
-Texture* Resource::ImportTexture( const std::string& file )
+Texture* ResourceManager::import_texture( const std::string& file )
 {
     struct stat stFileInfo;
     int intStat = stat(file.c_str(), &stFileInfo);
@@ -820,7 +820,7 @@ Texture* Resource::ImportTexture( const std::string& file )
             textura[j*4+3] = pixeles[j*4+3];
         }
 
-        SDL_GL_MakeCurrent(NULL, context->hWnd);
+        SDL_GL_MakeCurrent(NULL, context->gl_context);
 
         // Create OpenGL texture
         glGenTextures( 1, &texture->Image );
@@ -840,7 +840,7 @@ Texture* Resource::ImportTexture( const std::string& file )
         delete [] textura;
 
         // Add texture to media library
-        Textures.push_back( texture );
+        textures.push_back( texture );
 
         // Return texture pointer
         return texture;
@@ -852,7 +852,7 @@ Texture* Resource::ImportTexture( const std::string& file )
     }
 }
 
-Shader* Resource::ImportShader( const std::string& file )
+Shader* ResourceManager::import_shader( const std::string& file )
 {
     Ovgl::Shader* shader = new Ovgl::Shader;
     shader->MLibrary = this;
@@ -862,53 +862,53 @@ Shader* Resource::ImportShader( const std::string& file )
     const char* string;
 
     // Create effect
-    shader->effect = cgCreateEffectFromFile( context->CgContext, file.c_str(), NULL );
+    shader->effect = cgCreateEffectFromFile( context->cg_context, file.c_str(), NULL );
 
     // Check for errors
     string = cgGetLastErrorString(&error);
     if(error)
     {
         fprintf(stderr, "Error: %s\n", string);
-        string = cgGetLastListing(context->CgContext);
+        string = cgGetLastListing(context->cg_context);
         fprintf(stderr, "Compiler: %s\n", string);
     }
 
     //Add Effect to array
-    Shaders.push_back( shader );
+    shaders.push_back( shader );
 
     //Return effect.
     return shader;
 }
 
-Scene* Resource::CreateScene()
+Scene* ResourceManager::create_scene()
 {
     Ovgl::Scene* scene = new Ovgl::Scene;
     scene->context = context;
     scene->sky_box = NULL;
-    scene->DynamicsWorld = new btDiscreteDynamicsWorld( context->PhysicsDispatcher, context->PhysicsBroadphase, context->PhysicsSolver, context->PhysicsConfiguration );
+    scene->DynamicsWorld = new btDiscreteDynamicsWorld( context->physics_dispatcher, context->physics_broadphase, context->physics_solver, context->physics_configuration );
     scene->DynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = 0.00001f;
     scene->DynamicsWorld->setGravity(btVector3( 0.0f, -9.8f, 0.0f ));
     btContactSolverInfo& info = scene->DynamicsWorld->getSolverInfo();
     info.m_numIterations = 20;
-    Scenes.push_back(scene);
+    scenes.push_back(scene);
     return scene;
 }
 
-Material* Resource::CreateMaterial( )
+Material* ResourceManager::create_material( )
 {
     Material* material = new Material;
     material->MLibrary = this;
-    material->ShaderProgram = context->default_media->Shaders[0];
+    material->ShaderProgram = context->default_media->shaders[0];
     material->NoZBuffer = false;
     material->NoZWrite = false;
     material->PostRender = false;
-    material->setEffectTexture("txDiffuse", context->default_media->Textures[0] );
-    material->setEffectTexture("txEnvironment", context->default_media->Textures[1] );
-    Materials.push_back(material);
+    material->setEffectTexture("txDiffuse", context->default_media->textures[0] );
+    material->setEffectTexture("txEnvironment", context->default_media->textures[1] );
+    materials.push_back(material);
     return material;
 }
 
-Texture* Resource::CreateTexture( uint32_t width, uint32_t height )
+Texture* ResourceManager::create_texture( uint32_t width, uint32_t height )
 {
     // Create new texture
     Ovgl::Texture* texture = new Ovgl::Texture;
@@ -936,12 +936,12 @@ Texture* Resource::CreateTexture( uint32_t width, uint32_t height )
     glBindTexture( GL_TEXTURE_2D, 0 );
 
     // Add texture to media library
-    Textures.push_back( texture );
+    textures.push_back( texture );
 
     return texture;
 }
 
-Texture* Resource::CreateCubemap( uint32_t width, uint32_t height )
+Texture* ResourceManager::create_cubemap( uint32_t width, uint32_t height )
 {
     // Create new texture
     Ovgl::Texture* texture = new Ovgl::Texture;
@@ -975,12 +975,12 @@ Texture* Resource::CreateCubemap( uint32_t width, uint32_t height )
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     // Add texture to media library
-    Textures.push_back( texture );
+    textures.push_back( texture );
 
     return texture;
 }
 
-AudioBuffer* Resource::ImportAudio( const std::string& file )
+AudioBuffer* ResourceManager::import_audio( const std::string& file )
 {
     Ovgl::AudioBuffer* buffer = new Ovgl::AudioBuffer;
     buffer->context = context;
@@ -1052,15 +1052,15 @@ AudioBuffer* Resource::ImportAudio( const std::string& file )
         alBufferData( buffer->mono, AL_FORMAT_MONO16, (ALvoid*)&mono[0], mono.size(), buffer->frequency );
     }
 
-    AudioBuffers.push_back(buffer);
+    sounds.push_back(buffer);
     return buffer;
 }
 
-Font::Font( Resource* resource, const std::string& file, uint32_t size )
+Font::Font( ResourceManager* resource_manager, const std::string& file, uint32_t size )
 {
     this->size = size;
     FT_Face ftface;
-    FT_New_Face( resource->context->ftlibrary, file.c_str(), 0, &ftface );
+    FT_New_Face( resource_manager->context->ftlibrary, file.c_str(), 0, &ftface );
 
     for(int i = 0; i < 256; i++)
     {
@@ -1082,6 +1082,6 @@ Font::Font( Resource* resource, const std::string& file, uint32_t size )
         glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, ftface->glyph->bitmap.width, ftface->glyph->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE, ftface->glyph->bitmap.buffer );
         glBindTexture( GL_TEXTURE_2D, 0 );
     }
-	resource->Fonts.push_back(this);
+	resource_manager->fonts.push_back(this);
 }
 }

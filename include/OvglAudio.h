@@ -22,8 +22,6 @@
 #  define DLLEXPORT
 #endif
 
-// Forward declare external classes
-
 namespace Ovgl
 {
 	extern "C"
@@ -44,8 +42,8 @@ namespace Ovgl
 			uint32_t							mono;
             std::vector< int8_t >				data;
             std::vector< AudioInstance* >		audio_instances;
-			AudioInstance* CreateAudioInstance( Emitter* emitter, bool loop );
-			void Release();
+			AudioInstance* create_audio_instance( Emitter* emitter, bool loop );
+			void release();
 		};
 
         class DLLEXPORT AudioInstance
@@ -54,11 +52,11 @@ namespace Ovgl
 			Emitter*							emitter;
 			std::vector< AudioVoice* >			voices;
 			bool								paused;
-			void Play( bool loop );
-			void Stop();
-			void Pause();
-			void Set();
-			void Release();
+			void play( bool loop );
+			void stop();
+			void pause();
+			void set();
+			void release();
 		};
 
         class DLLEXPORT AudioVoice
@@ -66,7 +64,7 @@ namespace Ovgl
 		public:
 			AudioInstance*						instance;
             uint32_t                            source;
-			void Release();
+			void release();
 		};
 	}
 }

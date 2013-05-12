@@ -29,16 +29,15 @@
 #include <Cg/cg.h>
 #include <Cg/cgGL.h>
 
-
 namespace Ovgl
 {
 
 // This function is used to find the maximum number of mipmaps that can be produced from the given resolution.
-uint32_t MaxLevel( uint32_t width, uint32_t height)
+uint32_t max_level( uint32_t width, uint32_t height )
 {
     uint32_t max = 0;
     uint32_t highest = 0;
-    if( width > height)
+    if( width > height )
     {
         highest = width;
     }
@@ -54,12 +53,12 @@ uint32_t MaxLevel( uint32_t width, uint32_t height)
     return max;
 }
 
-Ovgl::Rect WindowAdjustedRect( Window* window, URect* rect)
+Ovgl::Rect WindowAdjustedRect( Window* window, URect* rect )
 {
     // Get the window's rect
     Ovgl::Rect WindowRect;
-    SDL_GetWindowPosition( window->hWnd, &WindowRect.left, &WindowRect.top );
-    SDL_GetWindowSize( window->hWnd, &WindowRect.right, &WindowRect.bottom);
+    SDL_GetWindowPosition( window->sdl_window, &WindowRect.left, &WindowRect.top );
+    SDL_GetWindowSize( window->sdl_window, &WindowRect.right, &WindowRect.bottom );
     WindowRect.right += WindowRect.left;
     WindowRect.bottom += WindowRect.top;
 
@@ -72,12 +71,12 @@ Ovgl::Rect WindowAdjustedRect( Window* window, URect* rect)
     return adjustedrect;
 }
 
-Ovgl::Rect RenderTargetAdjustedRect( RenderTarget* rendertarget, URect* rect)
+Ovgl::Rect RenderTargetAdjustedRect( RenderTarget* rendertarget, URect* rect )
 {
     // Get the rendertarget's rect
     Ovgl::Rect RenderTargetRect;
 
-    RenderTargetRect = WindowAdjustedRect(rendertarget->hWin, &rendertarget->rect);
+    RenderTargetRect = WindowAdjustedRect( rendertarget->window, &rendertarget->rect );
 
     Ovgl::Rect adjustedrect;
     adjustedrect.left = ((RenderTargetRect.right - RenderTargetRect.left) * rect->left.scale) + rect->left.offset;
@@ -88,18 +87,18 @@ Ovgl::Rect RenderTargetAdjustedRect( RenderTarget* rendertarget, URect* rect)
     return adjustedrect;
 }
 
-Ovgl::Rect TextureAdjustedRect( Texture* texture, URect* rect)
+Ovgl::Rect TextureAdjustedRect( Texture* texture, URect* rect )
 {
     // Get the window's rect
     Ovgl::Rect WindowRect;
 
-    glBindTexture(GL_TEXTURE_2D, texture->Image);
+    glBindTexture( GL_TEXTURE_2D, texture->Image );
     GLint width, height;
-    glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-    glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+    glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width );
+    glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height );
 
-    WindowRect.left =0;
-    WindowRect.top =0;
+    WindowRect.left = 0;
+    WindowRect.top = 0;
     WindowRect.right = width;
     WindowRect.bottom = height;
 
@@ -114,16 +113,16 @@ Ovgl::Rect TextureAdjustedRect( Texture* texture, URect* rect)
 RenderTarget::RenderTarget( Context* pcontext, Window* hWindow, const URect& viewport, uint32_t flags )
 {
     context = pcontext;
-    On_KeyDown = NULL;
-    On_KeyUp = NULL;
-    On_MouseMove = NULL;
-    On_MouseDown = NULL;
-    On_MouseUp = NULL;
-    On_MouseOver = NULL;
-    On_MouseOut = NULL;
-    hWin = hWindow;
+    on_key_down = NULL;
+    on_key_up = NULL;
+    on_mouse_move = NULL;
+    on_mouse_down = NULL;
+    on_mouse_up = NULL;
+    on_mouse_over = NULL;
+    on_mouse_out = NULL;
+    window = hWindow;
     hTex = NULL;
-    View = NULL;
+    view = NULL;
     debugMode = false;
     autoLuminance = false;
     bloom = 0;
@@ -140,22 +139,22 @@ RenderTarget::RenderTarget( Context* pcontext, Window* hWindow, const URect& vie
     PrimaryBloomTex = 0;
     SecondaryBloomTex = 0;
     Update();
-    hWin->RenderTargets.push_back(this);
+    window->render_targets.push_back(this);
 };
 
 RenderTarget::RenderTarget( Context* pcontext, Texture* hTexture, const URect& viewport, uint32_t flags )
 {
     context = pcontext;
-    On_KeyDown = NULL;
-    On_KeyUp = NULL;
-    On_MouseMove = NULL;
-    On_MouseDown = NULL;
-    On_MouseUp = NULL;
-    On_MouseOver = NULL;
-    On_MouseOut = NULL;
-    hWin = NULL;
+    on_key_down = NULL;
+    on_key_up = NULL;
+    on_mouse_move = NULL;
+    on_mouse_down = NULL;
+    on_mouse_up = NULL;
+    on_mouse_over = NULL;
+    on_mouse_out = NULL;
+    window = NULL;
     hTex = hTexture;
-    View = NULL;
+    view = NULL;
     debugMode = false;
     autoLuminance = true;
     bloom = 4;
@@ -174,41 +173,40 @@ RenderTarget::RenderTarget( Context* pcontext, Texture* hTexture, const URect& v
     Update();
 };
 
-void RenderTarget::Release()
+RenderTarget::~RenderTarget()
 {
-    for( uint32_t r = 0; r < hWin->RenderTargets.size(); r++)
+    for( uint32_t r = 0; r < window->render_targets.size(); r++)
     {
-        if(hWin->RenderTargets[r] == this)
+        if(window->render_targets[r] == this)
         {
-            hWin->RenderTargets.erase( hWin->RenderTargets.begin() + r );
+            window->render_targets.erase( window->render_targets.begin() + r );
         }
     }
-    delete this;
 }
 
-void RenderTarget::RenderMesh( const Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool PostRender )
+void RenderTarget::RenderMesh( const Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, std::vector< Material* >& materials, bool post_render )
 {
-    Matrix44 viewProj = (MatrixInverse( Vector4(0,0,0,0), View->getPose() ) * View->projMat);
+    Matrix44 viewProj = (MatrixInverse( Vector4(0,0,0,0), view->getPose() ) * view->projMat);
     Matrix44 worldMat = (matrix * viewProj );
     glLoadMatrixf((float*)&worldMat);
 
-    float LightCount = (float)View->scene->lights.size();
+    float LightCount = (float)view->scene->lights.size();
     std::vector< float > mLights;
     std::vector< float > LightColors;
-    for( uint32_t l = 0; l < View->scene->lights.size(); l++)
+    for( uint32_t l = 0; l < view->scene->lights.size(); l++)
     {
-        mLights.push_back( View->scene->lights[l]->getPose()._41 );
-        mLights.push_back( View->scene->lights[l]->getPose()._42 );
-        mLights.push_back( View->scene->lights[l]->getPose()._43 );
+        mLights.push_back( view->scene->lights[l]->getPose()._41 );
+        mLights.push_back( view->scene->lights[l]->getPose()._42 );
+        mLights.push_back( view->scene->lights[l]->getPose()._43 );
         mLights.push_back( 1.0f );
-        LightColors.push_back( View->scene->lights[l]->color.x );
-        LightColors.push_back( View->scene->lights[l]->color.y );
-        LightColors.push_back( View->scene->lights[l]->color.z );
+        LightColors.push_back( view->scene->lights[l]->color.x );
+        LightColors.push_back( view->scene->lights[l]->color.y );
+        LightColors.push_back( view->scene->lights[l]->color.z );
         LightColors.push_back( 1.0f );
     }
 
     for( uint32_t s = 0; s < mesh.subset_count; s++)
-        if( PostRender == materials[s]->PostRender )
+        if( post_render == materials[s]->PostRender )
         {
             if(materials[s]->NoZBuffer)
             {
@@ -235,7 +233,7 @@ void RenderTarget::RenderMesh( const Mesh& mesh, const Matrix44& matrix, std::ve
             Matrix44 tViewProj = MatrixTranspose(viewProj);
             cgGLSetMatrixParameterfc( CgViewProjMatrix, (float*)&tViewProj );
             CGparameter CgViewPos= cgGetNamedEffectParameter( materials[s]->ShaderProgram->effect, "ViewPos" );
-            cgGLSetParameter4f( CgViewPos, View->getPose()._41, View->getPose()._42, View->getPose()._43, View->getPose()._44 );
+            cgGLSetParameter4f( CgViewPos, view->getPose()._41, view->getPose()._42, view->getPose()._43, view->getPose()._44 );
 
             CGparameter CgBoneMatrices = cgGetNamedEffectParameter( materials[s]->ShaderProgram->effect, "Bones" );
             for( uint32_t v = 0; v < pose.size(); v++)
@@ -335,7 +333,7 @@ void RenderTarget::AutoLuminance()
     glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
     glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
 
-    glGetTexImage(GL_TEXTURE_2D, MaxLevel( width, height), GL_LUMINANCE, GL_FLOAT, &luminance);
+    glGetTexImage(GL_TEXTURE_2D, max_level( width, height), GL_LUMINANCE, GL_FLOAT, &luminance);
     eye_luminance = eye_luminance + ((( luminance + 0.5f ) - eye_luminance ) * 0.01f);
     eye_luminance = std::max( 0.5f, std::min( 1.0f, eye_luminance) );
 
@@ -344,15 +342,15 @@ void RenderTarget::AutoLuminance()
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
 
     // Set texture
-    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->Shaders[5]->effect, "txDiffuse" );
+    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->shaders[5]->effect, "txDiffuse" );
     cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
     cgGLEnableTextureParameter( CgFSTexture );
 
     // Set brightness
-    CGparameter CgBrightness = cgGetNamedEffectParameter( context->default_media->Shaders[5]->effect, "Brightness" );
+    CGparameter CgBrightness = cgGetNamedEffectParameter( context->default_media->shaders[5]->effect, "Brightness" );
     cgGLSetParameter1f( CgBrightness, 1.0f / eye_luminance );
 
-    CGtechnique tech = cgGetFirstTechnique( context->default_media->Shaders[5]->effect );
+    CGtechnique tech = cgGetFirstTechnique( context->default_media->shaders[5]->effect );
     CGpass pass;
     pass = cgGetFirstPass(tech);
     while (pass)
@@ -393,7 +391,7 @@ void RenderTarget::Bloom()
 
     glViewport( 0, 0, width, height );
 
-    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->Shaders[3]->effect, "txDiffuse" );
+    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->shaders[3]->effect, "txDiffuse" );
     cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
     cgGLEnableTextureParameter( CgFSTexture );
 
@@ -405,7 +403,7 @@ void RenderTarget::Bloom()
     glEnableVertexAttribArray( 0 );
     glEnableVertexAttribArray( 1 );
 
-    tech = cgGetFirstTechnique( context->default_media->Shaders[3]->effect );
+    tech = cgGetFirstTechnique( context->default_media->shaders[3]->effect );
     pass = cgGetFirstPass(tech);
     while (pass)
     {
@@ -424,7 +422,7 @@ void RenderTarget::Bloom()
         pass = cgGetNextPass(pass);
     }
 
-    tech = cgGetFirstTechnique( context->default_media->Shaders[3]->effect );
+    tech = cgGetFirstTechnique( context->default_media->shaders[3]->effect );
     pass = cgGetFirstPass(tech);
     while (pass)
     {
@@ -456,18 +454,18 @@ void RenderTarget::Bloom()
         if( flipflop )
         {
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, SecondaryBloomTex, 0);
-            CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->default_media->Shaders[2]->effect, "txDiffuse" );
+            CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->default_media->shaders[2]->effect, "txDiffuse" );
             cgGLSetTextureParameter( CgFSTexture2, PrimaryBloomTex );
             cgGLEnableTextureParameter( CgFSTexture2 );
         }
         else
         {
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryBloomTex, 0);
-            CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->default_media->Shaders[2]->effect, "txDiffuse" );
+            CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->default_media->shaders[2]->effect, "txDiffuse" );
             cgGLSetTextureParameter( CgFSTexture2, SecondaryBloomTex );
             cgGLEnableTextureParameter( CgFSTexture2 );
         }
-        CGparameter CgDirection2 = cgGetNamedEffectParameter( context->default_media->Shaders[2]->effect, "direction" );
+        CGparameter CgDirection2 = cgGetNamedEffectParameter( context->default_media->shaders[2]->effect, "direction" );
         cgGLSetParameter2f( CgDirection2, x, y );
 
         // Set vertex attributes
@@ -478,7 +476,7 @@ void RenderTarget::Bloom()
         glEnableVertexAttribArray( 0 );
         glEnableVertexAttribArray( 1 );
 
-        tech = cgGetFirstTechnique( context->default_media->Shaders[2]->effect );
+        tech = cgGetFirstTechnique( context->default_media->shaders[2]->effect );
         pass = cgGetFirstPass(tech);
         while (pass)
         {
@@ -511,11 +509,11 @@ void RenderTarget::Bloom()
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
     glViewport( 0, 0, width, height );
-    CGparameter CgFSTextureA = cgGetNamedEffectParameter( context->default_media->Shaders[4]->effect, "txDiffuse1" );
+    CGparameter CgFSTextureA = cgGetNamedEffectParameter( context->default_media->shaders[4]->effect, "txDiffuse1" );
     cgGLSetTextureParameter( CgFSTextureA, PrimaryTex);
     cgGLEnableTextureParameter( CgFSTextureA );
 
-    CGparameter CgFSTextureB = cgGetNamedEffectParameter( context->default_media->Shaders[4]->effect, "txDiffuse2" );
+    CGparameter CgFSTextureB = cgGetNamedEffectParameter( context->default_media->shaders[4]->effect, "txDiffuse2" );
     cgGLSetTextureParameter( CgFSTextureB, PrimaryBloomTex );
     cgGLEnableTextureParameter( CgFSTextureB );
 
@@ -527,7 +525,7 @@ void RenderTarget::Bloom()
     glEnableVertexAttribArray( 0 );
     glEnableVertexAttribArray( 1 );
 
-    tech = cgGetFirstTechnique( context->default_media->Shaders[4]->effect );
+    tech = cgGetFirstTechnique( context->default_media->shaders[4]->effect );
     pass = cgGetFirstPass(tech);
     while (pass)
     {
@@ -558,25 +556,25 @@ void RenderTarget::MotionBlur( )
     glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, SecondaryTex, 0);
 
-    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->Shaders[6]->effect, "sceneSampler" );
+    CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->shaders[6]->effect, "sceneSampler" );
     cgGLSetTextureParameter( CgFSTexture, PrimaryTex );
     cgGLEnableTextureParameter( CgFSTexture );
 
-    CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->default_media->Shaders[6]->effect, "depthTexture" );
+    CGparameter CgFSTexture2 = cgGetNamedEffectParameter( context->default_media->shaders[6]->effect, "depthTexture" );
     cgGLSetTextureParameter( CgFSTexture2, depth_texture );
     cgGLEnableTextureParameter( CgFSTexture2 );
 
-    Matrix44 viewProj = MatrixInverse( Vector4(0,0,0,0),(View->projMat * MatrixInverse( Vector4(0,0,0,0),View->getPose()) ));
+    Matrix44 viewProj = MatrixInverse( Vector4(0,0,0,0), (view->projMat * MatrixInverse( Vector4(0,0,0,0), view->getPose()) ));
     static Matrix44 previous_viewProj;
-    CGparameter CgViewProjMatrix = cgGetNamedEffectParameter( context->default_media->Shaders[6]->effect, "g_ViewProjectionInverseMatrix" );
+    CGparameter CgViewProjMatrix = cgGetNamedEffectParameter( context->default_media->shaders[6]->effect, "g_ViewProjectionInverseMatrix" );
     Matrix44 tViewProj = MatrixTranspose(viewProj);
     cgGLSetMatrixParameterfc( CgViewProjMatrix, (float*)&tViewProj );
 
-    CGparameter CgPreviousViewProjMatrix = cgGetNamedEffectParameter( context->default_media->Shaders[6]->effect, "g_previousViewProjectionMatrix" );
+    CGparameter CgPreviousViewProjMatrix = cgGetNamedEffectParameter( context->default_media->shaders[6]->effect, "g_previousViewProjectionMatrix" );
     Matrix44 tPreviousViewProj = MatrixTranspose(previous_viewProj);
     cgGLSetMatrixParameterfc( CgPreviousViewProjMatrix, (float*)&tPreviousViewProj );
 
-    CGtechnique tech = cgGetFirstTechnique( context->default_media->Shaders[6]->effect );
+    CGtechnique tech = cgGetFirstTechnique( context->default_media->shaders[6]->effect );
     CGpass pass;
     pass = cgGetFirstPass(tech);
     while (pass)
@@ -614,18 +612,18 @@ void RenderTarget::MotionBlur( )
     glEnd();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    previous_viewProj = View->projMat * MatrixInverse( Vector4(0,0,0,0),View->getPose());
+    previous_viewProj = view->projMat * MatrixInverse( Vector4(0,0,0,0), view->getPose());
 }
 
 void RenderTarget::DrawMarker( const Matrix44& matrix )
 {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    Matrix44 mat = (matrix * MatrixInverse( Vector4(0.0f, 0.0f, 0.0f, 0.0f), View->getPose()));
+    Matrix44 mat = (matrix * MatrixInverse( Vector4(0.0f, 0.0f, 0.0f, 0.0f), view->getPose()));
     glLoadMatrixf((float*)&mat);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glLoadMatrixf((float*)&View->projMat);
+    glLoadMatrixf((float*)&view->projMat);
     glDisable( GL_LIGHTING );
     glDisable( GL_TEXTURE_2D );
     glLineWidth( 1.0f );
@@ -652,14 +650,14 @@ void RenderTarget::Render()
     Ovgl::Rect WindowRect;
     Ovgl::Rect adjustedrect;
 	
-    if(hWin)
+    if(window)
     {
-        SDL_GetWindowPosition( hWin->hWnd, &WindowRect.left, &WindowRect.top );
-        SDL_GetWindowSize( hWin->hWnd, &WindowRect.right, &WindowRect.bottom );
+        SDL_GetWindowPosition( window->sdl_window, &WindowRect.left, &WindowRect.top );
+        SDL_GetWindowSize( window->sdl_window, &WindowRect.right, &WindowRect.bottom );
         WindowRect.right += WindowRect.left;
         WindowRect.bottom += WindowRect.top;
-        adjustedrect = WindowAdjustedRect( hWin, &rect);
-        SDL_GL_MakeCurrent( hWin->hWnd, context->hWnd);
+        adjustedrect = WindowAdjustedRect( window, &rect);
+        SDL_GL_MakeCurrent( window->sdl_window, context->gl_context);
     }
     else
     {
@@ -677,15 +675,15 @@ void RenderTarget::Render()
     int width = (int)(adjustedrect.right - adjustedrect.left);
     int height = (int)(adjustedrect.bottom - adjustedrect.top);
 
-    if( View != NULL )
+    if( view != NULL )
     {
         glBindFramebuffer(GL_FRAMEBUFFER, MultiSampleFrameBuffer);
 
         // Set the viewport to fit the window
         glViewport( 0, 0, width, height );
 
-        Scene* scene = View->scene;
-        Matrix44 viewProj = (MatrixInverse( Vector4(0,0,0,0), View->getPose() ) * View->projMat);
+        Scene* scene = view->scene;
+        Matrix44 viewProj = (MatrixInverse( Vector4(0, 0, 0, 0), view->getPose() ) * view->projMat);
 
         // Create light arrays
         float LightCount = (float)scene->lights.size();
@@ -716,23 +714,23 @@ void RenderTarget::Render()
             glDisable(GL_MULTISAMPLE);
 
             // Set skybox shader View variable
-            CGparameter CgView = cgGetNamedEffectParameter( context->default_media->Shaders[1]->effect, "View" );
-            Matrix44 tinvView = MatrixTranspose( MatrixInverse( Vector4(0,0,0,0), View->getPose()) );
+            CGparameter CgView = cgGetNamedEffectParameter( context->default_media->shaders[1]->effect, "View" );
+            Matrix44 tinvView = MatrixTranspose( MatrixInverse( Vector4(0,0,0,0), view->getPose()) );
             cgGLSetMatrixParameterfc( CgView, (float*)&tinvView );
 
             // Set skybox shader Projection variable
-            CGparameter CgProjection = cgGetNamedEffectParameter( context->default_media->Shaders[1]->effect, "Projection" );
-            Matrix44 tView = MatrixTranspose( View->projMat);
+            CGparameter CgProjection = cgGetNamedEffectParameter( context->default_media->shaders[1]->effect, "Projection" );
+            Matrix44 tView = MatrixTranspose( view->projMat);
             cgGLSetMatrixParameterfc( CgProjection, (float*)&tView );
 
             // Set skybox texture
-            CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->Shaders[1]->effect, "txSkybox" );
+            CGparameter CgFSTexture = cgGetNamedEffectParameter( context->default_media->shaders[1]->effect, "txSkybox" );
             cgGLSetTextureParameter( CgFSTexture, scene->sky_box->Image );
             cgGLEnableTextureParameter( CgFSTexture );
 
             // Bind vertex and index buffers
-            glBindBuffer( GL_ARRAY_BUFFER, context->default_media->Meshes[0]->vertex_buffer );
-            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, context->default_media->Meshes[0]->index_buffers[0] );
+            glBindBuffer( GL_ARRAY_BUFFER, context->default_media->meshes[0]->vertex_buffer );
+            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, context->default_media->meshes[0]->index_buffers[0] );
 
             // Set vertex attributes
             glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ((char *)NULL + (0)) );
@@ -749,7 +747,7 @@ void RenderTarget::Render()
             glEnableVertexAttribArray( 4 );
 
             // Draw skybox
-            CGtechnique tech = cgGetFirstTechnique( context->default_media->Shaders[1]->effect );
+            CGtechnique tech = cgGetFirstTechnique( context->default_media->shaders[1]->effect );
             CGpass pass = cgGetFirstPass(tech);
             while (pass)
             {
@@ -825,7 +823,6 @@ void RenderTarget::Render()
         glLoadIdentity();
 
         // Blit MultiSampleTexture to BaseTexture to apply effects.
-
         glBindFramebuffer(GL_READ_FRAMEBUFFER, MultiSampleFrameBuffer);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, EffectFrameBuffer);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
@@ -833,23 +830,6 @@ void RenderTarget::Render()
         glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-//        glBindTexture(GL_TEXTURE_2D, depth_texture);
-//        glBindFramebuffer(GL_FRAMEBUFFER, EffectFrameBuffer);
-//        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PrimaryTex, 0);
-
-//        glBegin(GL_QUADS);
-//        glTexCoord2f( 0.0f, 0.0f );
-//        glVertex3f(-1.0f,-1.0f, -1.0f);
-//        glTexCoord2f( 1.0f, 0.0f );
-//        glVertex3f(1.0f,-1.0f, -1.0f);
-//        glTexCoord2f( 1.0f, 1.0f );
-//        glVertex3f(1.0f, 1.0f, -1.0f);
-//        glTexCoord2f( 0.0f, 1.0f );
-//        glVertex3f(-1.0f, 1.0f, -1.0f);
-//        glEnd();
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         if( autoLuminance )
         {
@@ -949,7 +929,7 @@ void RenderTarget::Render()
 void RenderTarget::Update()
 {
     SDL_GL_MakeCurrent( NULL, context );
-    Ovgl::Rect adjustedrect = WindowAdjustedRect( hWin, &rect);
+    Ovgl::Rect adjustedrect = WindowAdjustedRect( window, &rect );
 
     int width = (int)(adjustedrect.right - adjustedrect.left);
     int height = (int)(adjustedrect.bottom - adjustedrect.top);
@@ -982,34 +962,6 @@ void RenderTarget::Update()
     glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT32, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, DepthBuffer);
 
-//    glGenTextures(1, &color_texture);
-//    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, color_texture);
-//    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA16F, width, height, GL_FALSE);
-//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-//    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, color_texture, 0);
-
-//    glGenTextures(1, &depth_texture);
-//    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depth_texture);
-//    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_DEPTH_COMPONENT32, width, height, GL_FALSE);
-//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-//    glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-//    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, depth_texture, 0);
-
-//    glGenTextures(1, &color_texture);
-//    glBindTexture(GL_TEXTURE_2D, color_texture);
-//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-//    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0);
-
-
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     // Effect framebuffer
@@ -1029,7 +981,7 @@ void RenderTarget::Update()
 
     glGenTextures(1, &PrimaryTex);
     glBindTexture(GL_TEXTURE_2D, PrimaryTex);
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, MaxLevel( width, height));
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_level( width, height));
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1065,117 +1017,105 @@ void RenderTarget::Update()
     SDL_GL_MakeCurrent( NULL, NULL );
 }
 
-void RenderTarget::DoEvent(Event event)
+void RenderTarget::do_event( Event event )
 {
-    Ovgl::Rect adjustedrect;
-    adjustedrect = WindowAdjustedRect( hWin, &rect);
-    switch (event.type)
+    Ovgl::Rect adjusted_rect;
+    adjusted_rect = WindowAdjustedRect( window, &rect );
+    switch( event.type )
     {
     case OVGL_KEYDOWN:
-        if(On_KeyDown)
+        if( on_key_down )
         {
-            On_KeyDown( event.key);
+            on_key_down( event.key);
         }
         for( uint32_t i = 0; i < Interfaces.size(); i++ )
         {
-            Interfaces[i]->DoEvent(event, adjustedrect);
+            Interfaces[i]->do_event( event, adjusted_rect );
         }
         break;
 
     case OVGL_KEYUP:
-        if(On_KeyUp)
+        if( on_key_up )
         {
-            On_KeyUp( event.key );
+            on_key_up( event.key );
         }
         for( uint32_t i = 0; i < Interfaces.size(); i++ )
         {
-            Interfaces[i]->DoEvent(event, adjustedrect);
+            Interfaces[i]->do_event( event, adjusted_rect );
         }
         break;
     case OVGL_MOUSEMOTION:
-        if( event.mouse_x > adjustedrect.left && event.mouse_x < adjustedrect.right )
-            if( event.mouse_y > adjustedrect.top && event.mouse_y < adjustedrect.bottom )
+        if( event.mouse_x > adjusted_rect.left && event.mouse_x < adjusted_rect.right )
+            if( event.mouse_y > adjusted_rect.top && event.mouse_y < adjusted_rect.bottom )
             {
-                event.mouse_x -= adjustedrect.left;
-                event.mouse_y -= adjustedrect.top;
-                if(On_MouseMove)
+                event.mouse_x -= adjusted_rect.left;
+                event.mouse_y -= adjusted_rect.top;
+                if(on_mouse_move)
                 {
-                    On_MouseMove( event.mouse_x, event.mouse_y );
+                    on_mouse_move( event.mouse_x, event.mouse_y );
                 }
                 for( uint32_t i = 0; i < Interfaces.size(); i++ )
                 {
-                    Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
-                    if( event.mouse_x > interfacerect.left && event.mouse_x < interfacerect.right )
-                        if( event.mouse_y > interfacerect.top && event.mouse_y < interfacerect.bottom )
+                    Ovgl::Rect interface_rect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
+                    if( event.mouse_x > interface_rect.left && event.mouse_x < interface_rect.right )
+                        if( event.mouse_y > interface_rect.top && event.mouse_y < interface_rect.bottom )
                         {
-                            Event interfaceevent = event;
-                            interfaceevent.mouse_x -= interfacerect.left;
-                            interfaceevent.mouse_y -= interfacerect.top;
-                            Interfaces[i]->DoEvent(interfaceevent, interfacerect);
+                            Event interface_event = event;
+                            interface_event.mouse_x -= interface_rect.left;
+                            interface_event.mouse_y -= interface_rect.top;
+                            Interfaces[i]->do_event(interface_event, interface_rect);
                         }
                 }
             }
         break;
     case OVGL_MOUSEBUTTONDOWN:
-        if( event.mouse_x > adjustedrect.left && event.mouse_x < adjustedrect.right )
-            if( event.mouse_y > adjustedrect.top && event.mouse_y < adjustedrect.bottom )
+        if( event.mouse_x > adjusted_rect.left && event.mouse_x < adjusted_rect.right )
+            if( event.mouse_y > adjusted_rect.top && event.mouse_y < adjusted_rect.bottom )
             {
-                event.mouse_x -= adjustedrect.left;
-                event.mouse_y -= adjustedrect.top;
-                if(On_MouseDown)
+                event.mouse_x -= adjusted_rect.left;
+                event.mouse_y -= adjusted_rect.top;
+                if(on_mouse_down)
                 {
-                    On_MouseDown( event.mouse_x, event.mouse_y, event.button );
+                    on_mouse_down( event.mouse_x, event.mouse_y, event.button );
                 }
                 for( uint32_t i = 0; i < Interfaces.size(); i++ )
                 {
-                    Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
-                    if( event.mouse_x > interfacerect.left && event.mouse_x < interfacerect.right )
-                        if( event.mouse_y > interfacerect.top && event.mouse_y < interfacerect.bottom )
+                    Ovgl::Rect interface_rect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect );
+                    if( event.mouse_x > interface_rect.left && event.mouse_x < interface_rect.right )
+                        if( event.mouse_y > interface_rect.top && event.mouse_y < interface_rect.bottom )
                         {
-                            Event interfaceevent = event;
-                            interfaceevent.mouse_x -= interfacerect.left;
-                            interfaceevent.mouse_y -= interfacerect.top;
-                            Interfaces[i]->DoEvent(interfaceevent, interfacerect);
+                            Event interface_event = event;
+                            interface_event.mouse_x -= interface_rect.left;
+                            interface_event.mouse_y -= interface_rect.top;
+                            Interfaces[i]->do_event( interface_event, interface_rect );
                         }
                 }
             }
         break;
     case OVGL_MOUSEBUTTONUP:
-        if( event.mouse_x > adjustedrect.left && event.mouse_x < adjustedrect.right )
-            if( event.mouse_y > adjustedrect.top && event.mouse_y < adjustedrect.bottom )
+        if( event.mouse_x > adjusted_rect.left && event.mouse_x < adjusted_rect.right )
+            if( event.mouse_y > adjusted_rect.top && event.mouse_y < adjusted_rect.bottom )
             {
-                event.mouse_x -= adjustedrect.left;
-                event.mouse_y -= adjustedrect.top;
-                if(On_MouseUp)
+                event.mouse_x -= adjusted_rect.left;
+                event.mouse_y -= adjusted_rect.top;
+                if(on_mouse_up)
                 {
-                    On_MouseUp( event.mouse_x, event.mouse_y, event.button );
+                    on_mouse_up( event.mouse_x, event.mouse_y, event.button );
                 }
                 for( uint32_t i = 0; i < Interfaces.size(); i++ )
                 {
-                    Ovgl::Rect interfacerect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect);
-                    if( event.mouse_x > interfacerect.left && event.mouse_x < interfacerect.right )
-                        if( event.mouse_y > interfacerect.top && event.mouse_y < interfacerect.bottom )
+                    Ovgl::Rect interface_rect = RenderTargetAdjustedRect( this, &Interfaces[i]->rect );
+                    if( event.mouse_x > interface_rect.left && event.mouse_x < interface_rect.right )
+                        if( event.mouse_y > interface_rect.top && event.mouse_y < interface_rect.bottom )
                         {
-                            Event interfaceevent = event;
-                            interfaceevent.mouse_x -= interfacerect.left;
-                            interfaceevent.mouse_y -= interfacerect.top;
-                            Interfaces[i]->DoEvent(interfaceevent, interfacerect);
+                            Event interface_event = event;
+                            interface_event.mouse_x -= interface_rect.left;
+                            interface_event.mouse_y -= interface_rect.top;
+                            Interfaces[i]->do_event( interface_event, interface_rect );
                         }
                 }
             }
         break;
-        //        case sf::Event::MouseEntered:
-        //            if(On_MouseOver)
-        //            {
-        //                On_MouseOver();
-        //            }
-        //            break;
-        //        case sf::Event::MouseLeft:
-        //            if(On_MouseOut)
-        //            {
-        //                On_MouseOut();
-        //            }
-        //            break;
 
     default:
         break;
@@ -1186,20 +1126,20 @@ Interface::Interface( Interface* parent, const URect& rect )
 {
     this->rect = rect;
     background = NULL;
-    tilex = false;
-    tiley = false;
+    tile_x = false;
+    tile_y = false;
     wordbreak = true;
     color = parent->color;
     align = 0;
     hscroll = 0;
     vscroll = 0;
-    On_KeyDown = NULL;
-    On_KeyUp = NULL;
-    On_MouseMove = NULL;
-    On_MouseDown = NULL;
-    On_MouseUp = NULL;
-    On_MouseOver = NULL;
-    On_MouseOut = NULL;
+    on_key_down = NULL;
+    on_key_up = NULL;
+    on_mouse_move = NULL;
+    on_mouse_down = NULL;
+    on_mouse_up = NULL;
+    on_mouse_over = NULL;
+    on_mouse_out = NULL;
     rendertarget = parent->rendertarget;
     parent->children.push_back(this);
 }
@@ -1208,21 +1148,21 @@ Interface::Interface( RenderTarget* parent, const URect& rect )
 {
     this->rect = rect;
     background = NULL;
-    tilex = false;
-    tiley = false;
+    tile_x = false;
+    tile_y = false;
     wordbreak = true;
     color = Vector4( 1.0f, 1.0f, 1.0f, 1.0f );
 	text_color = Vector4( 0.0f, 0.0f, 0.0f, 1.0f );
     align = 0;
     hscroll = 0;
     vscroll = 0;
-    On_KeyDown = NULL;
-    On_KeyUp = NULL;
-    On_MouseMove = NULL;
-    On_MouseDown = NULL;
-    On_MouseUp = NULL;
-    On_MouseOver = NULL;
-    On_MouseOut = NULL;
+    on_key_down = NULL;
+    on_key_up = NULL;
+    on_mouse_move = NULL;
+    on_mouse_down = NULL;
+    on_mouse_up = NULL;
+    on_mouse_over = NULL;
+    on_mouse_out = NULL;
     rendertarget = parent;
     parent->Interfaces.push_back(this);
 }
@@ -1232,7 +1172,7 @@ Interface::~Interface()
 
 }
 
-void Interface::render( const Ovgl::Rect& adjustedrect )
+void Interface::render( const Ovgl::Rect& adjusted_rect )
 {
     glClearStencil(0);
     glClear(GL_STENCIL_BUFFER_BIT);
@@ -1251,30 +1191,30 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
     float tilewidth = 1.0f;
     float tileheight = 1.0f;
 
-    if(tilex)
+    if(tile_x)
     {
         GLint width;
         glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-        tilewidth = (float)(adjustedrect.right - adjustedrect.left) / (float)width;
+        tilewidth = (float)(adjusted_rect.right - adjusted_rect.left) / (float)width;
     }
-    if(tiley)
+    if(tile_y)
     {
         GLint height;
         glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
-        tileheight = (float)(adjustedrect.bottom - adjustedrect.top) / (float)height;
+        tileheight = (float)(adjusted_rect.bottom - adjusted_rect.top) / (float)height;
     }
     glStencilFunc(GL_ALWAYS, 0x1, 0x1);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     glBegin( GL_QUADS );
     glTexCoord2f( tilewidth, 0 );
-    glVertex2i( adjustedrect.right, adjustedrect.top );
+    glVertex2i( adjusted_rect.right, adjusted_rect.top );
     glTexCoord2f( 0, 0 );
-    glVertex2i( adjustedrect.left, adjustedrect.top );
+    glVertex2i( adjusted_rect.left, adjusted_rect.top );
     glTexCoord2f( 0, tileheight );
-    glVertex2i( adjustedrect.left, adjustedrect.bottom );
+    glVertex2i( adjusted_rect.left, adjusted_rect.bottom );
     glTexCoord2f( tilewidth, tileheight );
-    glVertex2i( adjustedrect.right, adjustedrect.bottom );
+    glVertex2i( adjusted_rect.right, adjusted_rect.bottom );
     glEnd();
 
     glStencilFunc(GL_EQUAL, 0x1, 0x1);
@@ -1284,8 +1224,8 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
     int32_t x;
     if(align == 0)
     {
-        x = adjustedrect.left;
-        int32_t y = adjustedrect.top + vscroll;
+        x = adjusted_rect.left;
+        int32_t y = adjusted_rect.top + vscroll;
         for( uint32_t i = 0; i < text.size(); i++ )
         {
             int32_t wordwidth = 0;
@@ -1304,10 +1244,10 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
             glBindTexture(GL_TEXTURE_2D, font->charset[ text[i] ]);
             glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &charwidth);
             glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &charheight);
-            if(x + charwidth + wordwidth > adjustedrect.right)
+            if(x + charwidth + wordwidth > adjusted_rect.right)
             {
                 y += font->size;
-                x = adjustedrect.left;
+                x = adjusted_rect.left;
             }
             if(charwidth == 0)
             {
@@ -1329,8 +1269,8 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
     }
     else if(align == 1)
     {
-        x = adjustedrect.right;
-        int32_t y = adjustedrect.top + vscroll;
+        x = adjusted_rect.right;
+        int32_t y = adjusted_rect.top + vscroll;
         for( int32_t i = text.size()-1; i >= 0 ; i-- )
         {
             int32_t wordwidth = 0;
@@ -1350,10 +1290,10 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
             glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &charwidth);
             glGetTexLevelParameteriv( GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &charheight);
             x -= charwidth + 2;
-            if(x - (charwidth + wordwidth) < (int32_t)adjustedrect.left)
+            if(x - (charwidth + wordwidth) < (int32_t)adjusted_rect.left)
             {
                 y -= font->size;
-                x = adjustedrect.right;
+                x = adjusted_rect.right;
             }
             if(charwidth == 0)
             {
@@ -1376,35 +1316,35 @@ void Interface::render( const Ovgl::Rect& adjustedrect )
 
     for( uint32_t c = 0; c < children.size(); c++ )
     {
-        Ovgl::Rect childrect;
-        childrect.left = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset + adjustedrect.left;
-        childrect.top = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset + adjustedrect.top;
-        childrect.right = ((adjustedrect.right - adjustedrect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset + adjustedrect.left;
-        childrect.bottom = ((adjustedrect.bottom - adjustedrect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset + adjustedrect.top;
-        children[c]->render( childrect );
+        Ovgl::Rect child_rect;
+        child_rect.left = ((adjusted_rect.right - adjusted_rect.left) * children[c]->rect.left.scale) + children[c]->rect.left.offset + adjusted_rect.left;
+        child_rect.top = ((adjusted_rect.bottom - adjusted_rect.top) * children[c]->rect.top.scale) + children[c]->rect.top.offset + adjusted_rect.top;
+        child_rect.right = ((adjusted_rect.right - adjusted_rect.left) * children[c]->rect.right.scale) + children[c]->rect.right.offset + adjusted_rect.left;
+        child_rect.bottom = ((adjusted_rect.bottom - adjusted_rect.top) * children[c]->rect.bottom.scale) + children[c]->rect.bottom.offset + adjusted_rect.top;
+        children[c]->render( child_rect );
     }
 }
 
-void Interface::DoEvent(Event event, const Rect& adjustedrect)
+void Interface::do_event(Event event, const Rect& adjustedrect)
 {
     switch (event.type)
     {
     case OVGL_KEYDOWN:
-        if(On_KeyDown)
+        if(on_key_down)
         {
-            On_KeyDown( event.key );
+            on_key_down( event.key );
         }
         break;
     case OVGL_KEYUP:
-        if(On_KeyUp)
+        if(on_key_up)
         {
-            On_KeyUp( event.key );
+            on_key_up( event.key );
         }
         break;
     case OVGL_MOUSEMOTION:
-        if(On_MouseMove)
+        if(on_mouse_move)
         {
-            On_MouseMove( event.mouse_x, event.mouse_y );
+            on_mouse_move( event.mouse_x, event.mouse_y );
         }
         for( uint32_t c = 0; c < children.size(); c++ )
         {
@@ -1416,17 +1356,17 @@ void Interface::DoEvent(Event event, const Rect& adjustedrect)
             if( event.mouse_x > childrect.left && event.mouse_x < childrect.right )
                 if( event.mouse_y > childrect.top && event.mouse_y < childrect.bottom )
                 {
-                    Event interfaceevent = event;
-                    interfaceevent.mouse_x -= childrect.left;
-                    interfaceevent.mouse_y -= childrect.top;
-                    children[c]->DoEvent(interfaceevent, childrect);
+                    Event interface_event = event;
+                    interface_event.mouse_x -= childrect.left;
+                    interface_event.mouse_y -= childrect.top;
+                    children[c]->do_event(interface_event, childrect);
                 }
         }
         break;
     case OVGL_MOUSEBUTTONDOWN:
-        if(On_MouseDown)
+        if(on_mouse_down)
         {
-            On_MouseDown( event.mouse_x, event.mouse_y, event.button );
+            on_mouse_down( event.mouse_x, event.mouse_y, event.button );
         }
         for( uint32_t c = 0; c < children.size(); c++ )
         {
@@ -1438,17 +1378,17 @@ void Interface::DoEvent(Event event, const Rect& adjustedrect)
             if( event.mouse_x > childrect.left && event.mouse_x < childrect.right )
                 if( event.mouse_y > childrect.top && event.mouse_y < childrect.bottom )
                 {
-                    Event interfaceevent = event;
-                    interfaceevent.mouse_x -= childrect.left;
-                    interfaceevent.mouse_y -= childrect.top;
-                    children[c]->DoEvent(interfaceevent, childrect);
+                    Event interface_event = event;
+                    interface_event.mouse_x -= childrect.left;
+                    interface_event.mouse_y -= childrect.top;
+                    children[c]->do_event(interface_event, childrect);
                 }
         }
         break;
     case OVGL_MOUSEBUTTONUP:
-        if(On_MouseUp)
+        if(on_mouse_up)
         {
-            On_MouseUp( event.mouse_x, event.mouse_y, event.button );
+            on_mouse_up( event.mouse_x, event.mouse_y, event.button );
         }
         for( uint32_t c = 0; c < children.size(); c++ )
         {
@@ -1460,25 +1400,13 @@ void Interface::DoEvent(Event event, const Rect& adjustedrect)
             if( event.mouse_x > childrect.left && event.mouse_x < childrect.right )
                 if( event.mouse_y > childrect.top && event.mouse_y < childrect.bottom )
                 {
-                    Event interfaceevent = event;
-                    interfaceevent.mouse_x -= childrect.left;
-                    interfaceevent.mouse_y -= childrect.top;
-                    children[c]->DoEvent(interfaceevent, childrect);
+                    Event interface_event = event;
+                    interface_event.mouse_x -= childrect.left;
+                    interface_event.mouse_y -= childrect.top;
+                    children[c]->do_event(interface_event, childrect);
                 }
         }
         break;
-        //        case sf::Event::MouseEntered:
-        //            if(On_MouseOver)
-        //            {
-        //                On_MouseOver();
-        //            }
-        //            break;
-        //        case sf::Event::MouseLeft:
-        //            if(On_MouseOut)
-        //            {
-        //                On_MouseOut();
-        //            }
-        //            break;
 
     default:
         break;

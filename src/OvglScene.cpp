@@ -198,7 +198,7 @@ Prop* Scene::CreateProp( Mesh* mesh, const Matrix44& matrix )
     prop->materials.resize(mesh->subset_count);
     for( uint32_t s = 0; s < prop->materials.size(); s++)
     {
-        prop->materials[s] = context->default_media->Materials[0];
+        prop->materials[s] = context->default_media->materials[0];
     }
     for( uint32_t i = 0; i < mesh->skeleton->bones.size(); i++ )
     {
@@ -242,7 +242,7 @@ Object* Scene::CreateObject( Mesh* mesh, const Matrix44& matrix )
     object->materials.resize(mesh->subset_count);
     for( uint32_t s = 0; s < object->materials.size(); s++)
     {
-        object->materials[s] = context->default_media->Materials[0];
+        object->materials[s] = context->default_media->materials[0];
     }
     btTransform Transform;
     Transform.setFromOpenGLMatrix((float*)&matrix);
@@ -293,7 +293,7 @@ Actor* Scene::CreateActor( Mesh* mesh, float radius, float height, const Matrix4
         actor->materials.resize( mesh->subset_count );
         for( uint32_t i = 0; i < mesh->subset_count; i++ )
         {
-            actor->materials[i] = context->default_media->Materials[0];
+            actor->materials[i] = context->default_media->materials[0];
         }
     }
     actor->crouch = false;
@@ -312,7 +312,7 @@ Actor* Scene::CreateActor( Mesh* mesh, float radius, float height, const Matrix4
     startTransform.setFromOpenGLMatrix((float*)&matrix);
     actor->ghostObject = new btPairCachingGhostObject();
     actor->ghostObject->setWorldTransform(startTransform);
-    context->PhysicsBroadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
+    context->physics_broadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
     btConvexShape* capsule = new btCapsuleShape(radius, height);
     actor->ghostObject->setCollisionShape (capsule);
     actor->ghostObject->setCollisionFlags (btCollisionObject::CF_CHARACTER_OBJECT);
@@ -414,7 +414,7 @@ Matrix44 Actor::getPose()
     return matrix;
 }
 
-void Prop::Update( Bone* bone, Matrix44* matrix )
+void Prop::update( Bone* bone, Matrix44* matrix )
 {
     Matrix44 inv_matrix, inv_mesh_bone, tmatrix;
     matrices[bone->index] = bones[bone->index]->get_pose();
@@ -429,7 +429,7 @@ void Prop::Update( Bone* bone, Matrix44* matrix )
             Matrix44 child;
             child = bone->children[i]->matrix.Translation();
             child = child * tmatrix * (*matrix);
-            Prop::Update( bone->children[i], &child );
+            Prop::update( bone->children[i], &child );
         }
     }
 }
@@ -571,17 +571,17 @@ void Scene::Update( uint32_t UpdateTime )
     for( uint32_t c = 0; c < cameras.size(); c++ )
     {
         for( uint32_t w = 0; w < context->windows.size(); w++ )
-            for( uint32_t r = 0; r < context->windows[w]->RenderTargets.size(); r++ )
+            for( uint32_t r = 0; r < context->windows[w]->render_targets.size(); r++ )
             {
-                if( context->windows[w]->RenderTargets[r]->View == cameras[c] )
+                if( context->windows[w]->render_targets[r]->view == cameras[c] )
                 {
                     Matrix44 cmatrix = cameras[c]->getPose();
-                    ALfloat ListenerOri[] = { -cmatrix._21, cmatrix._22, -cmatrix._23, -cmatrix._31, cmatrix._32, -cmatrix._33 };
-                    ALfloat ListenerPos[] = { cmatrix._41, cmatrix._42, cmatrix._43 };
-                    ALfloat ListenerVel[] = { 0.0, 0.0, 0.0 };
-                    alListenerfv(AL_POSITION,	ListenerPos);
-                    alListenerfv(AL_VELOCITY,	ListenerVel);
-                    alListenerfv(AL_ORIENTATION, ListenerOri);
+                    ALfloat listener_ori[] = { -cmatrix._21, cmatrix._22, -cmatrix._23, -cmatrix._31, cmatrix._32, -cmatrix._33 };
+                    ALfloat listener_pos[] = { cmatrix._41, cmatrix._42, cmatrix._43 };
+                    ALfloat listener_vel[] = { 0.0, 0.0, 0.0 };
+                    alListenerfv(AL_POSITION,	listener_pos);
+                    alListenerfv(AL_VELOCITY,	listener_vel);
+                    alListenerfv(AL_ORIENTATION, listener_ori);
 
                     for( uint32_t i = 0; i < cameras[c]->voices.size(); i++ )
                     {
@@ -594,12 +594,12 @@ void Scene::Update( uint32_t UpdateTime )
                                 if(state == AL_PLAYING)
                                 {
                                     Matrix44 ematrix = cameras[c]->voices[i]->instance->emitter->getPose();
-                                    ALfloat SourceOri[] = { ematrix._21, ematrix._22, ematrix._23, ematrix._31, ematrix._32, ematrix._33 };
-                                    ALfloat SourcePos[] = { ematrix._41, ematrix._42, ematrix._43 };
-                                    ALfloat SourceVel[] = { 0.0, 0.0, 0.0 };
-                                    alSourcefv( cameras[c]->voices[i]->source, AL_POSITION, SourcePos );
-                                    alSourcefv( cameras[c]->voices[i]->source, AL_VELOCITY, SourceVel );
-                                    alSourcefv( cameras[c]->voices[i]->source, AL_ORIENTATION, SourceOri );
+                                    ALfloat source_ori[] = { ematrix._21, ematrix._22, ematrix._23, ematrix._31, ematrix._32, ematrix._33 };
+                                    ALfloat source_pos[] = { ematrix._41, ematrix._42, ematrix._43 };
+                                    ALfloat source_vel[] = { 0.0, 0.0, 0.0 };
+                                    alSourcefv( cameras[c]->voices[i]->source, AL_POSITION, source_pos );
+                                    alSourcefv( cameras[c]->voices[i]->source, AL_VELOCITY, source_vel );
+                                    alSourcefv( cameras[c]->voices[i]->source, AL_ORIENTATION, source_ori );
                                 }
                             }
                         }
@@ -612,7 +612,7 @@ void Scene::Update( uint32_t UpdateTime )
     for( uint32_t p = 0; p < props.size(); p++ )
     {
         Matrix44 mat = MatrixIdentity();
-        props[p]->Update(props[p]->mesh->skeleton->root_bone, &mat );
+        props[p]->update(props[p]->mesh->skeleton->root_bone, &mat );
     }
 
     // Update physics scene.
