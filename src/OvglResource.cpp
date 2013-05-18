@@ -612,7 +612,9 @@ Mesh* ResourceManager::import_model( const std::string& file, bool z_up )
             bone->length = 1.0f;
             bone->mesh = new Mesh;
             bone->convex = NULL;
+			bone->index = 0;
             mesh->skeleton->bones.push_back(bone);
+			mesh->skeleton->root_bone = bone;
         }
 
         // Save vertices which influence each bone for bone shape automatic generation.

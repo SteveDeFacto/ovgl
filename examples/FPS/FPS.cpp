@@ -18,11 +18,11 @@
 
 #include <Ovgl.h>
 
-// Define pointers we will use later
+// Declare pointers we will use later
 Ovgl::Context*				context;
 Ovgl::RenderTarget*			render_target;
 Ovgl::Window*				window;
-Ovgl::MediaLibrary*			media_library;
+Ovgl::ResourceManager*		resources;
 Ovgl::Scene*				scene;
 Ovgl::Actor*				actor;
 Ovgl::Actor*				actor2;
@@ -49,7 +49,7 @@ void KeyDown(char key)
 	switch(key)
 	{
 	case (char)27: // If escape is pressed tell the context to quit
-        context->g_Quit = true;
+        context->g_quit = true;
 		break;
 
 	case 'W': // If the W key is pressed move camera forward
@@ -75,13 +75,13 @@ int main()
     context = new Ovgl::Context( 0 );
 
     // Create Window
-    window = new Ovgl::Window( context, "Test");
+    window = new Ovgl::Window( context, "Editor");
 
 	// Lock mouse to center of window
-    window->LockMouse( true );
+    window->set_lock_mouse( true );
 
 	// Vertical synchronization to prevent screen tearing
-    window->SetVSync( true );
+    window->set_vsync( true );
 
 	// Set mouse move event callback function
     window->on_mouse_move = MouseMove;
@@ -105,10 +105,10 @@ int main()
     render_target->multiSample = true;
 
     // Create Media Library
-    media_library = new Ovgl::MediaLibrary(context, "");
+    resources = new Ovgl::ResourceManager(context, "");
 
     // Create empty scene
-    scene = media_library->CreateScene();
+    scene = resources->create_scene();
 
     // Add light to scene.
     light = scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 5.0f, 5.0f, 5.0f, 1.0f ));
@@ -117,26 +117,30 @@ int main()
     camera = scene->CreateCamera(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
 
     // Set camera as view for render target
-    render_target->View = camera;
+    render_target->view = camera;
 
     // Import cubemap texture
-    texture1 = media_library->ImportCubeMap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
+    texture1 = resources->import_cubemap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
                                             "../media/textures/skybox/bottom.png", "../media/textures/skybox/left.png", "../media/textures/skybox/right.png");
     // Import grass texture
-    texture2 = media_library->ImportTexture("../media/textures/Grass.png");
+    texture2 = resources->import_texture("../media/textures/Grass.png");
 
 	// Import margle texture
-    texture3 = media_library->ImportTexture("../media/textures/white marble.png");
+    texture3 = resources->import_texture("../media/textures/white marble.png");
 
     // Import mesh
-    mesh = media_library->ImportModel( "../media/meshes/plane.dae", true );
-    mesh2 = media_library->ImportModel( "../media/meshes/test.dae", true );
+    mesh = resources->import_model( "../media/meshes/plane.dae", true );
+
+	// Import another mesh
+    mesh2 = resources->import_model( "../media/meshes/test.dae", true );
 
 	// Import and play audio
-    media_library->ImportAudio("../media/audio/glacier.ogg")->CreateAudioInstance(NULL, true);
+    resources->import_audio("../media/audio/glacier.ogg")->create_audio_instance(NULL, true);
 
     // Add object to scene
     object = scene->CreateObject(mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
+
+	// Bind texture to effect
     object->materials[0]->setEffectTexture("txDiffuse", texture2);
 
     // Add actor to scene
@@ -155,7 +159,7 @@ int main()
     scene->sky_box = texture1;
 
 	// Start main loop 
-    context->Start();
+    context->start();
 
 	// Release all
     delete context;

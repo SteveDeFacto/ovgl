@@ -471,21 +471,22 @@ namespace Ovgl
 			*/
 			Camera* CreateCamera( const Matrix44& view_matrix );
 			/**
-			* This function adds a Ovgl::Actor to the scene.
+			* This function adds a Actor to the scene.
 			* @param mesh The mesh object that will be displayed for the actor.
-			* @param radius The radius of the actor's capsule within the physics scene which is the distance at which a character comes in contact with objects in the character's vertical plane.
-			* @param height The hieght of the actor's capsule within the physics scene which is the distance at which a character comes in contact with objects in the character's horizontal plane.
-			* @param matrix The matrix which defines the the starting pose of the actor.
+			* @param radius Radius of the actor's capsule within the physics scene which is the distance at which a character comes in contact with objects in the character's vertical plane.
+			* @param height Hieght of the actor's capsule within the physics scene which is the distance at which a character comes in contact with objects in the character's horizontal plane.
+			* @param matrix Matrix which defines the the starting pose of the actor.
+			* @param offset Offset the mesh's orientation relative to the actor.
 			*/
 			Actor* CreateActor( Mesh* mesh, float radius, float height, const Matrix44& matirx, const Matrix44& offset );
 			/**
-			* This function adds a Ovgl::Prop to the scene.
+			* This function adds a dynamic object to the scene.
 			* @param mesh The mesh that will be displayed for the prop.
 			* @param matrix The matrix which defines the the starting pose of the prop.
 			*/
 			Prop* CreateProp( Mesh* mesh, const Matrix44& matrix);
 			/**
-			* This function adds a Ovgl::Prop to the scene.
+			* This function adds a static object to the scene.
 			* @param mesh The mesh that will be displayed for the object.
 			* @param matrix The matrix which defines the pose of the object.
 			*/
