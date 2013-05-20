@@ -132,7 +132,7 @@ int main()
     mesh = resources->import_model( "../media/meshes/plane.dae", true );
 
 	// Import another mesh
-    mesh2 = resources->import_model( "../media/meshes/test.dae", true );
+    mesh2 = resources->import_model( "../media/meshes/harvey.dae", true );
 
 	// Import and play audio
     resources->import_audio("../media/audio/glacier.ogg")->create_audio_instance(NULL, true);
@@ -147,13 +147,13 @@ int main()
     actor = scene->CreateActor(mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
 
 	// Play an animation
-    actor->PlayAnimation( &mesh2->skeleton->animations[0], 0, 10, true);
+    //actor->PlayAnimation( &mesh2->skeleton->animations[0], 0, 10, true);
 
 	// Add another actor to scene
     actor2 = scene->CreateActor(mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
 
 	// Play an animation
-    actor2->PlayAnimation( &mesh2->skeleton->animations[0], 5, 6, false);
+    //actor2->PlayAnimation( &mesh2->skeleton->animations[0], 5, 6, false);
 
     // Set scene sky box
     scene->sky_box = texture1;

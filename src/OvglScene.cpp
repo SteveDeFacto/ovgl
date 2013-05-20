@@ -44,22 +44,26 @@ public:
 
 btScalar DisablePairCollision::addSingleResult(btManifoldPoint& cp,	const btCollisionObjectWrapper* colObj0,int partId0,int index0,const btCollisionObjectWrapper* colObj1,int partId1,int index1)
 {
+
     // Create an identity matrix.
     btTransform frame;
     frame.setIdentity();
 
     // Create a constraint between the two bone shapes which are contacting each other.
-    btGeneric6DofConstraint* Constraint;
-    Constraint = new btGeneric6DofConstraint( *(btRigidBody*)colObj0, *(btRigidBody*)colObj1, frame, frame, true );
+    btGeneric6DofConstraint* constraint = NULL;
+
+    constraint = new btGeneric6DofConstraint( *(btRigidBody*)colObj0, *(btRigidBody*)colObj1, frame, frame, true );
 
     // Set limits to be limitless.
-    Constraint->setLinearLowerLimit( btVector3(1, 1, 1 ) );
-    Constraint->setLinearUpperLimit( btVector3(0, 0, 0 ) );
-    Constraint->setAngularLowerLimit( btVector3(1, 1, 1 ) );
-    Constraint->setAngularUpperLimit( btVector3(0, 0, 0 ) );
+    constraint->setLinearLowerLimit( btVector3(1, 1, 1 ) );
+    constraint->setLinearUpperLimit( btVector3(0, 0, 0 ) );
+    constraint->setAngularLowerLimit( btVector3(1, 1, 1 ) );
+    constraint->setAngularUpperLimit( btVector3(0, 0, 0 ) );
 
     // Add constraint to scene.
-    DynamicsWorld->addConstraint(Constraint, true);
+	if(constraint)
+		DynamicsWorld->addConstraint(constraint, true);
+
     return 0;
 }
 
@@ -187,7 +191,7 @@ Emitter* Scene::CreateEmitter( const Matrix44& matrix )
     return emitter;
 };
 
-Prop* Scene::CreateProp( Mesh* mesh, const Matrix44& matrix )
+Prop* Scene::CreateProp( Mesh* mesh, const Matrix44& matrix, bool disable_pair_collision )
 {
     // Create a new prop object.
     Prop* prop = new Prop;
@@ -202,34 +206,44 @@ Prop* Scene::CreateProp( Mesh* mesh, const Matrix44& matrix )
     }
     for( uint32_t i = 0; i < mesh->skeleton->bones.size(); i++ )
     {
-        btTransform Transform;
-        Matrix44 mat = (mesh->skeleton->bones[i]->matrix * matrix );
-        Transform.setFromOpenGLMatrix((float*)&mat );
-        btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
-        btVector3 localInertia(0,0,0);
-        mesh->skeleton->bones[i]->convex->calculateLocalInertia(1, localInertia);
-        btRigidBody::btRigidBodyConstructionInfo rbInfo( mesh->skeleton->bones[i]->volume, MotionState, mesh->skeleton->bones[i]->convex, localInertia );
-        CMesh* cmesh = new CMesh;
-        cmesh->scene = this;
-        cmesh->actor = new btRigidBody(rbInfo);
-        DynamicsWorld->addRigidBody(cmesh->actor, btBroadphaseProxy::DefaultFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::StaticFilter | btBroadphaseProxy::CharacterFilter);
-        prop->bones.push_back(cmesh);
+		if(mesh->skeleton->bones[i]->convex != NULL)
+		{
+			btTransform Transform;
+			Matrix44 mat = (mesh->skeleton->bones[i]->matrix * matrix );
+			Transform.setFromOpenGLMatrix((float*)&mat );
+			btDefaultMotionState* MotionState = new btDefaultMotionState(Transform);
+			btVector3 localInertia(0,0,0);
+			mesh->skeleton->bones[i]->convex->calculateLocalInertia(1, localInertia);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo( mesh->skeleton->bones[i]->volume, MotionState, mesh->skeleton->bones[i]->convex, localInertia );
+			CMesh* cmesh = new CMesh;
+			cmesh->scene = this;
+			cmesh->actor = new btRigidBody(rbInfo);
+			DynamicsWorld->addRigidBody(cmesh->actor, btBroadphaseProxy::DefaultFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::StaticFilter | btBroadphaseProxy::CharacterFilter);
+			prop->bones.push_back(cmesh);
+		}
+		else
+		{
+			prop->bones.push_back(NULL);
+		}
     }
     prop->constraints.resize(prop->bones.size());
     prop->CreateJoints( prop->mesh->skeleton->root_bone );
-    for(uint32_t np = 0; np < prop->bones.size(); np++)
-    {
-        for(uint32_t nq = 0; nq < prop->bones.size(); nq++)
-        {
-            if( np!=nq )
-            {
-                DisablePairCollision Callback;
-                Callback.DynamicsWorld = DynamicsWorld;
-                DynamicsWorld->contactPairTest(prop->bones[np]->actor, prop->bones[nq]->actor, Callback);
-            }
-        }
-    }
-    this->props.push_back( prop );
+	if(disable_pair_collision)
+	{
+		for(uint32_t np = 0; np < prop->bones.size(); np++)
+		{
+			for(uint32_t nq = 0; nq < prop->bones.size(); nq++)
+			{
+				if( np!=nq && prop->bones[np] != NULL && prop->bones[nq] != NULL )
+				{
+					DisablePairCollision Callback;
+					Callback.DynamicsWorld = DynamicsWorld;
+					DynamicsWorld->contactPairTest(prop->bones[np]->actor, prop->bones[nq]->actor, Callback);
+				}
+			}
+		}
+	}
+    props.push_back( prop );
     prop->matrices.resize( prop->bones.size() );
     return prop;
 };
@@ -754,7 +768,7 @@ void Constraint::Release()
 Prop* Actor::Kill()
 {
     Matrix44 mat = (offset * getPose());
-    Prop* body = scene->CreateProp(mesh, mat );
+    Prop* body = scene->CreateProp(mesh, mat, true );
     Release();
     return body;
 }

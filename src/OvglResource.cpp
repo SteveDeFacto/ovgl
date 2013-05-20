@@ -306,7 +306,7 @@ void ResourceManager::load_resources( const std::string& file )
                 fread( &matrix, sizeof(Matrix44), 1, input );
                 uint32_t mesh_index;
                 fread( &mesh_index, 4, 1, input );
-                Prop* prop = scene->CreateProp( meshes[mesh_index + mesh_offset], matrix );
+                Prop* prop = scene->CreateProp( meshes[mesh_index + mesh_offset], matrix, true );
                 for( uint32_t b = 0; b < meshes[mesh_index + mesh_offset]->skeleton->bones.size(); b++ )
                 {
                     uint32_t bone_flags;
@@ -367,6 +367,8 @@ Mesh* ResourceManager::import_model( const std::string& file, bool z_up )
         // Set media library to this library.
         mesh->media_library = this;
 
+		mesh->subset_count = 0;
+
         // Import scene from file.
         const aiScene* scene = aiImportFile(file.c_str(), 0);
 
@@ -405,17 +407,19 @@ Mesh* ResourceManager::import_model( const std::string& file, bool z_up )
                 // Get skeleton.
                 if(scene->mMeshes[m]->HasBones())
                 {
+					int mybones = scene->mMeshes[m]->mNumBones;
                     mesh->skeleton->bones.resize(scene->mMeshes[m]->mNumBones + boffset);
 
-                    for( uint32_t b = 0; b < mesh->skeleton->bones.size(); b++ )
+                    for( uint32_t b = 0; b < scene->mMeshes[m]->mNumBones; b++ )
                     {
                         mesh->skeleton->bones[b + boffset] = new Bone;
+						mesh->skeleton->bones[b + boffset]->convex = NULL;
                     }
 
                     for( uint32_t b = 0; b < scene->mMeshes[m]->mNumBones; b++ )
                     {
 
-                        Bone* bone = mesh->skeleton->bones[b];
+                        Bone* bone = mesh->skeleton->bones[b+ boffset];
                         bone->length = 1.0f;
                         bone->mesh = new Mesh;
                         bone->convex = NULL;
@@ -529,9 +533,24 @@ Mesh* ResourceManager::import_model( const std::string& file, bool z_up )
                     }
                 }
 
-                // Cap off bone influences to no more than 4.
+				// Cap off bone influences to no more than 4.
                 for ( uint32_t w = 0; w < scene->mMeshes[m]->mNumVertices; w++)
                 {
+					// Bubble sort the bone influences
+					bool swapped = true;
+					while(swapped)
+					{
+						swapped = false;
+						for( uint32_t i = 1; i< weights[w].size();i++)
+						{
+							if(weights[w][i-1] < weights[w][i])
+							{
+								std::swap(weights[w][i-1], weights[w][i]);
+								std::swap(indices[w][i-1], indices[w][i]);
+								swapped = true;
+							}
+						}
+					}
                     weights[w].resize(4);
                     indices[w].resize(4);
                     if(!scene->mMeshes[m]->HasBones())
@@ -626,10 +645,10 @@ Mesh* ResourceManager::import_model( const std::string& file, bool z_up )
                 {
                     if(mesh->vertices[v].indices[j] == i && mesh->vertices[v].weight[j] > 0.1f)
                     {
-                        Vertex Vertex;
-                        Vertex.position = Vector3Transform( mesh->vertices[v].position, MatrixInverse( Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), mesh->skeleton->bones[i]->matrix));
-                        Vertex.weight[0] = 1.0f;
-                        mesh->skeleton->bones[i]->mesh->vertices.push_back( Vertex );
+                        Vertex vertex;
+                        vertex.position = Vector3Transform( mesh->vertices[v].position, MatrixInverse( Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), mesh->skeleton->bones[i]->matrix));
+                        vertex.weight[0] = 1.0f;
+                        mesh->skeleton->bones[i]->mesh->vertices.push_back( vertex );
                     }
                 }
             }
@@ -664,8 +683,10 @@ Mesh* ResourceManager::import_model( const std::string& file, bool z_up )
         mesh->index_buffers = 0;
 
         // Update video memory copies of index and vertex buffers.
-        mesh->update();
-
+		if(mesh->vertices.size() > 0)
+		{
+			mesh->update();
+		}
         meshes.push_back( mesh );
         return mesh;
     }

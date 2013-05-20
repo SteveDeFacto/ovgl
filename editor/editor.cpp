@@ -34,6 +34,7 @@ Ovgl::Texture*				texture3;
 Ovgl::Mesh*					mesh;
 Ovgl::Mesh*					mesh2;
 Ovgl::Object*				object;
+Ovgl::Prop*					prop;
 Ovgl::Light*				light;
 Ovgl::Interface*			interface1;
 Ovgl::Interface*			interface2;
@@ -66,6 +67,9 @@ void KeyDown(char key)
 
 	case 'D': // If the D key is pressed move camera right
         camera->setPose( (Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * camera->getPose() ) );
+		break;
+	case 'F': // If the D key is pressed move camera right
+        actor->walkDirection = Ovgl::Vector3(0.01f,0.0f,0.0f);
 		break;
 	}
 }
@@ -132,10 +136,11 @@ int main()
     mesh = resources->import_model( "../media/meshes/plane.dae", true );
 
 	// Import another mesh
-    mesh2 = resources->import_model( "../media/meshes/test.dae", true );
+    mesh2 = resources->import_model( "../media/meshes/harvey.dae", true );
+
 
 	// Import and play audio
-    resources->import_audio("../media/audio/glacier.ogg")->create_audio_instance(NULL, true);
+    //resources->import_audio("../media/audio/glacier.ogg")->create_audio_instance(NULL, true);
 
     // Add object to scene
     object = scene->CreateObject(mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
@@ -144,16 +149,10 @@ int main()
     object->materials[0]->setEffectTexture("txDiffuse", texture2);
 
     // Add actor to scene
-    actor = scene->CreateActor(mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+    actor = scene->CreateActor(mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(-2.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
 
 	// Play an animation
 //    actor->PlayAnimation( &mesh2->skeleton->animations[0], 0, 10, true);
-
-	// Add another actor to scene
-    actor2 = scene->CreateActor(mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
-
-	// Play an animation
-//    actor2->PlayAnimation( &mesh2->skeleton->animations[0], 5, 6, false);
 
     // Set scene sky box
     scene->sky_box = texture1;

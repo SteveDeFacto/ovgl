@@ -110,7 +110,7 @@ void BuildDefaultMedia( Context* context )
             "float4 LightColors[16]			: LIGHTCOLORS;"
             "float4x4 World					: WORLD;"
             "float4x4 ViewProj				: VIEWPROJ;"
-            "float4x4 Bones[64]				: BONES;"
+            "float4x4 Bones[128]			: BONES;"
             "uniform sampler2D txDiffuse;"
             "uniform samplerCUBE txEnvironment;"
 

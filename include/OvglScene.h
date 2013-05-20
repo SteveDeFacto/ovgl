@@ -484,11 +484,12 @@ namespace Ovgl
 			* @param mesh The mesh that will be displayed for the prop.
 			* @param matrix The matrix which defines the the starting pose of the prop.
 			*/
-			Prop* CreateProp( Mesh* mesh, const Matrix44& matrix);
+			Prop* CreateProp( Mesh* mesh, const Matrix44& matrix, bool disable_pair_collision );
 			/**
 			* This function adds a static object to the scene.
 			* @param mesh The mesh that will be displayed for the object.
 			* @param matrix The matrix which defines the pose of the object.
+			* @param disable_pair_collision Sometimes it is necessary to disable collision between objects that are connected and contacted each other
 			*/
 			Object* CreateObject( Mesh* mesh, const Matrix44& matrix);
 			/**
