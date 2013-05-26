@@ -35,6 +35,7 @@
 #endif
 
 // C++ Standard Library Headers
+#include <unistd.h>
 #include <sys/stat.h>
 #include <stdint.h>
 #include <stdio.h>

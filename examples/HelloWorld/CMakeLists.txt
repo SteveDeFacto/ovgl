@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(HelloWorld)
 
-set(EXECUTABLE_OUTPUT_PATH "./../../bin")
-set(CMAKE_DEBUG_POSTFIX "_d")
+set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/../../bin")
 
 include_directories("./../../include")
 

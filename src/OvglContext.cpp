@@ -624,7 +624,7 @@ Context::Context( uint32_t flags )
 	}
 
     // Initialize GLEW
-    glewExperimental = GL_TRUE;
+    //glewExperimental = GL_TRUE;
     GLenum err = glewInit();
     if (GLEW_OK != err)
     {
@@ -656,7 +656,10 @@ Context::Context( uint32_t flags )
     av_register_all();
 
     // Initialize FreeType
-    FT_Init_FreeType( &ftlibrary );
+    if(FT_Init_FreeType( &ftlibrary ))
+    {
+        fprintf( stderr, "Error occured while initializing FreeType.\n");
+    }
 
     // Initialize FreeImage
     FreeImage_Initialise();
