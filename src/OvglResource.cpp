@@ -1081,12 +1081,8 @@ AudioBuffer* ResourceManager::import_audio( const std::string& file )
 
 Font::Font( ResourceManager* resource_manager, const std::string& file, uint32_t size )
 {
+	this->size = size;
     FT_Face ftface;
-    if( access( file.c_str(), F_OK ) == -1 )
-    {
-        fprintf( stderr, "File does not exist: %s\n", file.c_str());
-        return;
-    }
 
     if(FT_New_Face( resource_manager->context->ftlibrary, file.c_str(), 0, &ftface ))
     {

@@ -44,7 +44,7 @@ int main()
 	interface1 = new Ovgl::Interface( render_target, Ovgl::URect( 0.0f, 0.0f, 1.0f, 1.0f ) );
 
 	// Load a font
-    font1 = new Ovgl::Font(resources, "../media/fonts/ArchitectsDaughter.ttf", 48);
+    font1 = new Ovgl::Font(resources, "../../media/fonts/ArchitectsDaughter.ttf", 48);
 
 	// Set interface font
 	interface1->font = font1;
