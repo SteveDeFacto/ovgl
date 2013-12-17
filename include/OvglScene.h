@@ -43,7 +43,7 @@ namespace Ovgl
 		class CMesh;
 		class AudioEmitter;
 		class AudioVoice;
-        class Context;
+		class Context;
 		class Shader;
 		class Joint;
 		class Vector3;
@@ -57,7 +57,7 @@ namespace Ovgl
 		{
 		public:
 			uint32_t type;
-            Ovgl::CMesh* cmesh;
+			Ovgl::CMesh* cmesh;
 			Ovgl::Prop* prop;
 			Ovgl::Actor* actor;
 			Ovgl::Vector3 loc_point;
@@ -72,7 +72,7 @@ namespace Ovgl
 		{
 		public:
 			Scene* scene;
-			CMesh* obj[1];
+			CMesh* obj[2];
 			btGeneric6DofConstraint* joint;
 			void Release();
 		};
@@ -84,31 +84,38 @@ namespace Ovgl
         class DLLEXPORT Camera
 		{
 		public:
+
 			/**
 			* This is a pointer to the scene that this camera was created by and resides in.
 			*/
 			Scene* scene;
+
 			/**
 			* This is a pointer to the physics scene object that represents the camera within the scene.
 			*/
-            CMesh* cmesh;
+			CMesh* cmesh;
+
 			/**
 			* This matrix defines the perspective of the camera.
 			*/
 			Matrix44 projMat;
+
 			/**
 			* This is an array of all audio voices that the camera can hear.
 			*/
 			std::vector< AudioVoice* > voices;
+
 			/**
 			* Sets the pose of this camera.
 			* @param matrix The matrix which defines the new pose for this camera.
 			*/
-            void setPose( const Matrix44& matrix );
+			void setPose( const Matrix44& matrix );
+
 			/**
 			* Returns the current pose of the camera.
 			*/
 			Matrix44 getPose();
+
 			/**
 			* This function will release control of all memory associated with the camera and it will also remove any reference to it from the scene.
 			*/
@@ -121,31 +128,38 @@ namespace Ovgl
         class DLLEXPORT Light
 		{
 		public:
+
 			/**
 			* This is a pointer to the scene that this light was created by and resides in.
 			*/
 			Scene* scene;
+
 			/**
 			* This is a pointer to the physics scene object that represents the light with in the scene.
 			*/
-            CMesh* cmesh;
+			CMesh* cmesh;
+			
 			/**
 			* This is the color of the light that will be cast on objects.
 			*/
 			Vector3 color;
+
 			/**
 			* Specifies what type of light is emitted.
 			*/
 			uint32_t type;
+
 			/**
 			* Sets the pose of this light.
 			* @param matrix The matrix which defines the new pose for this light.
 			*/
-            void setPose( const Matrix44& matrix );
+			void setPose( const Matrix44& matrix );
+
 			/**
 			* Returns the current pose of this light.
 			*/
 			Matrix44 getPose();
+
 			/**
 			* This function will release control of all memory associated with the light and it will also remove any reference to it from the scene.
 			*/
@@ -159,45 +173,55 @@ namespace Ovgl
         class DLLEXPORT Prop
 		{
 		public:
+
 			/**
 			* This is a pointer to the scene that this prop was created by and resides in.
 			*/
-			Scene*									scene;
+			Scene*							scene;
+
 			/**
 			* The mesh that is displayed for this prop.
 			*/
-			Mesh*									mesh;
+			Mesh*							mesh;
+
 			/**
 			* List of bones that are used to distort the mesh that is displayed for the prop.
 			*/
 			std::vector< CMesh* >					bones;
+
 			/**
 			* List of materials that are used for each subset of the mesh.
 			*/
 			std::vector< Material* >				materials;
+
 			/**
 			* List of matrices that are taken from the bones and can be passed directly to the shaders to be rendered.
 			*/
 			std::vector< Matrix44 >					matrices;
+
 			/**
 			* List of joints that are holding together the bones of this prop.
 			*/
 			std::vector< Constraint* >				constraints;
+
 			/**
 			* List of animations affecting this prop.
 			*/
-			std::vector< AnimationInstance* >		animations;
+			std::vector< AnimationInstance* >			animations;
+
 			/**
 			* Used by Ovgl::Scene to update the bone orientations that are displayed to the Ovgl::RenderTarget. This function will recursivly apply the offset of a parent bone to all child bones and their children until it has gone through the entire tree.
 			* @param bone Index of the first bone to update. Generally the meshes root_bone.
 			* @param matrix This matrix is the amount of offset that is to be applied to the bone.
 			*/
 			void update( Bone* bone, Matrix44* matrix );
+
 			/**
 			* This function creates the joints that fuse together bones within the prop. This function will recursivly joints together a parent bone to all child bones and their children until it has gone through the entire tree.
 			* @param bone Index of first bone to joint to it's children. This should generally be the meshes root_bone.
 			*/
 			void CreateJoints( Bone* bone );
+
 			/**
 			* Creates an animation clip.
 			* @param current The current time.
@@ -205,15 +229,18 @@ namespace Ovgl
 			* @param start The time in which the clip ends.
 			*/
 			AnimationInstance* PlayAnimation( double start, double end, bool repeat );
+
 			/**
 			* Sets the pose of this prop.
 			* @param matrix The matrix which defines the new pose for this prop.
 			*/
-            void setPose( const Matrix44& matrix );
+			void setPose( const Matrix44& matrix );
+
 			/**
 			* Returns the current pose of this prop.
 			*/
 			Matrix44 getPose();
+
 			/**
 			* This function will release control of all memory associated with the prop and it will also remove any reference to it from the scene.
 			*/
@@ -227,31 +254,38 @@ namespace Ovgl
         class DLLEXPORT Object
 		{
 		public:
+
 			/**
 			* This is a pointer to the scene that this object resides in.
 			*/
 			Scene* scene;
+
 			/**
 			* This is a pointer to the physics object that represents this object within the scene.
 			*/
-            CMesh* cmesh;
+			CMesh* cmesh;
+
 			/**
 			* The mesh that is displayed for this object.
 			*/
 			Mesh* mesh;
+
 			/**
 			* List of materials that are used for each subset of the mesh.
 			*/
 			std::vector< Material* > materials;
+
 			/**
 			* Sets the pose of this object.
 			* @param matrix The matrix which defines the new pose for this object.
 			*/
-            void setPose( const Matrix44& matrix );
+			void setPose( const Matrix44& matrix );
+
 			/**
 			* Returns the current pose of this object.
 			*/
 			Matrix44 getPose();
+
 			/**
 			* This function will release control of all memory associated with the object and it will also remove any reference to it from the scene.
 			*/
@@ -265,23 +299,28 @@ namespace Ovgl
         class DLLEXPORT Emitter
 		{
 		public:
+
 			/**
 			* This is a pointer to the scene that this emitter was created by and resides in.
 			*/
 			Scene* scene;
+
 			/**
 			* This is a pointer to the physics scene object that represents the emitter with in the scene.
 			*/
-            CMesh* cmesh;
+			CMesh* cmesh;
+
 			/**
 			* Sets the pose of this emitter.
 			* @param matrix The matrix which defines the new pose for this emitter.
 			*/
 			void setPose( Matrix44* matrix );
+
 			/**
 			* Returns the current post of this emitter.
 			*/
 			Matrix44 getPose();
+
 			/**
 			* This function will release control of all memory associated with the emitter and it will also remove any reference to it from the scene.
 			*/
@@ -296,82 +335,102 @@ namespace Ovgl
 			* This is a pointer to the scene that this actor was created by and resides in.
 			*/
 			Scene* scene;
+
 			/**
 			* Bullet character controller.
 			*/
 			btKinematicCharacterController* controller;
+
 			/**
 			* Bullet ghost object.
 			*/
 			btPairCachingGhostObject* ghostObject;
+
 			/**
 			* This is the view of the actor. You can set it as the view to a render target to see out of the actor's eyes.
 			*/
 			Camera* camera;
+
 			/**
 			* This offsets the actor's view and can be used for third person view.
 			*/
 			Matrix44 CameraOffset;
+
 			/**
 			* Mesh offset
 			*/
 			Matrix44 offset;
+
 			/**
 			* This is what defines the appearance of the actor.
 			*/
 			Mesh* mesh;
+
 			/**
 			* List of materials that are used for each subset of the character's mesh.
 			*/
 			std::vector< Material* > materials;
+
 			/**
 			* List of matrices that are taken from active animations.
 			*/
 			std::vector< Matrix44 > matrices;
+
 			/**
 			* Which direction the actor is currently moving.
 			*/
 			Vector3 walkDirection;
+			
 			/**
 			* Which direction the actor is currently looking.
 			*/
 			Vector3 lookDirection;
+
 			/**
 			* When the actor is not on the gound we need to know what his velocity is in the air.
 			*/
 			Vector3 velocity;
+
 			/**
 			* The actor's current position
 			*/
 			Vector3 position;
+
 			/**
 			* The maximum slope the actor can climb
 			*/
 			float maxSlope;
+			
 			/**
 			* The height of the character's collision shape
 			*/
 			float height;
+
 			/**
 			* The radius of the character's collision shape
 			*/
 			float radius;
+
 			/**
 			* The actor's current crouch state
 			*/
 			bool crouch;
+
 			/**
 			* This will be true if the actor is standing on the ground.
 			*/
 			bool onGround;
+
 			/**
 			* Represents the physical pose of the actor
 			*/
 			Pose* pose;
+
 			/**
 			* Returns the current post of this actor.
 			*/
 			Matrix44 getPose();
+
 			/**
 			* Updates the pose based on the time specified. This function is then called on all child bones and
 			* the traformational matrix is then passed down.
@@ -379,6 +438,7 @@ namespace Ovgl
 			* @param matrix The root bone to update
 			*/
 			void UpdateAnimation( Bone* bone, Ovgl::Matrix44* matrix, double time );
+
 			/**
 			* Plays an animation from the start to the end times.
 			* @param anim The animation to play
@@ -387,20 +447,24 @@ namespace Ovgl
 			* @param repeat Specifies whether the animation repeats
 			*/
 			AnimationInstance* PlayAnimation(  Animation* anim, double start, double end, bool repeat );
+
 			/**
 			* Tells the actor where to look.
 			* @param vec The direction to look.
 			*/
 			void SetDirection( Vector3* vec );
+
 			/**
 			* Makes the actor jump.
 			* @param force This tells the actor how high to jump.
 			*/
 			void Jump( float force );
+
 			/**
 			* Releases the actor from memory and creates a ragdoll in it's place.
 			*/
 			Prop* Kill();
+
 			/**
 			* This function will release control of all memory associated with the actor and it will also remove any reference to it from the scene.
 			*/
@@ -417,47 +481,58 @@ namespace Ovgl
 			/**
             * This is a pointer to the context that created the scene.
 			*/
-            Context*								context;
+			Context*						context;
+
 			/**
 			* This is a pointer to the bullet scene.
 			*/
 			btDiscreteDynamicsWorld*				DynamicsWorld;
+
 			/**
 			* This texture is the cubemap for the skybox.
 			*/
-			Texture*								sky_box;
+			Texture*						sky_box;
+			
 			/**
 			* This array contains all static objects within the scene.
 			*/
 			std::vector< Object* >					objects;
+
 			/**
 			* This array contains all lights within the scene.
 			*/
 			std::vector< Light* >					lights;
+
 			/**
 			* This array contains all cameras within the scene.
 			*/
 			std::vector< Camera* >					cameras;
+
 			/**
 			* This array contains all props within the scene.
 			*/
 			std::vector< Prop* >					props;
+			
 			/**
 			* This array contains all actors within the scene.
 			*/
 			std::vector< Actor* >					actors;
+
 			/**
 			* This array contains all emitters within the scene.
 			*/
 			std::vector< Emitter* >					emitters;
+
 			/**
 			* This array contains all joints within the scene.
 			*/
 			std::vector< Constraint* >				constraints;
+
 			/**
 			* This array contains all markers within the scene.
 			*/
 			std::vector< Matrix44* >				markers;
+
 			/**
 			* This function adds a Ovgl::Light to the scene.
 			* @param matrix The matrix which defines the the starting pose of the light.
@@ -465,11 +540,13 @@ namespace Ovgl
 			* @param type This option can be used to specify what type of light to emit. There are three types Point Light, Spot Light, and a Directional Light.
 			*/
 			Light* CreateLight( const Matrix44& matirx, const Vector4& color );
+
 			/**
 			* This function adds a Ovgl::Camera to the scene.
 			* @param matrix The matrix which defines the the starting pose of the camera.
 			*/
 			Camera* CreateCamera( const Matrix44& view_matrix );
+
 			/**
 			* This function adds a Actor to the scene.
 			* @param mesh The mesh object that will be displayed for the actor.
@@ -479,12 +556,14 @@ namespace Ovgl
 			* @param offset Offset the mesh's orientation relative to the actor.
 			*/
 			Actor* CreateActor( Mesh* mesh, float radius, float height, const Matrix44& matirx, const Matrix44& offset );
+
 			/**
 			* This function adds a dynamic object to the scene.
 			* @param mesh The mesh that will be displayed for the prop.
 			* @param matrix The matrix which defines the the starting pose of the prop.
 			*/
 			Prop* CreateProp( Mesh* mesh, const Matrix44& matrix, bool disable_pair_collision );
+
 			/**
 			* This function adds a static object to the scene.
 			* @param mesh The mesh that will be displayed for the object.
@@ -492,11 +571,13 @@ namespace Ovgl
 			* @param disable_pair_collision Sometimes it is necessary to disable collision between objects that are connected and contacted each other
 			*/
 			Object* CreateObject( Mesh* mesh, const Matrix44& matrix);
+
 			/**
 			* This function adds a Ovgl::Emitter to the scene.
 			* @param matrix The matrix which defines the starting pose of the emitter.
 			*/
 			Emitter* CreateEmitter( const Matrix44& matrix );
+
 			/**
 			* This function creates a constraint which binds two Ovgl::CMesh together.
 			* @param obj1 First Ovgl::CMesh.
@@ -504,15 +585,18 @@ namespace Ovgl
 			* @param anchor This is the point in which the two Ovgl::CMesh are anchored. If this is set to NULL the anchor will be placed at the position of the first Ovgl::CMesh;
 			*/
 			Constraint* CreateConstraint( CMesh* obj1, CMesh* obj2);
+
 			/**
 			* This function updates the animations, audio emition points, and the physics objects of the scene.
 			* @param update_time The amount of time that has passed since the last scene update.
 			*/
 			void Update( uint32_t update_time );
+
 			/**
 			* This function will release control of all memory associated with the scene and any objects within it. It will also remove any reference to it from the Ovgl::Instance.
 			*/
 			void Release();
+			
 		};
 	}
 }

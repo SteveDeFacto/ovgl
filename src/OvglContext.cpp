@@ -38,10 +38,10 @@
 #include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include <freetype/freetype.h>
-#include <freetype/ftoutln.h>
-#include <freetype/fttrigon.h>
-#include <freetype/ftglyph.h>
+#include <freetype2/freetype.h>
+#include <freetype2/ftoutln.h>
+#include <freetype2/fttrigon.h>
+#include <freetype2/ftglyph.h>
 
 extern "C"
 {
