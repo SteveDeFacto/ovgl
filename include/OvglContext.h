@@ -1,20 +1,20 @@
 /**
-* @file OvglContext.h
-* Copyright 2011 Steven Batchelor
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*       http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-* @brief None.
-*/
+ * @file OvglContext.h
+ * Copyright 2011 Steven Batchelor
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * @brief None.
+ */
 
 #pragma once
 
@@ -85,11 +85,11 @@ extern "C"
 # endif
 #endif
 
-typedef void *SDL_GLContext;
-struct SDL_Window;
-extern DECLSPEC void SDLCALL SDL_GetWindowPosition( SDL_Window * window, int *x, int *y );
-extern DECLSPEC void SDLCALL SDL_GetWindowSize( SDL_Window * window, int *w, int *h );
-extern DECLSPEC int SDLCALL SDL_GL_MakeCurrent(SDL_Window * window, SDL_GLContext context);
+	typedef void *SDL_GLContext;
+	struct SDL_Window;
+	extern DECLSPEC void SDLCALL SDL_GetWindowPosition( SDL_Window * window, int *x, int *y );
+	extern DECLSPEC void SDLCALL SDL_GetWindowSize( SDL_Window * window, int *w, int *h );
+	extern DECLSPEC int SDLCALL SDL_GL_MakeCurrent(SDL_Window * window, SDL_GLContext context);
 }
 
 typedef struct _CGeffect *CGeffect;
@@ -99,6 +99,7 @@ typedef struct ALCdevice_struct ALCdevice;
 typedef struct ALCcontext_struct ALCcontext;
 typedef struct FT_LibraryRec_  *FT_Library;
 typedef float btScalar;
+
 //struct	ContactResultCallback;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
@@ -106,6 +107,7 @@ class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 class btManifoldPoint;
+
 //class btCollisionObject;
 struct btBroadphaseProxy;
 class btGeneric6DofConstraint;
@@ -114,163 +116,163 @@ class btPairCachingGhostObject;
 
 namespace Ovgl
 {
-    typedef enum
-    {
-        OVGL_KEYDOWN,
-        OVGL_KEYUP,
-        OVGL_MOUSEMOTION,
-        OVGL_MOUSEBUTTONDOWN,
-        OVGL_MOUSEBUTTONUP,
-        OVGL_MOUSEWHEEL,
-        OVGL_WINDOWEVENT
-    } OVGL_EventType;
+typedef enum
+{
+	OVGL_KEYDOWN,
+	OVGL_KEYUP,
+	OVGL_MOUSEMOTION,
+	OVGL_MOUSEBUTTONDOWN,
+	OVGL_MOUSEBUTTONUP,
+	OVGL_MOUSEWHEEL,
+	OVGL_WINDOWEVENT
+} OVGL_EventType;
 
-    typedef enum
-    {
-        OVGL_WINDOWEVENT_NONE,
-        OVGL_WINDOWEVENT_SHOWN,
-        OVGL_WINDOWEVENT_HIDDEN,
-        OVGL_WINDOWEVENT_EXPOSED,
-        OVGL_WINDOWEVENT_MOVED,
-        OVGL_WINDOWEVENT_RESIZED,
-        OVGL_WINDOWEVENT_SIZE_CHANGED,
-        OVGL_WINDOWEVENT_MINIMIZED,
-        OVGL_WINDOWEVENT_MAXIMIZED,
-        OVGL_WINDOWEVENT_RESTORED,
-        OVGL_WINDOWEVENT_ENTER,
-        OVGL_WINDOWEVENT_LEAVE,
-        OVGL_WINDOWEVENT_FOCUS_GAINED,
-        OVGL_WINDOWEVENT_FOCUS_LOST,
-        OVGL_WINDOWEVENT_CLOSE
-    } OVGL_WindowEvent;
+typedef enum
+{
+	OVGL_WINDOWEVENT_NONE,
+	OVGL_WINDOWEVENT_SHOWN,
+	OVGL_WINDOWEVENT_HIDDEN,
+	OVGL_WINDOWEVENT_EXPOSED,
+	OVGL_WINDOWEVENT_MOVED,
+	OVGL_WINDOWEVENT_RESIZED,
+	OVGL_WINDOWEVENT_SIZE_CHANGED,
+	OVGL_WINDOWEVENT_MINIMIZED,
+	OVGL_WINDOWEVENT_MAXIMIZED,
+	OVGL_WINDOWEVENT_RESTORED,
+	OVGL_WINDOWEVENT_ENTER,
+	OVGL_WINDOWEVENT_LEAVE,
+	OVGL_WINDOWEVENT_FOCUS_GAINED,
+	OVGL_WINDOWEVENT_FOCUS_LOST,
+	OVGL_WINDOWEVENT_CLOSE
+} OVGL_WindowEvent;
 
-	extern "C"
+extern "C"
+{
+
+	// Declare needed classes
+	class Matrix22;
+	class Matrix33;
+	class Matrix34;
+	class Matrix43;
+	class Matrix44;
+	class Vector2;
+	class Vector3;
+	class Vector4;
+	class Vertex;
+	class Face;
+	class Bone;
+	class Joint;
+	class Animation;
+	class Key;
+	class CMesh;
+	class Mesh;
+	class AudioBuffer;
+	class AudioInstance;
+	class AudioVoice;
+	class Actor;
+	class Camera;
+	class Light;
+	class Prop;
+	class Scene;
+	class Mesh;
+	class Emitter;
+	class Context;
+	class Interface;
+	class RenderTarget;
+	class Effect;
+	class Event;
+	class ResourceManager;
+	class Window;
+
+	/**
+	 * This class is used to store and pass event information from the windows to the hierarchical GUI elements.
+	 * Primarily for user input such a keyboard events and mouse events.
+	 * @brief This class represents events.
+	 */
+	class DLLEXPORT Event
 	{
+		public:
+			OVGL_EventType type;
+			OVGL_WindowEvent windowEvent;
+			unsigned char                           key;
+			int32_t                                 mouseX;
+			int32_t                                 mouseY;
+			int32_t                                 button;
+	};
 
-        // Declare needed classes
-		class Matrix22;
-		class Matrix33;
-		class Matrix34;
-		class Matrix43;
-		class Matrix44;
-		class Vector2;
-		class Vector3;
-		class Vector4;
-		class Vertex;
-		class Face;
-		class Bone;
-		class Joint;
-		class Animation;
-		class Key;
-		class CMesh;
-		class Mesh;
-		class AudioBuffer;
-		class AudioInstance;
-		class AudioVoice;
-		class Actor;
-		class Camera;
-		class Light;
-		class Prop;
-		class Scene;
-		class Mesh;
-		class Emitter;
-        class Context;
-		class Interface;
-        class RenderTarget;
-		class Effect;
-        class Event;
-		class ResourceManager;
-		class Window;
+	/**
+	 * A UDim(unified dimension) represents both a floating point scale and a per pixel offset.
+	 * This allows for dynamic resizing of GUI elements.
+	 * @brief This class represents both scale and offset.
+	 */
+	class DLLEXPORT UDim
+	{
+		public:
+			UDim();
+			UDim( int offset);
+			UDim( float scale );
+			UDim( int32_t offset, float scale );
+			int32_t                                 offset;
+			float                                   scale;
+	};
 
-        /**
-        * This class is used to store and pass event information from the windows to the hierarchical GUI elements.
-        * Primarily for user input such a keyboard events and mouse events.
-        * @brief This class represents events.
-        */
-        class DLLEXPORT Event
-        {
-        public:
-            OVGL_EventType type;
-            OVGL_WindowEvent window_event;
-            unsigned char key;
-            int32_t									mouse_x;
-            int32_t									mouse_y;
-            int32_t									button;
-        };
+	/**
+	 * The URect class contains four UDims. This allows for dynamic resizing of a rectangle which
+	 * can represent the position and size of a two dimensional GUI element.
+	 * @brief Two dimensional dynamically resizing rectangle.
+	 */
+	class DLLEXPORT URect
+	{
+		public:
+			URect();
+			URect( UDim left, UDim top, UDim right, UDim bottom );
+			UDim                                    left;
+			UDim                                    top;
+			UDim                                    right;
+			UDim                                    bottom;
+	};
 
-        /**
-        * A UDim(unified dimension) represents both a floating point scale and a per pixel offset.
-        * This allows for dynamic resizing of GUI elements.
-        * @brief This class represents both scale and offset.
-        */
-        class DLLEXPORT UDim
-        {
-        public:
-            UDim();
-            UDim( int offset);
-            UDim( float scale );
-            UDim( int32_t offset, float scale );
-            int32_t                                 offset;
-            float                                   scale;
-        };
-
-        /**
-        * The URect class contains four UDims. This allows for dynamic resizing of a rectangle which
-        * can represent the position and size of a two dimensional GUI element.
-        * @brief Two dimensional dynamically resizing rectangle.
-        */
-        class DLLEXPORT URect
-        {
-        public:
-            URect();
-            URect( UDim left, UDim top, UDim right, UDim bottom );
-            UDim                    				left;
-            UDim                    				top;
-            UDim                    				right;
-            UDim                    				bottom;
-        };
-
-        /**
-        * The Rect class contains four integers which represent an absolutely positioned two dimensional
-        * rectagle. It can be used to store the position and size of a GUI element.
-        * @brief Two dimensional absolutely positioned rectangle.
-        */
-        class DLLEXPORT Rect
-		{
+	/**
+	 * The Rect class contains four integers which represent an absolutely positioned two dimensional
+	 * rectagle. It can be used to store the position and size of a GUI element.
+	 * @brief Two dimensional absolutely positioned rectangle.
+	 */
+	class DLLEXPORT Rect
+	{
 		public:
 			Rect();
-            Rect( int32_t left, int32_t top, int32_t right, int32_t bottom );
-            int32_t                                 left;
-            int32_t                                 top;
-            int32_t                                 right;
-            int32_t                                 bottom;
-		};
+			Rect( int32_t left, int32_t top, int32_t right, int32_t bottom );
+			int32_t                                 left;
+			int32_t                                 top;
+			int32_t                                 right;
+			int32_t                                 bottom;
+	};
 
-        /**
-        * The context is the base class from which all other classes originate.
-        * This class is basically responsible for managing and storing all sub classes and information.
-        * @brief Base class which manages all sub classes.
-        */
-        class DLLEXPORT Context
-		{
+	/**
+	 * The context is the base class from which all other classes originate.
+	 * This class is basically responsible for managing and storing all sub classes and information.
+	 * @brief Base class which manages all sub classes.
+	 */
+	class DLLEXPORT Context
+	{
 		public:
-            Context( uint32_t flags );
-            ~Context();
-			bool									g_quit;
-            SDL_GLContext							gl_context;
-			SDL_Window*								context_window;
-			_CGcontext*								cg_context;
-			btDefaultCollisionConfiguration*		physics_configuration;
-			btCollisionDispatcher*					physics_dispatcher;
-			btBroadphaseInterface*					physics_broadphase;
-			btSequentialImpulseConstraintSolver*	physics_solver;
-			ALCdevice*								aldevice;
-			ALCcontext*								alcontext;
-			ResourceManager*						default_media;
-			std::vector< ResourceManager* >			media_libraries;
-			std::vector< Window* >					windows;
-            FT_Library                              ftlibrary;
-            void									start();
-		};
-	}
+			Context( uint32_t flags );
+			~Context();
+			bool                                    gQuit;
+			SDL_GLContext                           glContext;
+			SDL_Window*                             contextWindow;
+			_CGcontext*                             cgContext;
+			btDefaultCollisionConfiguration*        physicsConfiguration;
+			btCollisionDispatcher*                  physicsDispatcher;
+			btBroadphaseInterface*                  physicsBroadphase;
+			btSequentialImpulseConstraintSolver*    physicsSolver;
+			ALCdevice*                              alDevice;
+			ALCcontext*                             alContext;
+			ResourceManager*                        defaultMedia;
+			std::vector< ResourceManager* >         mediaLibraries;
+			std::vector< Window* >                  windows;
+			FT_Library                              ftLibrary;
+			void                                    start();
+	};
+}
 }

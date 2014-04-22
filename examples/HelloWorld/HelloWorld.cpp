@@ -50,7 +50,7 @@ int main()
 	interface1->font = font1;
 
 	// Set the interface text
-	interface1->set_text("Hello World!");
+	interface1->setText("Hello World!");
 
 	// Start main loop 
     context->start();

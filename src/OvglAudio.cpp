@@ -13,7 +13,7 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* @brief None.
+* @brief This part of the library has to do with anything audio related.
 */
 
 #include "OvglContext.h"
@@ -28,7 +28,7 @@
 
 namespace Ovgl
 {
-AudioInstance* AudioBuffer::create_audio_instance( Emitter* emitter, bool loop )
+AudioInstance* AudioBuffer::createAudioInstance( Emitter* emitter, bool loop )
 {
     AudioInstance* instance = new AudioInstance;
     instance->paused = false;
@@ -57,11 +57,11 @@ AudioInstance* AudioBuffer::create_audio_instance( Emitter* emitter, bool loop )
     {
         for( uint32_t w = 0; w < context->windows.size(); w++ )
         {
-            for( uint32_t r = 0; r < context->windows[w]->render_targets.size(); r++ )
+            for( uint32_t r = 0; r < context->windows[w]->renderTargets.size(); r++ )
             {
                 for( uint32_t c = 0; c < emitter->scene->cameras.size(); c++ )
                 {
-                    if( context->windows[w]->render_targets[r]->view == emitter->scene->cameras[c] )
+                    if( context->windows[w]->renderTargets[r]->view == emitter->scene->cameras[c] )
                     {
                         emitter->scene->cameras[c]->voices.push_back( voice );
                     }
@@ -69,7 +69,7 @@ AudioInstance* AudioBuffer::create_audio_instance( Emitter* emitter, bool loop )
             }
         }
     }
-    audio_instances.push_back( instance );
+    audioInstances.push_back( instance );
     return instance;
 }
 
@@ -129,9 +129,9 @@ void AudioInstance::release()
 
 void AudioBuffer::release()
 {
-    for( uint32_t i = 0; i < audio_instances.size(); i++)
+    for( uint32_t i = 0; i < audioInstances.size(); i++)
     {
-        audio_instances[i]->release();
+        audioInstances[i]->release();
     }
     alDeleteBuffers(1, &mono);
     alDeleteBuffers(1, &stereo);

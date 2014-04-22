@@ -20,7 +20,7 @@
 
 // Declare pointers we will use later
 Ovgl::Context*				context;
-Ovgl::RenderTarget*			render_target;
+Ovgl::RenderTarget*			renderTarget;
 Ovgl::Window*				window;
 Ovgl::ResourceManager*		resources;
 Ovgl::Scene*				scene;
@@ -41,7 +41,7 @@ Ovgl::Interface*			interface3;
 
 void MouseMove(long x, long y)
 {
-	camera->setPose( ((Ovgl::MatrixRotationY(x / 1000.0f ) * Ovgl::MatrixRotationX( -y / 1000.0f)) * camera->getPose() ) );
+	camera->setPose( ((Ovgl::matrixRotationY(x / 1000.0f ) * Ovgl::matrixRotationX( -y / 1000.0f)) * camera->getPose() ) );
 }
 
 void KeyDown(char key)
@@ -49,23 +49,23 @@ void KeyDown(char key)
 	switch(key)
 	{
 	case (char)27: // If escape is pressed tell the context to quit
-        context->g_quit = true;
+        context->gQuit = true;
 		break;
 
 	case 'W': // If the W key is pressed move camera forward
-        camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.1f ) * camera->getPose() ) );
+        camera->setPose( (Ovgl::matrixTranslation( 0.0f, 0.0f, 0.1f ) * camera->getPose() ) );
 		break;
 
 	case 'S': // If the S key is pressed move camera back
-		camera->setPose( (Ovgl::MatrixTranslation( 0.0f, 0.0f, -0.1f ) * camera->getPose() ) );
+		camera->setPose( (Ovgl::matrixTranslation( 0.0f, 0.0f, -0.1f ) * camera->getPose() ) );
 		break;
 
 	case 'A': // If the A key is pressed move camera left
-        camera->setPose( (Ovgl::MatrixTranslation( 0.1f, 0.0f, 0.0f ) * camera->getPose() ) );
+        camera->setPose( (Ovgl::matrixTranslation( 0.1f, 0.0f, 0.0f ) * camera->getPose() ) );
 		break;
 
 	case 'D': // If the D key is pressed move camera right
-        camera->setPose( (Ovgl::MatrixTranslation( -0.1f, 0.0f, 0.0f ) * camera->getPose() ) );
+        camera->setPose( (Ovgl::matrixTranslation( -0.1f, 0.0f, 0.0f ) * camera->getPose() ) );
 		break;
 	}
 }
@@ -78,85 +78,85 @@ int main()
     window = new Ovgl::Window( context, "Editor");
 
 	// Lock mouse to center of window
-    window->set_lock_mouse( true );
+    window->setLockMouse( true );
 
 	// Vertical synchronization to prevent screen tearing
-    window->set_vsync( true );
+    window->setVsync( true );
 
 	// Set mouse move event callback function
-    window->on_mouse_move = MouseMove;
+    window->onMouseMove = MouseMove;
 
 	// Set key down event callback function
-    window->on_key_down = KeyDown;
+    window->onKeyDown = KeyDown;
 
     // Create Render Target
-    render_target = new Ovgl::RenderTarget( context, window, Ovgl::URect(0, 0, 1.0f, 1.0f), 0);
+    renderTarget = new Ovgl::RenderTarget( context, window, Ovgl::URect(0, 0, 1.0f, 1.0f), 0);
 
 	// Blurs bloom across four angles
-    render_target->bloom = 4;
+    renderTarget->bloom = 4;
 
 	// Auto adjust brightness
-    render_target->autoLuminance = true;
+    renderTarget->autoLuminance = true;
 
 	// Use motion bluring
-    render_target->motionBlur = true;
+    renderTarget->motionBlur = true;
 
 	// Multi sample to smooth edges
-    render_target->multiSample = true;
+    renderTarget->multiSample = true;
 
     // Create Media Library
     resources = new Ovgl::ResourceManager(context, "");
 
     // Create empty scene
-    scene = resources->create_scene();
+    scene = resources->createScene();
 
     // Add light to scene.
-    light = scene->CreateLight(Ovgl::MatrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 5.0f, 5.0f, 5.0f, 1.0f ));
+    light = scene->createLight(Ovgl::matrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 5.0f, 5.0f, 5.0f, 1.0f ));
 
     // Add camera to scene
-    camera = scene->CreateCamera(Ovgl::MatrixTranslation( 0.0f, 0.0f, 0.0f ));
+    camera = scene->createCamera(Ovgl::matrixTranslation( 0.0f, 0.0f, 0.0f ));
 
     // Set camera as view for render target
-    render_target->view = camera;
+    renderTarget->view = camera;
 
     // Import cubemap texture
-    texture1 = resources->import_cubemap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
+    texture1 = resources->importCubemap( "../media/textures/skybox/front.png", "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
                                             "../media/textures/skybox/bottom.png", "../media/textures/skybox/left.png", "../media/textures/skybox/right.png");
     // Import grass texture
-    texture2 = resources->import_texture("../media/textures/Grass.png");
+    texture2 = resources->importTexture("../media/textures/Grass.png");
 
 	// Import margle texture
-    texture3 = resources->import_texture("../media/textures/white marble.png");
+    texture3 = resources->importTexture("../media/textures/white marble.png");
 
     // Import mesh
-    mesh = resources->import_model( "../media/meshes/plane.dae", true );
+    mesh = resources->importModel( "../media/meshes/plane.dae", true );
 
 	// Import another mesh
-    mesh2 = resources->import_model( "../media/meshes/harvey.dae", true );
+    mesh2 = resources->importModel( "../media/meshes/harvey.dae", true );
 
 	// Import and play audio
-    resources->import_audio("../media/audio/glacier.ogg")->create_audio_instance(NULL, true);
+    resources->importAudio("../media/audio/glacier.ogg")->createAudioInstance(NULL, true);
 
     // Add object to scene
-    object = scene->CreateObject(mesh, Ovgl::MatrixTranslation( 0.0f, -5.0f, 0.0f ));
+    object = scene->createObject(mesh, Ovgl::matrixTranslation( 0.0f, -5.0f, 0.0f ));
 
 	// Bind texture to effect
     object->materials[0]->setEffectTexture("txDiffuse", texture2);
 
     // Add actor to scene
-    actor = scene->CreateActor(mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+    actor = scene->createActor(mesh2, 0.1f, 1.0f, Ovgl::matrixTranslation(0.0f, 0.0f, 0.0f), Ovgl::matrixTranslation(0.0f, 0.0f, 0.0f));
 
 	// Play an animation
     //actor->PlayAnimation( &mesh2->skeleton->animations[0], 0, 10, true);
 
 	// Add another actor to scene
-    actor2 = scene->CreateActor(mesh2, 0.1f, 1.0f, Ovgl::MatrixTranslation(1.0f, 0.0f, 0.0f), Ovgl::MatrixTranslation(0.0f, 0.0f, 0.0f));
+    actor2 = scene->createActor(mesh2, 0.1f, 1.0f, Ovgl::matrixTranslation(1.0f, 0.0f, 0.0f), Ovgl::matrixTranslation(0.0f, 0.0f, 0.0f));
 
 	// Play an animation
     //actor2->PlayAnimation( &mesh2->skeleton->animations[0], 5, 6, false);
 
     // Set scene sky box
-    scene->sky_box = texture1;
+    scene->skyBox = texture1;
 
 	// Start main loop 
     context->start();

@@ -13,7 +13,7 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* @brief None.
+* @brief This part of the library deals with mathmatical storage and computation.
 */
 
 #include "OvglContext.h"
@@ -303,7 +303,7 @@ Matrix33 Matrix33::operator * ( const Matrix33& in ) const
     return out;
 }
 
-Matrix44 Matrix44::Rotation()
+Matrix44 Matrix44::rotation()
 {
     Matrix44 out;
     out = *this;
@@ -313,10 +313,10 @@ Matrix44 Matrix44::Rotation()
     return out;
 }
 
-Matrix44 Matrix44::Translation()
+Matrix44 Matrix44::translation()
 {
     Matrix44 out;
-    out = MatrixTranslation(this->_41, this->_42, this->_43);
+    out = matrixTranslation(this->_41, this->_42, this->_43);
     return out;
 }
 
@@ -349,7 +349,7 @@ void Matrix44::fromDoubles( double* data )
     }
 }
 
-Matrix44 MatrixIdentity()
+Matrix44 matrixIdentity()
 {
     Matrix44 out = {0};
     out._11 = 1;
@@ -359,7 +359,7 @@ Matrix44 MatrixIdentity()
     return out;
 }
 
-Matrix44 MatrixInverse ( const Vector4& in_vec, const Matrix44& in_mat)
+Matrix44 matrixInverse ( const Vector4& in_vec, const Matrix44& in_mat)
 {
     Matrix44 out = {0};
     float inv[16], det;
@@ -408,7 +408,7 @@ Matrix44 MatrixInverse ( const Vector4& in_vec, const Matrix44& in_mat)
 }
 
 
-Matrix44 MatrixScaling( float x, float y, float z )
+Matrix44 matrixScaling( float x, float y, float z )
 {
     Matrix44 out = {0};
     out._11 = x;
@@ -418,7 +418,7 @@ Matrix44 MatrixScaling( float x, float y, float z )
     return out;
 }
 
-Matrix44 MatrixTranslation( float x, float y, float z )
+Matrix44 matrixTranslation( float x, float y, float z )
 {
     Matrix44 out = {0};
     out._11 = 1;
@@ -431,7 +431,7 @@ Matrix44 MatrixTranslation( float x, float y, float z )
     return out;
 }
 
-Matrix44 MatrixTranspose( const Matrix44& in_mat )
+Matrix44 matrixTranspose( const Matrix44& in_mat )
 {
     Matrix44 out = {0};
     out._11 = in_mat._11;
@@ -453,7 +453,7 @@ Matrix44 MatrixTranspose( const Matrix44& in_mat )
     return out;
 }
 
-Matrix44 MatrixRotationX( float angle )
+Matrix44 matrixRotationX( float angle )
 {
     Matrix44 out = {0};
     out._11 = 1;
@@ -465,7 +465,7 @@ Matrix44 MatrixRotationX( float angle )
     return out;
 }
 
-Matrix44 MatrixRotationY( float angle )
+Matrix44 matrixRotationY( float angle )
 {
     Matrix44 out = {0};
     out._11 = cos( angle );
@@ -477,7 +477,7 @@ Matrix44 MatrixRotationY( float angle )
     return out;
 }
 
-Matrix44 MatrixRotationZ( float angle )
+Matrix44 matrixRotationZ( float angle )
 {
     Matrix44 out = {0};
     out._11 = cos( angle );
@@ -489,7 +489,7 @@ Matrix44 MatrixRotationZ( float angle )
     return out;
 }
 
-Matrix44 MatrixRotationEuler( float roll, float pitch, float yaw )
+Matrix44 matrixRotationEuler( float roll, float pitch, float yaw )
 {
     Matrix44 out = {0};
     out._11 = ( cos(roll) * cos(yaw) ) + ( sin(roll) * sin(pitch) * sin(yaw) );
@@ -505,7 +505,7 @@ Matrix44 MatrixRotationEuler( float roll, float pitch, float yaw )
     return out;
 }
 
-Matrix44 MatrixRotationAxis( const Vector3& axis, float angle )
+Matrix44 matrixRotationAxis( const Vector3& axis, float angle )
 {
     Matrix44 out;
     float s = sinf(angle);
@@ -530,7 +530,7 @@ Matrix44 MatrixRotationAxis( const Vector3& axis, float angle )
     return out;
 }
 
-Matrix44 MatrixPerspectiveLH( float fov, float aspect, float zn, float zf)
+Matrix44 matrixPerspectiveLH( float fov, float aspect, float zn, float zf)
 {
     Matrix44 out;
     float yScale = cos(fov/2) / sin(fov/2);
@@ -554,7 +554,7 @@ Matrix44 MatrixPerspectiveLH( float fov, float aspect, float zn, float zf)
     return out;
 }
 
-Matrix44 MatrixRotationQuaternion( const Vector4& q )
+Matrix44 matrixRotationQuaternion( const Vector4& q )
 {
     Matrix44 out;
     float x2 = q.x + q.x;
@@ -583,7 +583,7 @@ Matrix44 MatrixRotationQuaternion( const Vector4& q )
     return out;
 }
 
-Matrix44 MatrixSwapYZ( const Matrix44& in_mat )
+Matrix44 matrixSwapYZ( const Matrix44& in_mat )
 {
     Matrix44 out;
     out._11 = in_mat._11;
@@ -605,7 +605,7 @@ Matrix44 MatrixSwapYZ( const Matrix44& in_mat )
     return out;
 }
 
-Matrix44 MatrixSwapXZ( const Matrix44& in_mat )
+Matrix44 matrixSwapXZ( const Matrix44& in_mat )
 {
     Matrix44 out;
     out._11 = in_mat._13;
@@ -627,7 +627,7 @@ Matrix44 MatrixSwapXZ( const Matrix44& in_mat )
     return out;
 }
 
-Vector4 QuaternionRotationMatrix( const Matrix44& matrix )
+Vector4 quaternionRotationMatrix( const Matrix44& matrix )
 {
     Vector4 out;
     out.w = (float)sqrt(1.0f + matrix._11 + matrix._22 + matrix._33) / 2.0f;
@@ -638,7 +638,7 @@ Vector4 QuaternionRotationMatrix( const Matrix44& matrix )
     return out;
 }
 
-Vector4 QuaternionRotationAxis( Vector3& axis, float angle )
+Vector4 quaternionRotationAxis( Vector3& axis, float angle )
 {
     Vector4 out;
     out.w  = cosf( angle / 2 );
@@ -648,7 +648,7 @@ Vector4 QuaternionRotationAxis( Vector3& axis, float angle )
     return out;
 }
 
-Vector4 QuaternionRotationEuler( float yaw, float pitch, float roll )
+Vector4 quaternionRotationEuler( float yaw, float pitch, float roll )
 {
     Vector4 out;
     float c1 = cos( yaw / 2 );
@@ -666,7 +666,7 @@ Vector4 QuaternionRotationEuler( float yaw, float pitch, float roll )
     return out;
 }
 
-Vector3 EulerRotationMatrix( Matrix44& matrix )
+Vector3 eulerRotationMatrix( Matrix44& matrix )
 {
     Vector3 out;
     if (matrix._21 > 0.998)
@@ -683,23 +683,23 @@ Vector3 EulerRotationMatrix( Matrix44& matrix )
         out.y = 0;
         return out;
     }
-    out.x = atan2(-matrix._31,matrix._11);
-    out.y = atan2(-matrix._23,matrix._22);
-    out.z = asin(matrix._21);
+    out.x = atan2( -matrix._31, matrix._11 );
+    out.y = atan2( -matrix._23, matrix._22 );
+    out.z = asin( matrix._21 );
     return out;
 }
 
-float& Vector4::operator [] (size_t index)
+float& Vector4::operator [] ( size_t index )
 {
     return (&x)[index];
 }
 
-Vector3& Matrix33::operator [] (size_t index)
+Vector3& Matrix33::operator [] ( size_t index )
 {
     return (Vector3&)*((Vector3*)((&_11) + (index*3)));
 }
 
-Vector4& Matrix44::operator [] (size_t index)
+Vector4& Matrix44::operator [] ( size_t index )
 {
     return (Vector4&)*((Vector4*)((&_11) + (index*4)));
 }
@@ -718,19 +718,19 @@ void Vector3::fromDoubles( double* data )
     z = (float)data[2];
 }
 
-float Distance( const Vector3& vector1, const Vector3& vector2 )
+float distance( const Vector3& vector1, const Vector3& vector2 )
 {
     Vector3 vector = vector1 - vector2;
     float out = sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
     return out;
 }
 
-float Vector3Dot( const Vector3& vec1, const Vector3& vec2 )
+float vector3Dot( const Vector3& vec1, const Vector3& vec2 )
 {
     return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z;
 }
 
-Vector3 Vector3Cross( const Vector3& vec1, const Vector3& vec2 )
+Vector3 vector3Cross( const Vector3& vec1, const Vector3& vec2 )
 {
     Vector3 out;
     out.x = vec1.y * vec2.z - vec2.y * vec1.z;
@@ -739,7 +739,7 @@ Vector3 Vector3Cross( const Vector3& vec1, const Vector3& vec2 )
     return out;
 }
 
-Vector3 Vector3Transform( const Vector3& vector, const Matrix44& matrix )
+Vector3 vector3Transform( const Vector3& vector, const Matrix44& matrix )
 {
     Vector3 out;
     out.x = vector.x * matrix._11 + vector.y * matrix._21 + vector.z * matrix._31 + matrix._41;
@@ -748,7 +748,7 @@ Vector3 Vector3Transform( const Vector3& vector, const Matrix44& matrix )
     return out;
 }
 
-Vector3 Vector3Normalize( const Vector3& vector )
+Vector3 vector3Normalize( const Vector3& vector )
 {
     Vector3 out;
     float l = sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
@@ -758,7 +758,7 @@ Vector3 Vector3Normalize( const Vector3& vector )
     return out;
 }
 
-Vector3 Vector3Center( std::vector< Vector3 >& vertices )
+Vector3 vector3Center( std::vector< Vector3 >& vertices )
 {
     Vector3 out;
     for( uint32_t v = 0; v < vertices.size(); v++ )
@@ -771,22 +771,22 @@ Vector3 Vector3Center( std::vector< Vector3 >& vertices )
     return out;
 }
 
-Vector4 Vector4Lerp( Vector4& vec1, Vector4& vec2, float u)
+Vector4 vector4Lerp( Vector4& vec1, Vector4& vec2, float u )
 {
     return (vec1 * (1 - u)) + (vec2 * u);
 }
 
-float Round( float expression, int32_t numdecimalplaces)
+float round( float expression, int32_t numdecimalplaces )
 {
-    return floorf(expression * pow(10.0f, numdecimalplaces)) / pow(10.0f, numdecimalplaces);
+    return floorf( expression * pow(10.0f, numdecimalplaces ) ) / pow( 10.0f, numdecimalplaces );
 }
 
-float Lerp( float val1, float val2, float u)
+float lerp( float val1, float val2, float u )
 {
-    return (val1 * (1 - u)) + (val2 * u);
+    return ( val1 * (1 - u) ) + ( val2 * u );
 }
 
-Vector4 Slerp( const Vector4& q1, const Vector4& q2, float t )
+Vector4 slerp( const Vector4& q1, const Vector4& q2, float t )
 {
 
     Vector4 qm;
@@ -795,14 +795,15 @@ Vector4 Slerp( const Vector4& q1, const Vector4& q2, float t )
 
     float cosHalfTheta = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 
-    if (cosHalfTheta < 0)
+    if( cosHalfTheta < 0 )
     {
         qt.w = -qt.w; qt.x = -qt.x; qt.y = -qt.y; qt.z = qt.z;
         cosHalfTheta = -cosHalfTheta;
     }
 
 
-    if (abs(cosHalfTheta) >= 1.0f){
+    if( abs(cosHalfTheta) >= 1.0f )
+	{
         qm.w = q1.w;qm.x = q1.x;qm.y = q1.y;qm.z = q1.z;
         return qm;
     }
@@ -810,7 +811,7 @@ Vector4 Slerp( const Vector4& q1, const Vector4& q2, float t )
     float halfTheta = acos(cosHalfTheta);
     float sinHalfTheta = sqrt(1.0f - cosHalfTheta*cosHalfTheta);
 
-    if (fabs(sinHalfTheta) < 0.001)
+    if( fabs(sinHalfTheta) < 0.001 )
     {
         qm.w = (q1.w * 0.5f + qt.w * 0.5f);
         qm.x = (q1.x * 0.5f + qt.x * 0.5f);
@@ -821,28 +822,28 @@ Vector4 Slerp( const Vector4& q1, const Vector4& q2, float t )
     float ratioA = sinf((1.0f - t) * halfTheta) / sinHalfTheta;
     float ratioB = sinf(t * halfTheta) / sinHalfTheta;
 
-    qm.w = (q1.w * ratioA + qt.w * ratioB);
-    qm.x = (q1.x * ratioA + qt.x * ratioB);
-    qm.y = (q1.y * ratioA + qt.y * ratioB);
-    qm.z = (q1.z * ratioA + qt.z * ratioB);
+    qm.w = ( q1.w * ratioA + qt.w * ratioB );
+    qm.x = ( q1.x * ratioA + qt.x * ratioB );
+    qm.y = ( q1.y * ratioA + qt.y * ratioB );
+    qm.z = ( q1.z * ratioA + qt.z * ratioB );
 
     return qm;
 }
 
-float DegToRad( float degree )
+float degToRad( float degree )
 {
-    return degree * ((float)OvglPi) / 180.0f;
+    return degree * ( (float)OvglPi ) / 180.0f;
 }
 
-float VolumeTetrahedron( const Vector3& vector1, const Vector3& vector2, const Vector3& vector3, const Vector3& vector4 )
+float volumeTetrahedron( const Vector3& vector1, const Vector3& vector2, const Vector3& vector3, const Vector3& vector4 )
 {
-    float width = Distance(vector1, vector2);
-    float height = Distance(vector1, vector3);
-    float depth = Distance(vector1, vector4);
-    return (width * height * depth) / 3.0f;
+    float width = distance( vector1, vector2 );
+    float height = distance( vector1, vector3 );
+    float depth = distance( vector1, vector4 );
+    return ( width * height * depth ) / 3.0f;
 }
 
-void Vector3Box( std::vector< Ovgl::Vector3 >& vectors, Ovgl::Vector3* min, Ovgl::Vector3* max )
+void vector3Box( std::vector< Ovgl::Vector3 >& vectors, Ovgl::Vector3* min, Ovgl::Vector3* max )
 {
     for( uint32_t i = 0; i < vectors.size(); i++ )
     {
