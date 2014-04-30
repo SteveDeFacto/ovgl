@@ -1,7 +1,7 @@
 ovgl
 ====
 
-Open Video Game Library
+Open Video Game Library( http://ovgl.org )
 
 OVGL offers a light weight cross platform framework for 3D video game development.
 
