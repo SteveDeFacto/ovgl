@@ -1032,7 +1032,7 @@ AudioBuffer* ResourceManager::importAudio( const std::string& file )
 {
 	Ovgl::AudioBuffer* buffer = new Ovgl::AudioBuffer;
 	buffer->context = context;
-	AVFrame* frame = avcodec_alloc_frame();
+	AVFrame* frame = av_frame_alloc();
 	AVFormatContext* formatContext = NULL;
 	avformat_open_input(&formatContext, file.c_str(), NULL, NULL);
 	avformat_find_stream_info(formatContext, NULL);
