@@ -561,6 +561,7 @@ void Window::doEvents()
 		}
 		SDL_WarpMouseInWindow(sdlWindow, cx, cy);
 	}
+	SDL_GL_MakeCurrent( sdlWindow, context->glContext );
 	SDL_GL_SwapWindow(sdlWindow);
 }
 
