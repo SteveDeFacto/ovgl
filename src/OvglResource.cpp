@@ -714,7 +714,7 @@ Texture* ResourceManager::importCubemap( const std::string& front, const std::st
 	// Create array of cube faces.
 	std::string cubeFaces[6] = {front, back, top, bottom, left, right};
 
-	SDL_GL_MakeCurrent(NULL, context->glContext);
+	SDL_GL_MakeCurrent(context->contextWindow, context->glContext);
 
 	glGenTextures(1, &texture->image);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture->image);
@@ -867,7 +867,7 @@ Texture* ResourceManager::importTexture( const std::string& file )
 			textura[j*4+3] = pixeles[j*4+3];
 		}
 
-		SDL_GL_MakeCurrent(NULL, context->glContext);
+		SDL_GL_MakeCurrent(context->contextWindow, context->glContext);
 
 		// Create OpenGL texture
 		glGenTextures( 1, &texture->image );
@@ -909,8 +909,12 @@ Shader* ResourceManager::importShader( const std::string& file )
 	CGerror error;
 	const char* string;
 
+	SDL_GL_MakeCurrent(context->contextWindow, context->glContext);
+
 	// Create effect
 	shader->effect = cgCreateEffectFromFile( context->cgContext, file.c_str(), NULL );
+
+	SDL_GL_MakeCurrent(NULL, NULL);
 
 	// Check for errors
 	string = cgGetLastErrorString(&error);
@@ -974,6 +978,8 @@ Texture* ResourceManager::createTexture( uint32_t width, uint32_t height )
 		textura[j*4+3] = 255;
 	}
 
+	SDL_GL_MakeCurrent(context->contextWindow, context->glContext);
+
 	// Create OpenGL texture
 	glGenTextures( 1, &texture->image );
 	glBindTexture( GL_TEXTURE_2D, texture->image );
@@ -982,6 +988,9 @@ Texture* ResourceManager::createTexture( uint32_t width, uint32_t height )
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
 	//glGenerateMipmap( GL_TEXTURE_2D );
 	glBindTexture( GL_TEXTURE_2D, 0 );
+
+	SDL_GL_MakeCurrent(NULL, NULL);
+
 
 	// Add texture to media library
 	textures.push_back( texture );
@@ -1007,6 +1016,8 @@ Texture* ResourceManager::createCubemap( uint32_t width, uint32_t height )
 		textura[j*4+3] = 255;
 	}
 
+	SDL_GL_MakeCurrent(context->contextWindow, context->glContext);
+
 	// Create OpenGL texture
 	glGenTextures( 1, &texture->image );
 	glBindTexture( GL_TEXTURE_CUBE_MAP, texture->image );
@@ -1021,6 +1032,8 @@ Texture* ResourceManager::createCubemap( uint32_t width, uint32_t height )
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+	SDL_GL_MakeCurrent(NULL, NULL);
 
 	// Add texture to media library
 	textures.push_back( texture );
@@ -1045,10 +1058,10 @@ AudioBuffer* ResourceManager::importAudio( const std::string& file )
 			break;
 		}
 	}
+
 	AVCodecContext* codecContext = audioStream->codec;
 	codecContext->codec = avcodec_find_decoder(codecContext->codec_id);
 	avcodec_open2(codecContext, codecContext->codec, NULL);
-
 	if (codecContext->channels == 1)
 	{
 		buffer->format = AL_FORMAT_MONO16;
@@ -1081,7 +1094,6 @@ AudioBuffer* ResourceManager::importAudio( const std::string& file )
 	av_free(frame);
 	avcodec_close(codecContext);
 	avformat_close_input(&formatContext);
-
 	if( buffer->format == AL_FORMAT_MONO16 )
 	{
 		alGenBuffers( 1, &buffer->mono );
@@ -1114,6 +1126,8 @@ Font::Font( ResourceManager* resourceManager, const std::string& file, uint32_t 
 		fprintf( stderr, "Error occured while loading font: %s\n", file.c_str());
 		return;
 	}
+	
+	SDL_GL_MakeCurrent( resourceManager->context->contextWindow, resourceManager->context->glContext);
 
 	for(int i = 0; i < 256; i++)
 	{
@@ -1135,6 +1149,10 @@ Font::Font( ResourceManager* resourceManager, const std::string& file, uint32_t 
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, ftFace->glyph->bitmap.width, ftFace->glyph->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE, ftFace->glyph->bitmap.buffer );
 		glBindTexture( GL_TEXTURE_2D, 0 );
 	}
+
+	SDL_GL_MakeCurrent(NULL, NULL);
+
+
 	resourceManager->fonts.push_back(this);
 }
 }

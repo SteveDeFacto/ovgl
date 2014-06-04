@@ -349,8 +349,11 @@ Window::Window( Context* pcontext, const std::string& name )
 	onMouseUp = NULL;
 	onMouseOver = NULL;
 	onMouseOut = NULL;
+	SDL_GL_MakeCurrent(context->contextWindow, context->glContext);
+	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 	sdlWindow = SDL_CreateWindow( name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
-	SDL_GL_MakeCurrent(sdlWindow, context->glContext);
+	windowContext = SDL_GL_CreateContext(sdlWindow); 
+	SDL_GL_MakeCurrent(sdlWindow, windowContext);
 	glDisable(GL_BLEND);
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable (GL_CULL_FACE);
@@ -373,8 +376,11 @@ Window::Window( Context* pcontext, const std::string& name, unsigned int width, 
 	onMouseUp = NULL;
 	onMouseOver = NULL;
 	onMouseOut = NULL;
+	SDL_GL_MakeCurrent(context->contextWindow, context->glContext);
+	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 	sdlWindow = SDL_CreateWindow( name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,  width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
-	SDL_GL_MakeCurrent(sdlWindow, context->glContext);
+	windowContext = SDL_GL_CreateContext(sdlWindow); 
+	SDL_GL_MakeCurrent(sdlWindow, windowContext);
 	glDisable(GL_BLEND);
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable (GL_CULL_FACE);
@@ -561,8 +567,8 @@ void Window::doEvents()
 		}
 		SDL_WarpMouseInWindow(sdlWindow, cx, cy);
 	}
-	SDL_GL_MakeCurrent( sdlWindow, context->glContext );
-	SDL_GL_SwapWindow(sdlWindow);
+	SDL_GL_MakeCurrent( sdlWindow, windowContext );
+	SDL_GL_SwapWindow( sdlWindow );
 }
 
 void Window::setFullscreen( bool state )

@@ -152,10 +152,10 @@ int main()
     actor = scene->createActor(mesh2, 0.1f, 1.0f, Ovgl::matrixTranslation(-2.0f, 0.0f, 0.0f), Ovgl::matrixTranslation(0.0f, 0.0f, 0.0f));
 
 	// Play an animation
-//    actor->PlayAnimation( &mesh2->skeleton->animations[0], 0, 10, true);
+    actor->playAnimation( &mesh2->skeleton->animations[0], 0, 10, true);
 
     // Set scene sky box
-//    scene->sky_box = texture1;
+    scene->skyBox = texture1;
 
 	// Start main loop 
     context->start();

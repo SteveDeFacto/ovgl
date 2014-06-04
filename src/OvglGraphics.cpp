@@ -663,7 +663,7 @@ void RenderTarget::render()
 		windowRect.right += windowRect.left;
 		windowRect.bottom += windowRect.top;
 		adjustedRect = windowAdjustedRect( window, &rect );
-		SDL_GL_MakeCurrent( window->sdlWindow, context->glContext );
+		SDL_GL_MakeCurrent( window->sdlWindow, window->windowContext );
 	}
 	else
 	{
@@ -776,7 +776,7 @@ void RenderTarget::render()
 		}
 		else
 		{
-			glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+			glClearColor( 0.0f, 0.0f, 1.0f, 0.0f );
 			glClear( GL_COLOR_BUFFER_BIT );
 		}
 
@@ -815,6 +815,7 @@ void RenderTarget::render()
 				}
 			}
 		}
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		glColor3f( 1.0f, 1.0f, 1.0f );
@@ -836,6 +837,7 @@ void RenderTarget::render()
 		glBlitFramebuffer( 0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST );
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
+
 
 		if( autoLuminance )
 		{
@@ -884,8 +886,6 @@ void RenderTarget::render()
 		glTexCoord2i( 1, 0 );
 		glVertex2i( adjustedRect.right, adjustedRect.bottom );
 		glEnd();
-
-
 	}
 
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
@@ -934,7 +934,7 @@ void RenderTarget::render()
 
 void RenderTarget::update()
 {
-	SDL_GL_MakeCurrent( NULL, context );
+	SDL_GL_MakeCurrent( window->sdlWindow, window->windowContext );
 	Ovgl::Rect adjustedRect = windowAdjustedRect( window, &rect );
 
 	int width = (int)(adjustedRect.right - adjustedRect.left);
@@ -975,7 +975,6 @@ void RenderTarget::update()
 	glBindFramebuffer( GL_FRAMEBUFFER, effectFrameBuffer );
 
 	// Create and bind textures
-
 	glGenTextures( 1, &depthTexture );
 	glBindTexture( GL_TEXTURE_2D, depthTexture );
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );

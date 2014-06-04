@@ -53,6 +53,7 @@ namespace Ovgl
 {
 void buildDefaultMedia( Context* context )
 {
+	SDL_GL_MakeCurrent(context->contextWindow, context->glContext);
 	context->defaultMedia = new ResourceManager(context, "");
 
 	Shader* defaultEffect = new Shader;
@@ -595,7 +596,6 @@ void buildDefaultMedia( Context* context )
 	bone->mesh = new Mesh;
 	bone->convex = NULL;
 	mesh->skeleton->bones.push_back( bone );
-	SDL_GL_MakeCurrent( NULL, context->glContext );
 	mesh->update();
 	SDL_GL_MakeCurrent( NULL, NULL );
 	context->defaultMedia->meshes.push_back( mesh );
@@ -618,13 +618,14 @@ Context::Context( uint32_t flags )
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
 	contextWindow = SDL_CreateWindow( "ContextWindow", 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN );
 	glContext = SDL_GL_CreateContext( contextWindow );
+	SDL_GL_MakeCurrent(contextWindow, glContext);
 	if(!glContext)
 	{
 		fprintf( stderr, "Error: %s\n", "Could not create GL Context." );
 	}
 
 	// Initialize GLEW
-	//glewExperimental = GL_TRUE;
+//	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 	if (GLEW_OK != err)
 	{

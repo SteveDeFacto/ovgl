@@ -36,6 +36,7 @@ extern "C"
 			~Window();
 			Context*                                              context;
 			SDL_Window*                                           sdlWindow;
+			SDL_GLContext                                           windowContext;
 			std::vector< RenderTarget* >                          renderTargets;
 			std::string                                           title;
 			bool                                                  sizing;

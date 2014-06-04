@@ -72,6 +72,8 @@ void Mesh::generateVertexNormals()
 
 void Mesh::update()
 {
+	SDL_GL_MakeCurrent(mediaLibrary->context->contextWindow, mediaLibrary->context->glContext);
+
 	// Release buffers.
 	if( vertexBuffer ) glDeleteBuffers(1, &vertexBuffer);
 	if( indexBuffers )
@@ -88,12 +90,13 @@ void Mesh::update()
 			delete skeleton->bones[i]->convex;
 		}
 	}
+
 	glGenBuffers( 1, &vertexBuffer );
 	glBindBuffer( GL_ARRAY_BUFFER, vertexBuffer );
 	glBufferData( GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW );
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
-	// Create Index buffers.
+	// Create index buffers.
 	std::set<uint32_t> usedAttributes(attributes.begin(), attributes.end());
 	std::vector< std::vector< Face > > indexSubsets;
 	indexSubsets.resize(usedAttributes.size());
@@ -140,6 +143,7 @@ void Mesh::update()
 	{
 		delete trimesh;
 	}
+
 	// Create bone shapes.
 	for( uint32_t i = 0; i < skeleton->bones.size(); i++ )
 	{
@@ -151,6 +155,8 @@ void Mesh::update()
 			skeleton->bones[i]->convex = new btConvexHullShape((float*)&skeleton->bones[i]->mesh->vertices[0], skeleton->bones[i]->mesh->vertices.size(), sizeof(Vertex));
 		}
 	}
+
+	SDL_GL_MakeCurrent( 0, 0 );
 }
 
 Mesh::Mesh()
