@@ -16,6 +16,7 @@
 * @brief This part of the library deals with mathmatical storage and computation.
 */
 
+#include "OvglCommon.h"
 #include "OvglContext.h"
 #include "OvglMath.h"
 
@@ -33,7 +34,7 @@ Vector2::Vector2( float new_x, float new_y )
     y = new_y;
 }
 
-float& Vector2::operator [] (size_t index)
+float& Vector2::operator [] ( size_t index )
 {
     return (&x)[index];
 }
@@ -56,7 +57,7 @@ Vector2 Vector2::operator / ( const float& in ) const
 
 bool Vector2::operator == ( const Vector2& in ) const
 {
-    if( memcmp(this, &in, sizeof(Vector2)) == 0 )
+    if( in.x == x && in.y == y )
         return true;
     else
         return false;
@@ -64,7 +65,7 @@ bool Vector2::operator == ( const Vector2& in ) const
 
 bool Vector2::operator != ( const Vector2& in ) const
 {
-    if( memcmp(this, &in, sizeof(Vector2)) != 0 )
+    if( in.x ==x && in.y == y )
         return true;
     else
         return false;
@@ -84,7 +85,7 @@ Vector3::Vector3( float new_x, float new_y, float new_z )
     z = new_z;
 }
 
-float& Vector3::operator [] (size_t index)
+float& Vector3::operator [] ( size_t index )
 {
     return (&x)[index];
 }
@@ -145,7 +146,7 @@ Vector3 Vector3::operator * ( const float& in ) const
 
 bool Vector3::operator == ( const Vector3& in ) const
 {
-    if( memcmp(this, &in, sizeof(Vector3)) == 0 )
+    if( x == in.x && y == in.y && z == in.z )
         return true;
     else
         return false;
@@ -153,7 +154,7 @@ bool Vector3::operator == ( const Vector3& in ) const
 
 bool Vector3::operator != ( const Vector3& in ) const
 {
-    if( memcmp(this, &in, sizeof(Vector3)) != 0 )
+    if( x == in.x && y == in.y && z == in.z )
         return true;
     else
         return false;
@@ -235,33 +236,76 @@ Vector4 Vector4::operator * ( const float& in ) const
     return out;
 }
 
+Matrix44::Matrix44()
+{
+    _11 = 1;
+    _12 = 0;
+    _13 = 0;
+    _14 = 0;
+
+    _21 = 0;
+	_22 = 1;
+    _23 = 0;
+    _24 = 0;
+
+    _31 = 0;
+    _32 = 0;
+    _33 = 1;
+    _34 = 0;
+
+    _41 = 0;
+    _42 = 0;
+    _43 = 0;
+    _44 = 1;
+}
+
 Matrix44 Matrix44::operator * ( const Matrix44& in ) const
 {
-    Matrix44 out = {0};
+    Matrix44 out;
+	for( int row = 0; row < 4; row++)
+	{
+		for( int col = 0; col < 4; col++)
+		{
+    		out[row][col] = in[row][0] * in[0][col] + in[row][1] * in[1][col] + in[row][2] * in[2][col] + in[row][3] * in[3][col];
+		}
+	}
+/*
     out._11 = _11 * in._11 + _12 * in._21 + _13 * in._31 + _14 * in._41;
-    out._12 = _11 * in._12 + _12 * in._22 + _13 * in._32 + _14 * in._42;
-    out._13 = _11 * in._13 + _12 * in._23 + _13 * in._33 + _14 * in._43;
+	out._12 = _11 * in._12 + _12 * in._22 + _13 * in._32 + _14 * in._42;
+	out._13 = _11 * in._13 + _12 * in._23 + _13 * in._33 + _14 * in._43;
     out._14 = _11 * in._14 + _12 * in._24 + _13 * in._34 + _14 * in._44;
-    out._21 = _21 * in._11 + _22 * in._21 + _23 * in._31 + _24 * in._41;
+    
+	out._21 = _21 * in._11 + _22 * in._21 + _23 * in._31 + _24 * in._41;
     out._22 = _21 * in._12 + _22 * in._22 + _23 * in._32 + _24 * in._42;
     out._23 = _21 * in._13 + _22 * in._23 + _23 * in._33 + _24 * in._43;
     out._24 = _21 * in._14 + _22 * in._24 + _23 * in._34 + _24 * in._44;
-    out._31 = _31 * in._11 + _32 * in._21 + _33 * in._31 + _34 * in._41;
+    
+	out._31 = _31 * in._11 + _32 * in._21 + _33 * in._31 + _34 * in._41;
     out._32 = _31 * in._12 + _32 * in._22 + _33 * in._32 + _34 * in._42;
     out._33 = _31 * in._13 + _32 * in._23 + _33 * in._33 + _34 * in._43;
     out._34 = _31 * in._14 + _32 * in._24 + _33 * in._34 + _34 * in._44;
-    out._41 = _41 * in._11 + _42 * in._21 + _43 * in._31 + _44 * in._41;
+
+	out._41 = _41 * in._11 + _42 * in._21 + _43 * in._31 + _44 * in._41;
     out._42 = _41 * in._12 + _42 * in._22 + _43 * in._32 + _44 * in._42;
     out._43 = _41 * in._13 + _42 * in._23 + _43 * in._33 + _44 * in._43;
     out._44 = _41 * in._14 + _42 * in._24 + _43 * in._34 + _44 * in._44;
-    return out;
+*/
+	return out;
 }
 
 Matrix44 Matrix33::to4x4()
 {
-    Matrix44 out = {0};
-    memcpy( &out, this, sizeof(Matrix33) );
-    out._44 = 1;
+    Matrix44 out;
+    out._11 = _11;
+	out._12 = _12;
+	out._13 = _13;
+	out._21 = _21;
+	out._22 = _22;
+	out._23 = _23;
+	out._31 = _31;
+	out._32 = _32;
+	out._33 = _33;
+	out._44 = 1;
     return out;
 }
 
@@ -322,8 +366,16 @@ Matrix44 Matrix44::translation()
 
 Matrix33 Matrix44::to3x3()
 {
-    Matrix33 out = {0};
-    memcpy( &out, this, sizeof(Matrix33) );
+    Matrix33 out;
+	out._11 = _11;
+	out._12 = _12;
+	out._13 = _13;
+	out._21 = _21;
+	out._22 = _22;
+	out._23 = _23;
+	out._31 = _31;
+	out._32 = _32;
+	out._33 = _33;
     return out;
 }
 
@@ -351,7 +403,7 @@ void Matrix44::fromDoubles( double* data )
 
 Matrix44 matrixIdentity()
 {
-    Matrix44 out = {0};
+    Matrix44 out;
     out._11 = 1;
     out._22 = 1;
     out._33 = 1;
@@ -361,7 +413,7 @@ Matrix44 matrixIdentity()
 
 Matrix44 matrixInverse ( const Vector4& in_vec, const Matrix44& in_mat)
 {
-    Matrix44 out = {0};
+    Matrix44 out;
     float inv[16], det;
     inv[0] =   in_mat._22*in_mat._33*in_mat._44 - in_mat._22*in_mat._34*in_mat._43 - in_mat._32*in_mat._23*in_mat._44
             + in_mat._32*in_mat._24*in_mat._43 + in_mat._42*in_mat._23*in_mat._34 - in_mat._42*in_mat._24*in_mat._33;
@@ -410,7 +462,7 @@ Matrix44 matrixInverse ( const Vector4& in_vec, const Matrix44& in_mat)
 
 Matrix44 matrixScaling( float x, float y, float z )
 {
-    Matrix44 out = {0};
+    Matrix44 out;
     out._11 = x;
     out._22 = y;
     out._33 = z;
@@ -420,7 +472,7 @@ Matrix44 matrixScaling( float x, float y, float z )
 
 Matrix44 matrixTranslation( float x, float y, float z )
 {
-    Matrix44 out = {0};
+    Matrix44 out;
     out._11 = 1;
     out._22 = 1;
     out._33 = 1;
@@ -433,7 +485,7 @@ Matrix44 matrixTranslation( float x, float y, float z )
 
 Matrix44 matrixTranspose( const Matrix44& in_mat )
 {
-    Matrix44 out = {0};
+    Matrix44 out;
     out._11 = in_mat._11;
     out._21 = in_mat._12;
     out._31 = in_mat._13;
@@ -455,7 +507,7 @@ Matrix44 matrixTranspose( const Matrix44& in_mat )
 
 Matrix44 matrixRotationX( float angle )
 {
-    Matrix44 out = {0};
+    Matrix44 out;
     out._11 = 1;
     out._22 = cos( angle );
     out._23 = -sin( angle );
@@ -467,7 +519,7 @@ Matrix44 matrixRotationX( float angle )
 
 Matrix44 matrixRotationY( float angle )
 {
-    Matrix44 out = {0};
+    Matrix44 out;
     out._11 = cos( angle );
     out._13 = sin( angle );
     out._22 = 1;
@@ -479,7 +531,7 @@ Matrix44 matrixRotationY( float angle )
 
 Matrix44 matrixRotationZ( float angle )
 {
-    Matrix44 out = {0};
+    Matrix44 out;
     out._11 = cos( angle );
     out._12 = -sin( angle );
     out._21 = sin( angle );
@@ -491,16 +543,20 @@ Matrix44 matrixRotationZ( float angle )
 
 Matrix44 matrixRotationEuler( float roll, float pitch, float yaw )
 {
-    Matrix44 out = {0};
-    out._11 = ( cos(roll) * cos(yaw) ) + ( sin(roll) * sin(pitch) * sin(yaw) );
-    out._12 = ( sin(roll) * cos(pitch) );
-    out._13 = ( cos(roll) * -sin(yaw) ) + ( sin(roll) * sin(pitch) * cos(yaw) );
-    out._21 = (-sin(roll) * cos(yaw) ) + ( cos(roll) * sin(pitch) * sin(yaw) );
-    out._22 = ( cos(roll) * cos(pitch) );
-    out._23 = ( sin(roll) * sin(yaw) ) + ( cos(roll) * sin(pitch) * cos(yaw) );
-    out._31 = ( cos(pitch) * sin(yaw) );
-    out._32 = -sin(pitch);
-    out._33 = ( cos(pitch) * cos(yaw) );
+    float rollSin = sin(roll), rollCos = cos(roll);
+	float pitchSin = sin(pitch), pitchCos = cos(pitch);
+	float yawSin = sin(yaw), yawCos = cos(yaw);
+	
+	Matrix44 out;
+    out._11 = ( rollCos * yawCos ) + ( rollSin * pitchSin * yawSin );
+    out._12 = ( rollSin * pitchCos );
+    out._13 = ( rollCos * -yawSin ) + ( rollSin * pitchSin * yawCos );
+    out._21 = (-rollSin * yawCos ) + ( rollCos * pitchSin * yawSin );
+    out._22 = ( rollCos * pitchCos );
+    out._23 = ( rollSin * yawSin ) + ( rollCos * pitchSin * yawCos );
+    out._31 = ( pitchCos * yawSin );
+    out._32 = -pitchSin;
+    out._33 = ( pitchCos * yawCos );
     out._44 = 1;
     return out;
 }
@@ -694,12 +750,12 @@ float& Vector4::operator [] ( size_t index )
     return (&x)[index];
 }
 
-Vector3& Matrix33::operator [] ( size_t index )
+Vector3& Matrix33::operator [] ( size_t index ) const
 {
     return (Vector3&)*((Vector3*)((&_11) + (index*3)));
 }
 
-Vector4& Matrix44::operator [] ( size_t index )
+Vector4& Matrix44::operator [] ( size_t index ) const
 {
     return (Vector4&)*((Vector4*)((&_11) + (index*4)));
 }
@@ -718,11 +774,16 @@ void Vector3::fromDoubles( double* data )
     z = (float)data[2];
 }
 
+float length( const Vector3& vector )
+{
+	return sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
+}
+
 float distance( const Vector3& vector1, const Vector3& vector2 )
 {
     Vector3 vector = vector1 - vector2;
-    float out = sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
-    return out;
+    float out = length( vector );
+	return out;
 }
 
 float vector3Dot( const Vector3& vec1, const Vector3& vec2 )
@@ -751,7 +812,7 @@ Vector3 vector3Transform( const Vector3& vector, const Matrix44& matrix )
 Vector3 vector3Normalize( const Vector3& vector )
 {
     Vector3 out;
-    float l = sqrt((vector.x * vector.x) + (vector.y * vector.y) + (vector.z * vector.z));
+    float l = length( vector );
     out.x = vector.x / l;
     out.y = vector.y / l;
     out.z = vector.z / l;

@@ -17,35 +17,7 @@
  */
 
 #pragma once
-
-#pragma warning(disable : 4251) // Disable std warnings
-
-#pragma warning(disable : 4244) // Disable conversion loss of data warnings
-
-#define _CRT_SECURE_NO_WARNINGS // Disable security warnings
-
-#define __STDC_CONSTANT_MACROS // Enable c99 macros
-
-#define SDL_MAIN_HANDLED // Disable SDL main
-
-#ifdef _WIN32
-#  define DLLEXPORT __declspec( dllexport )
-#else
-#  define DLLEXPORT
-#endif
-
-// C++ Standard Library Headers
-#include <sys/stat.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <math.h>
-#include <algorithm>
-#include <iostream>
-#include <fstream>
-#include <map>
-#include <vector>
-#include <string.h>
-#include <set>
+#include "OvglCommon.h"
 
 // Predefine some third party classes and structures which we will need later.
 

@@ -16,11 +16,7 @@
  * @brief This header defines all math functions and classes used in Ovgl.
  */
 
-#ifdef _WIN32
-#  define DLLEXPORT __declspec( dllexport )
-#else
-#  define DLLEXPORT
-#endif
+#include "OvglCommon.h"
 
 namespace Ovgl
 {
@@ -43,9 +39,9 @@ class DLLEXPORT Vector2
 		Vector2( float newX, float newY );
 		Vector2 operator - ( const Vector2& ) const;
 		Vector2 operator / ( const float& ) const;
-		bool operator == (const Vector2&) const;
-		bool operator != (const Vector2&) const;
-		float& operator[](size_t index);
+		bool operator == ( const Vector2& ) const;
+		bool operator != ( const Vector2& ) const;
+		float& operator[]( size_t index );
 };
 
 // A three dimensional vector using floating points.
@@ -55,15 +51,15 @@ class DLLEXPORT Vector3
 		float x, y, z;
 		Vector3();
 		Vector3( float newX, float newY, float newZ );
-		float& operator[](size_t index);
+		float& operator[]( size_t index );
 		Vector3 operator - ( const Vector3& ) const;
 		Vector3 operator + ( const Vector3& ) const;
 		Vector3 operator / ( const Vector3& ) const;
 		Vector3 operator * ( const Vector3& ) const;
 		Vector3 operator / ( const float& ) const;
 		Vector3 operator * ( const float& ) const;
-		bool operator == (const Vector3&) const;
-		bool operator != (const Vector3&) const;
+		bool operator == ( const Vector3& ) const;
+		bool operator != ( const Vector3& ) const;
 		void toDoubles( double* data );
 		void fromDoubles( double* data );
 };
@@ -75,7 +71,7 @@ class DLLEXPORT Vector4
 		float x, y, z, w;
 		Vector4();
 		Vector4( float newX, float newY, float newZ, float newW );
-		float& operator[](size_t index);
+		float& operator[]( size_t index );
 		Vector4 operator - ( const Vector4& ) const;
 		Vector4 operator + ( const Vector4& ) const;
 		Vector4 operator / ( const Vector4& ) const;
@@ -93,7 +89,8 @@ class DLLEXPORT Matrix33
 		float _11, _12, _13;
 		float _21, _22, _23;
 		float _31, _32, _33;
-		Vector3& operator[](size_t index);
+		Matrix33();
+		Vector3& operator[]( size_t index ) const;
 		Matrix33 operator * ( const Matrix33& ) const;
 		Matrix44 to4x4();
 		void toDoubles( double* data );
@@ -108,7 +105,8 @@ class DLLEXPORT Matrix44
 		float _21, _22, _23, _24;
 		float _31, _32, _33, _34;
 		float _41, _42, _43, _44;
-		Vector4& operator[](size_t index);
+		Matrix44();
+		Vector4& operator[](size_t index) const;
 		Matrix44 operator * ( const Matrix44& ) const;
 		Matrix33 to3x3();
 		Matrix44 rotation();
@@ -295,6 +293,12 @@ DLLEXPORT float volumeTetrahedron( const Ovgl::Vector3& vector1, const Ovgl::Vec
  * @param numdecimalplaces The number of decimal places.
  */
 DLLEXPORT float bound( float expression, int32_t decimalPlaces );
+
+/**
+ * Gets the length of a three dimensional vector.
+ * @param vector The vector.
+ */
+DLLEXPORT float length( const Vector3& vector );
 
 /**
  * Finds the distance between two three dimensional vectors.

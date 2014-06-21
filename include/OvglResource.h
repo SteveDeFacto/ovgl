@@ -16,11 +16,7 @@
  * @brief This header defines all resource functions and classes used in Ovgl.
  */
 
-#ifdef _WIN32
-#  define DLLEXPORT __declspec( dllexport )
-#else
-#  define DLLEXPORT
-#endif
+#include "OvglCommon.h"
 
 namespace Ovgl
 {

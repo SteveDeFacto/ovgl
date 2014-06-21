@@ -777,7 +777,7 @@ Texture* ResourceManager::importCubemap( const std::string& front, const std::st
 		else
 		{
 			// File does not exist!
-			fprintf(stderr, "Error: Unable to import cubemap texture %s\n. File does not exist!", cubeFaces[i].c_str());
+			fprintf(stderr, "Error: Unable to import cubemap texture %s\n. File does not exist!\n", cubeFaces[i].c_str());
 			return NULL;
 		}
 	}
@@ -895,7 +895,7 @@ Texture* ResourceManager::importTexture( const std::string& file )
 	else
 	{
 		// File does not exist!
-		fprintf(stderr, "Error: Unable to import texture %s\n. File does not exist!", file.c_str()); 
+		fprintf(stderr, "Error: Unable to import texture %s\n. File does not exist!\n", file.c_str()); 
 		return NULL;
 	}
 }

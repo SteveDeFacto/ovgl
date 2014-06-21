@@ -16,11 +16,7 @@
  * @brief This header defines all mesh functions and classes used in Ovgl.
  */
 
-#ifdef _WIN32
-#  define DLLEXPORT __declspec( dllexport )
-#else
-#  define DLLEXPORT
-#endif
+#include "OvglCommon.h"
 
 // Forward declare external classes
 class btRigidBody;

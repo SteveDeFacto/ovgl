@@ -16,11 +16,7 @@
  * @brief This Header defines each class that makes up the Ovgl::Scene class.
  */
 
-#ifdef _WIN32
-#  define DLLEXPORT __declspec( dllexport )
-#else
-#  define DLLEXPORT
-#endif
+#include "OvglCommon.h"
 
 namespace Ovgl
 {

@@ -16,11 +16,7 @@
  * @brief None.
  */
 
-#ifdef _WIN32
-#  define DLLEXPORT __declspec( dllexport )
-#else
-#  define DLLEXPORT
-#endif
+#include "OvglCommon.h"
 
 namespace Ovgl
 {
@@ -36,7 +32,7 @@ extern "C"
 			~Window();
 			Context*                                              context;
 			SDL_Window*                                           sdlWindow;
-			SDL_GLContext                                           windowContext;
+			SDL_GLContext                                         windowContext;
 			std::vector< RenderTarget* >                          renderTargets;
 			std::string                                           title;
 			bool                                                  sizing;

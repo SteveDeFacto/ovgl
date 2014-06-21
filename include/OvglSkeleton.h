@@ -16,11 +16,7 @@
  * @brief None.
  */
 
-#ifdef _WIN32
-#  define DLLEXPORT __declspec( dllexport )
-#else
-#  define DLLEXPORT
-#endif
+#include "OvglCommon.h"
 
 // Forward declare external classes
 class btRigidBody;

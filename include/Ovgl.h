@@ -19,23 +19,6 @@
 #ifndef _Ovgl
 #define _Ovgl
 
-#define __STDC_CONSTANT_MACROS
-
-#pragma warning(disable:4251)
-
-// C++ Standard Library Headers
-#include <sys/stat.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <math.h>
-#include <algorithm>
-#include <iostream>
-#include <fstream>
-#include <map>
-#include <vector>
-#include <string>
-#include <set>
-
 // This file includes all the other files which you will need to build a client application
 #include "OvglContext.h"
 #include "OvglMath.h"
