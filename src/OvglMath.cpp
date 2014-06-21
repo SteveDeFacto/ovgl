@@ -236,6 +236,21 @@ Vector4 Vector4::operator * ( const float& in ) const
     return out;
 }
 
+Matrix33::Matrix33()
+{
+    _11 = 1;
+    _12 = 0;
+    _13 = 0;
+
+    _21 = 0;
+	_22 = 1;
+    _23 = 0;
+
+    _31 = 0;
+    _32 = 0;
+    _33 = 1;
+}
+
 Matrix44::Matrix44()
 {
     _11 = 1;
@@ -262,34 +277,14 @@ Matrix44::Matrix44()
 Matrix44 Matrix44::operator * ( const Matrix44& in ) const
 {
     Matrix44 out;
+	Matrix44 mine = *this;
 	for( int row = 0; row < 4; row++)
 	{
 		for( int col = 0; col < 4; col++)
 		{
-    		out[row][col] = in[row][0] * in[0][col] + in[row][1] * in[1][col] + in[row][2] * in[2][col] + in[row][3] * in[3][col];
+    		out[row][col] = mine[row][0] * in[0][col] + mine[row][1] * in[1][col] + mine[row][2] * in[2][col] + mine[row][3] * in[3][col];
 		}
 	}
-/*
-    out._11 = _11 * in._11 + _12 * in._21 + _13 * in._31 + _14 * in._41;
-	out._12 = _11 * in._12 + _12 * in._22 + _13 * in._32 + _14 * in._42;
-	out._13 = _11 * in._13 + _12 * in._23 + _13 * in._33 + _14 * in._43;
-    out._14 = _11 * in._14 + _12 * in._24 + _13 * in._34 + _14 * in._44;
-    
-	out._21 = _21 * in._11 + _22 * in._21 + _23 * in._31 + _24 * in._41;
-    out._22 = _21 * in._12 + _22 * in._22 + _23 * in._32 + _24 * in._42;
-    out._23 = _21 * in._13 + _22 * in._23 + _23 * in._33 + _24 * in._43;
-    out._24 = _21 * in._14 + _22 * in._24 + _23 * in._34 + _24 * in._44;
-    
-	out._31 = _31 * in._11 + _32 * in._21 + _33 * in._31 + _34 * in._41;
-    out._32 = _31 * in._12 + _32 * in._22 + _33 * in._32 + _34 * in._42;
-    out._33 = _31 * in._13 + _32 * in._23 + _33 * in._33 + _34 * in._43;
-    out._34 = _31 * in._14 + _32 * in._24 + _33 * in._34 + _34 * in._44;
-
-	out._41 = _41 * in._11 + _42 * in._21 + _43 * in._31 + _44 * in._41;
-    out._42 = _41 * in._12 + _42 * in._22 + _43 * in._32 + _44 * in._42;
-    out._43 = _41 * in._13 + _42 * in._23 + _43 * in._33 + _44 * in._43;
-    out._44 = _41 * in._14 + _42 * in._24 + _43 * in._34 + _44 * in._44;
-*/
 	return out;
 }
 
@@ -305,7 +300,6 @@ Matrix44 Matrix33::to4x4()
 	out._31 = _31;
 	out._32 = _32;
 	out._33 = _33;
-	out._44 = 1;
     return out;
 }
 
@@ -335,16 +329,15 @@ void Matrix33::fromDoubles( double* data )
 Matrix33 Matrix33::operator * ( const Matrix33& in ) const
 {
     Matrix33 out;
-    out._11 = _11 * in._11 + _12 * in._21 + _13 * in._31;
-    out._12 = _11 * in._12 + _12 * in._22 + _13 * in._32;
-    out._13 = _11 * in._13 + _12 * in._23 + _13 * in._33;
-    out._21 = _21 * in._11 + _22 * in._21 + _23 * in._31;
-    out._22 = _21 * in._12 + _22 * in._22 + _23 * in._32;
-    out._23 = _21 * in._13 + _22 * in._23 + _23 * in._33;
-    out._31 = _31 * in._11 + _32 * in._21 + _33 * in._31;
-    out._32 = _31 * in._12 + _32 * in._22 + _33 * in._32;
-    out._33 = _31 * in._13 + _32 * in._23 + _33 * in._33;
-    return out;
+	Matrix33 mine = *this;
+	for( int row = 0; row < 3; row++)
+	{
+		for( int col = 0; col < 3; col++)
+		{
+    		out[row][col] = mine[row][0] * in[0][col] + mine[row][1] * in[1][col] + mine[row][2] * in[2][col];
+		}
+	}
+	return out;
 }
 
 Matrix44 Matrix44::rotation()
@@ -752,12 +745,12 @@ float& Vector4::operator [] ( size_t index )
 
 Vector3& Matrix33::operator [] ( size_t index ) const
 {
-    return (Vector3&)*((Vector3*)((&_11) + (index*3)));
+    return (Vector3&)*((Vector3*)((&_11) + (index * 3)));
 }
 
 Vector4& Matrix44::operator [] ( size_t index ) const
 {
-    return (Vector4&)*((Vector4*)((&_11) + (index*4)));
+    return (Vector4&)*((Vector4*)((&_11) + (index * 4)));
 }
 
 void Vector3::toDoubles( double* data )
