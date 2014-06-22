@@ -27,6 +27,14 @@ enum ObjectFlags
 	OBJECT_KINEMATIC = 4
 };
 
+enum LightTypes
+{
+	SPOT_LIGHT = 1,
+	POINT_LIGHT = 2,
+	DIRECTIONAL_LIGHT = 4,
+	AMBIENT_LIGHT = 8
+};
+
 extern "C"
 {
 	class Actor;
@@ -144,6 +152,21 @@ extern "C"
 			 * Specifies what type of light is emitted.
 			 */
 			uint32_t                                 type;
+
+			/**
+			 * This frame buffer is used to apply effects.
+			 */
+			uint32_t                                 shadowFrameBuffer;
+
+			/**
+			 * This texture stores depth information to perform shadowmapping
+			 */
+			uint32_t                                 depthTexture;
+
+			/**
+			 * Render a single mesh's shadow.
+			 */
+			void renderShadow( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, bool PostRender );
 
 			/**
 			 * Sets the pose of this light.
@@ -536,7 +559,7 @@ extern "C"
 			 * @param type This option can be used to specify what type of light to emit.
 			 * There are three types Point Light, Spot Light, and a Directional Light.
 			 */
-			Light* createLight( const Matrix44& matirx, const Vector4& color );
+			Light* createLight( const Matrix44& matirx, const Vector4& color, const LightTypes& type );
 
 			/**
 			 * This function adds a Ovgl::Camera to the scene.

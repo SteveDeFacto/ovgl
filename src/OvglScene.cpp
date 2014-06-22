@@ -25,6 +25,7 @@
 #include "OvglMesh.h"
 #include "OvglWindow.h"
 #include "OvglSkeleton.h"
+#include <GL/glew.h>
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <bullet/btBulletDynamicsCommon.h>
@@ -110,7 +111,7 @@ Camera* Scene::createCamera( const Matrix44& matrix )
 	return camera;
 };
 
-Light* Scene::createLight( const Matrix44& matrix, const Vector4& color )
+Light* Scene::createLight( const Matrix44& matrix, const Vector4& color, const LightTypes& type )
 {
 	// Create a new light object.
 	Light* light = new Light;
@@ -145,6 +146,40 @@ Light* Scene::createLight( const Matrix44& matrix, const Vector4& color )
 	light->color.x = color.x;
 	light->color.y = color.y;
 	light->color.z = color.z;
+
+	// Shadow framebuffer
+	glGenFramebuffers( 1, &light->shadowFrameBuffer );
+	glBindFramebuffer( GL_FRAMEBUFFER, light->shadowFrameBuffer );
+
+	if(type == 2)
+	{
+		// Create and bind depth cubemap texture
+		for (int face = 1; face < 6; face++)
+		{
+			glGenTextures( 1, &light->depthTexture );
+			glBindTexture( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, light->depthTexture );
+			glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_DEPTH_COMPONENT32, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
+			glTexParameteri( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+			glTexParameteri( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+			glTexParameteri( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+			glTexParameteri( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+			glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, light->depthTexture, 0 );
+		}
+	}
+	else
+	{
+		// Create and bind depth texture
+		glGenTextures( 1, &light->depthTexture );
+		glBindTexture( GL_TEXTURE_2D, light->depthTexture );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+		glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, light->depthTexture, 0 );
+	}
+
+	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 
 	// Add light to scene list of lights.
 	this->lights.push_back( light );
@@ -437,6 +472,11 @@ Matrix44 Actor::getPose()
 	return matrix;
 }
 
+void Light::renderShadow( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, bool PostRender )
+{
+	// Add shadow rendering code here
+}
+
 void Prop::update( Bone* bone, Matrix44* matrix )
 {
 	Matrix44 invMatrix, invMeshBone, tMatrix;
@@ -444,7 +484,7 @@ void Prop::update( Bone* bone, Matrix44* matrix )
 	if( this->mesh->skeleton->bones.size() > 0 )
 	{
 		invMeshBone = matrixInverse( Vector4(0,0,0,0), bone->matrix );
-		matrices[bone->index] = ( invMeshBone * matrices[bone->index]  );
+		matrices[bone->index] = ( invMeshBone * matrices[bone->index] );
 		invMatrix = matrixInverse( Vector4(0,0,0,0), *matrix );
 		tMatrix = matrices[bone->index] * invMatrix;
 		for (uint32_t i = 0; i < bone->children.size(); i++)
@@ -515,29 +555,29 @@ void Scene::update( uint32_t UpdateTime )
 	for(uint32_t a = 0; a < actors.size(); a++)
 	{
 		Vector3 correctedTrajectory;
-		correctedTrajectory = vector3Transform( (actors[a]->walkDirection / (1.0f + (float)actors[a]->crouch) ), matrixRotationY( -actors[a]->lookDirection.z) );
-		actors[a]->controller->setWalkDirection(btVector3(correctedTrajectory.x, correctedTrajectory.y, correctedTrajectory.z));
+		correctedTrajectory = vector3Transform( ( actors[a]->walkDirection / ( 1.0f + (float)actors[a]->crouch ) ), matrixRotationY( -actors[a]->lookDirection.z ) );
+		actors[a]->controller->setWalkDirection( btVector3( correctedTrajectory.x, correctedTrajectory.y, correctedTrajectory.z ) );
 
 		btCollisionShape* shape = actors[a]->ghostObject->getCollisionShape();
 		if( (actors[a]->crouch) && shape->getLocalScaling().getY() > 0.5f )
 		{
-			shape->setLocalScaling( btVector3(1, shape->getLocalScaling().getY() - ((float)UpdateTime * 0.005f), 1 ) );
+			shape->setLocalScaling( btVector3(1, shape->getLocalScaling().getY() - ( (float)UpdateTime * 0.005f ), 1 ) );
 		}
 		else if( (!actors[a]->crouch) && (shape->getLocalScaling().getY() < 1.0f ) )
 		{
-			shape->setLocalScaling( btVector3(1, shape->getLocalScaling().getY() + ((float)UpdateTime * 0.005f), 1 ) );
+			shape->setLocalScaling( btVector3(1, shape->getLocalScaling().getY() + ( (float)UpdateTime * 0.005f ), 1 ) );
 			if( actors[a]->controller->onGround() )
 			{
 				btTransform transform = actors[a]->ghostObject->getWorldTransform();
-				transform.setOrigin( transform.getOrigin() + btVector3( 0.0f, ((float)UpdateTime * 0.005f), 0.0f ) );
+				transform.setOrigin( transform.getOrigin() + btVector3( 0.0f, ( (float)UpdateTime * 0.005f ), 0.0f ) );
 				actors[a]->ghostObject->setWorldTransform( transform );
 			}
 		}
-		else if(shape->getLocalScaling().getY() <= 0.5f)
+		else if( shape->getLocalScaling().getY() <= 0.5f )
 		{
 			shape->setLocalScaling( btVector3( 1.0f, 0.5f, 1.0f ) );
 		}
-		else if(shape->getLocalScaling().getY() >= 1.0f)
+		else if( shape->getLocalScaling().getY() >= 1.0f )
 		{
 			shape->setLocalScaling( btVector3( 1.0f, 1.0f, 1.0f ) );
 		}

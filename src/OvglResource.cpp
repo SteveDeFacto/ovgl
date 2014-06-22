@@ -337,7 +337,7 @@ void ResourceManager::loadResources( const std::string& file )
 				// Get the pose of this light.
 				Matrix44 matrix;
 				fread( &matrix, sizeof(Matrix44), 1, input );
-				scene->createLight( matrix, Vector4( 1.0f, 1.0f, 1.0f, 1.0f ) );
+				scene->createLight( matrix, Vector4( 1.0f, 1.0f, 1.0f, 1.0f ), Ovgl::POINT_LIGHT );
 			}
 
 			uint32_t cameraCount;
@@ -766,7 +766,7 @@ Texture* ResourceManager::importCubemap( const std::string& front, const std::st
 			}
 
 			// Create texture.
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura);
+			glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, textura );
 
 			// Release FreeImage's copy of the image
 			FreeImage_Unload( dib );
@@ -781,14 +781,14 @@ Texture* ResourceManager::importCubemap( const std::string& front, const std::st
 			return NULL;
 		}
 	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	glBindTexture( GL_TEXTURE_CUBE_MAP, 0 );
 
-	SDL_GL_MakeCurrent(NULL, NULL);
+	SDL_GL_MakeCurrent( NULL, NULL );
 
 	// Add texture to media library
 	textures.push_back( texture );

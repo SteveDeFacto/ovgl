@@ -111,7 +111,7 @@ int main()
     scene = resources->createScene();
 
     // Add light to scene.
-    light = scene->createLight(Ovgl::matrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 5.0f, 5.0f, 5.0f, 1.0f ));
+    light = scene->createLight(Ovgl::matrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 5.0f, 5.0f, 5.0f, 1.0f ), Ovgl::POINT_LIGHT);
 
     // Add camera to scene
     camera = scene->createCamera(Ovgl::matrixTranslation( 0.0f, 0.0f, 0.0f ));
@@ -150,7 +150,7 @@ int main()
     //actor->PlayAnimation( &mesh2->skeleton->animations[0], 0, 10, true);
 
 	// Add another actor to scene
-    actor2 = scene->createActor(mesh2, 0.1f, 1.0f, Ovgl::matrixTranslation(1.0f, 0.0f, 0.0f), Ovgl::matrixTranslation(0.0f, 0.0f, 0.0f));
+    actor2 = scene->createActor(mesh2, 0.1f, 1.0f, Ovgl::matrixTranslation(0.5f, 0.0f, 0.0f), Ovgl::matrixTranslation(0.0f, 0.0f, 0.0f));
 
 	// Play an animation
     //actor2->PlayAnimation( &mesh2->skeleton->animations[0], 5, 6, false);

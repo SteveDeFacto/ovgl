@@ -115,10 +115,10 @@ int main()
     scene = resources->createScene();
 
     // Add light to scene.
-    light = scene->createLight(Ovgl::matrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 5.0f, 5.0f, 5.0f, 1.0f ));
+    light = scene->createLight( Ovgl::matrixTranslation( -1.8f, 4.0f, -3.35f ), Ovgl::Vector4( 5.0f, 5.0f, 5.0f, 1.0f ), Ovgl::POINT_LIGHT );
 
     // Add camera to scene
-    camera = scene->createCamera(Ovgl::matrixTranslation( 0.0f, 0.0f, 0.0f ));
+    camera = scene->createCamera( Ovgl::matrixTranslation( 0.0f, 0.0f, 0.0f ) );
 
     // Set camera as view for render target
     renderTarget->view = camera;
@@ -127,10 +127,10 @@ int main()
     texture1 = resources->importCubemap( "../media/textures/skybox/front.png" , "../media/textures/skybox/back.png", "../media/textures/skybox/top.png",
 	                                      "../media/textures/skybox/bottom.png", "../media/textures/skybox/left.png", "../media/textures/skybox/right.png");
     // Import grass texture
-    texture2 = resources->importTexture("../media/textures/Grass.png");
+    texture2 = resources->importTexture( "../media/textures/Grass.png" );
 
 	// Import margle texture
-    texture3 = resources->importTexture("../media/textures/white marble.png");
+    texture3 = resources->importTexture( "../media/textures/white marble.png" );
 
     // Import mesh
     mesh = resources->importModel( "../media/meshes/plane.dae", true );
@@ -143,10 +143,10 @@ int main()
     //resources->import_audio("../media/audio/glacier.ogg")->create_audio_instance(NULL, true);
 
     // Add object to scene
-    object = scene->createObject(mesh, Ovgl::matrixTranslation( 0.0f, -5.0f, 0.0f ));
+    object = scene->createObject( mesh, Ovgl::matrixTranslation( 0.0f, -5.0f, 0.0f ) );
 
 	// Bind texture to effect
-    object->materials[0]->setEffectTexture("txDiffuse", texture2);
+    object->materials[0]->setEffectTexture( "txDiffuse", texture2 );
 
     // Add actor to scene
     actor = scene->createActor(mesh2, 0.1f, 1.0f, Ovgl::matrixTranslation(-2.0f, 0.0f, 0.0f), Ovgl::matrixTranslation(0.0f, 0.0f, 0.0f));

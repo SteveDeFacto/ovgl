@@ -683,29 +683,58 @@ void RenderTarget::render()
 
 	if( view != NULL )
 	{
-		glBindFramebuffer( GL_FRAMEBUFFER, multiSampleFrameBuffer );
-
-		// Set the viewport to fit the window
-		glViewport( 0, 0, width, height );
-
 		Scene* scene = view->scene;
-		Matrix44 viewProj = ( matrixInverse( Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), view->getPose() ) * view->projMat );
-
-		// Create light arrays
+		
+		// Create light arrays and render shadowmaps
 		float LightCount = (float)scene->lights.size();
 		std::vector< float > mLights;
 		std::vector< float > lightColors;
 		for( uint32_t l = 0; l < scene->lights.size(); l++)
 		{
-			mLights.push_back( scene->lights[l]->getPose()._41 );
-			mLights.push_back( scene->lights[l]->getPose()._42 );
-			mLights.push_back( scene->lights[l]->getPose()._43 );
+			Light* light = scene->lights[l];
+			mLights.push_back( light->getPose()._41 );
+			mLights.push_back( light->getPose()._42 );
+			mLights.push_back( light->getPose()._43 );
 			mLights.push_back( 1.0f );
-			lightColors.push_back( scene->lights[l]->color.x );
-			lightColors.push_back( scene->lights[l]->color.y );
-			lightColors.push_back( scene->lights[l]->color.z );
+			lightColors.push_back( light->color.x );
+			lightColors.push_back( light->color.y );
+			lightColors.push_back( light->color.z );
 			lightColors.push_back( 1.0f );
+
+			glBindFramebuffer( GL_FRAMEBUFFER, light->shadowFrameBuffer );
+			for( uint32_t PostRender = 0; PostRender < 2; PostRender++ )
+			{
+				// Render Objects
+				for( uint32_t i = 0; i < scene->objects.size(); i++ )
+				{
+					std::vector<Matrix44> temp(1);
+					temp[0] = scene->objects[i]->getPose();
+					light->renderShadow( *scene->objects[i]->mesh, scene->objects[i]->getPose(), temp, !!PostRender );
+				}
+
+				// Render props
+				for( uint32_t i = 0; i < scene->props.size(); i++ )
+				{
+					light->renderShadow( *scene->props[i]->mesh, scene->props[i]->getPose(), scene->props[i]->matrices, !!PostRender );
+				}
+
+				// Render actors
+				for( uint32_t i = 0; i < scene->actors.size(); i++ )
+				{
+					if( scene->actors[i]->mesh )
+					{
+						light->renderShadow( *scene->actors[i]->mesh, scene->actors[i]->getPose(), scene->actors[i]->pose->matrices, !!PostRender );
+					}
+				}
+			}
+			glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 		}
+
+		glBindFramebuffer( GL_FRAMEBUFFER, multiSampleFrameBuffer );
+
+		// Set the viewport to fit the window
+		glViewport( 0, 0, width, height );
+
 
 		// Clear depth buffer
 		glDepthMask( GL_TRUE );
