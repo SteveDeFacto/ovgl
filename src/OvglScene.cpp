@@ -474,7 +474,125 @@ Matrix44 Actor::getPose()
 
 void Light::renderShadow( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, bool PostRender )
 {
-	// Add shadow rendering code here
+	Matrix44 viewProj = (matrixInverse( Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), getPose() ) * view->projMat);
+	Matrix44 worldMat = (matrix * viewProj );
+	glLoadMatrixf((float*)&worldMat);
+
+	float lightCount = (float)view->scene->lights.size();
+	std::vector< float > mLights;
+	std::vector< float > lightColors;
+	for( uint32_t l = 0; l < view->scene->lights.size(); l++)
+	{
+		mLights.push_back( view->scene->lights[l]->getPose()._41 );
+		mLights.push_back( view->scene->lights[l]->getPose()._42 );
+		mLights.push_back( view->scene->lights[l]->getPose()._43 );
+		mLights.push_back( 1.0f );
+		lightColors.push_back( view->scene->lights[l]->color.x );
+		lightColors.push_back( view->scene->lights[l]->color.y );
+		lightColors.push_back( view->scene->lights[l]->color.z );
+		lightColors.push_back( 1.0f );
+	}
+
+	for( uint32_t s = 0; s < mesh.subsetCount; s++)
+	{
+		glEnable (GL_DEPTH_TEST);
+		glDepthMask (GL_TRUE);
+
+		CGparameter cgWorldMatrix = cgGetNamedEffectParameter( materials[s]->shaderProgram->effect, "World" );
+		Matrix44 tWorldMat = matrixTranspose(worldMat);
+		cgGLSetMatrixParameterfc( cgWorldMatrix, (float*)&tWorldMat );
+		CGparameter cgViewProjMatrix = cgGetNamedEffectParameter( materials[s]->shaderProgram->effect, "ViewProj" );
+		Matrix44 tViewProj = matrixTranspose(viewProj);
+		cgGLSetMatrixParameterfc( cgViewProjMatrix, (float*)&tViewProj );
+		CGparameter cgViewPos= cgGetNamedEffectParameter( materials[s]->shaderProgram->effect, "ViewPos" );
+		cgGLSetParameter4f( cgViewPos, view->getPose()._41, view->getPose()._42, view->getPose()._43, view->getPose()._44 );
+
+		CGparameter cgBoneMatrices = cgGetNamedEffectParameter( materials[s]->shaderProgram->effect, "Bones" );
+		for( uint32_t v = 0; v < pose.size(); v++)
+		{
+			CGparameter cgBone = cgGetArrayParameter( cgBoneMatrices, v );
+			Matrix44 tPose = matrixTranspose(pose[v]);
+			cgGLSetMatrixParameterfc(cgBone, (float*)&tPose);
+		}
+
+		CGparameter cgLightCount = cgGetNamedEffectParameter( materials[s]->shaderProgram->effect, "LightCount" );
+		cgGLSetParameter1f( cgLightCount, lightCount );
+
+		CGparameter CgLights = cgGetNamedEffectParameter( materials[s]->shaderProgram->effect, "Lights" );
+		CGparameter CgLight;
+		for( uint32_t v = 0; v < mLights.size() / 4; v++)
+		{
+			CgLight=cgGetArrayParameter( CgLights, v );
+			cgGLSetParameter4fv(CgLight, (float*)&mLights[v * 4]);
+		}
+
+		CGparameter CgLightColors = cgGetNamedEffectParameter( materials[s]->shaderProgram->effect, "LightColors" );
+		CGparameter CgLightColor;
+		for( uint32_t v = 0; v < lightColors.size() / 4; v++)
+		{
+			CgLightColor=cgGetArrayParameter( CgLightColors, v );
+			cgGLSetParameter4fv(CgLightColor, (float*)&lightColors[v * 4]);
+		}
+
+		for( uint32_t v = 0; v < materials[s]->textures.size(); v++)
+		{
+			CGparameter CgTexture = materials[s]->textures[v].first;
+			cgGLSetTextureParameter( CgTexture, materials[s]->textures[v].second->image );
+			cgGLEnableTextureParameter( CgTexture );
+		}
+
+		for( uint32_t v = 0; v < materials[s]->variables.size(); v++)
+		{
+			CGparameter CgVariable = materials[s]->variables[v].first;
+			cgSetParameterValuefr( CgVariable, materials[s]->variables[v].second.size(), (float*)&materials[s]->variables[v].second[0] );
+		}
+
+		glBindBuffer( GL_ARRAY_BUFFER, mesh.vertexBuffer );
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffers[s] );
+
+		// Set vertex attributes
+		glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), ( (char *)NULL + (0) ) );
+		glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), ( (char *)NULL + (12) ) );
+		glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, sizeof( Vertex ), ( (char *)NULL + (24) ) );
+		glVertexAttribPointer( 3, 4, GL_FLOAT, GL_FALSE, sizeof( Vertex ), ( (char *)NULL + (32) ) );
+		glVertexAttribPointer( 4, 4, GL_FLOAT, GL_FALSE, sizeof( Vertex ), ( (char *)NULL + (48) ) );
+
+		// Enable vertex attributes
+		glEnableVertexAttribArray( 0 );
+		glEnableVertexAttribArray( 1 );
+		glEnableVertexAttribArray( 2 );
+			glEnableVertexAttribArray( 3 );
+			glEnableVertexAttribArray( 4 );
+
+			CGtechnique tech = cgGetFirstTechnique( materials[s]->shaderProgram->effect );
+			CGpass pass;
+			pass = cgGetFirstPass(tech);
+			while (pass)
+			{
+				cgSetPassState(pass);
+				int BufferSize;
+				glGetBufferParameteriv( GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &BufferSize);
+				glDrawElements( GL_TRIANGLES, BufferSize / sizeof( uint32_t ), GL_UNSIGNED_INT, 0 );
+				cgResetPassState(pass);
+				pass = cgGetNextPass(pass);
+			}
+
+			// Disable vertex attributes
+			glDisableVertexAttribArray( 0 );
+			glDisableVertexAttribArray( 1 );
+			glDisableVertexAttribArray( 2 );
+			glDisableVertexAttribArray( 3 );
+			glDisableVertexAttribArray( 4 );
+
+			glBindBuffer( GL_ARRAY_BUFFER, 0 );
+			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+			for( uint32_t v = 0; v < materials[s]->textures.size(); v++)
+			{
+				CGparameter cgTexture = materials[s]->textures[v].first;
+				cgGLDisableTextureParameter( cgTexture );
+			}
+		}
 }
 
 void Prop::update( Bone* bone, Matrix44* matrix )
