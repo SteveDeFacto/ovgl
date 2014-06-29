@@ -166,7 +166,7 @@ extern "C"
 			/**
 			 * Render a single mesh's shadow.
 			 */
-			void renderShadow( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, bool PostRender );
+			//void renderShadow( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, bool PostRender );
 
 			/**
 			 * Sets the pose of this light.
