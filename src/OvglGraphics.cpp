@@ -15,7 +15,7 @@
  * limitations under the License.
  * @brief This part of the library handles everything related to graphics.
  */
-  
+   
 #include "OvglContext.h"
 #include "OvglMath.h"
 #include "OvglResource.h"
