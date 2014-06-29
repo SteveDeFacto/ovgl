@@ -471,9 +471,11 @@ Matrix44 Actor::getPose()
 	ghostObject->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
 	return matrix;
 }
-/*
+
 void Light::renderShadow( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, bool PostRender )
 {
+
+/*
 	Matrix44 viewProj = (matrixInverse( Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), getPose() ) * view->projMat);
 	Matrix44 worldMat = (matrix * viewProj );
 	glLoadMatrixf((float*)&worldMat);
@@ -561,40 +563,40 @@ void Light::renderShadow( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::v
 		glEnableVertexAttribArray( 0 );
 		glEnableVertexAttribArray( 1 );
 		glEnableVertexAttribArray( 2 );
-			glEnableVertexAttribArray( 3 );
-			glEnableVertexAttribArray( 4 );
+		glEnableVertexAttribArray( 3 );
+		glEnableVertexAttribArray( 4 );
 
-			CGtechnique tech = cgGetFirstTechnique( materials[s]->shaderProgram->effect );
-			CGpass pass;
-			pass = cgGetFirstPass(tech);
-			while (pass)
-			{
-				cgSetPassState(pass);
-				int BufferSize;
-				glGetBufferParameteriv( GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &BufferSize);
-				glDrawElements( GL_TRIANGLES, BufferSize / sizeof( uint32_t ), GL_UNSIGNED_INT, 0 );
-				cgResetPassState(pass);
-				pass = cgGetNextPass(pass);
-			}
-
-			// Disable vertex attributes
-			glDisableVertexAttribArray( 0 );
-			glDisableVertexAttribArray( 1 );
-			glDisableVertexAttribArray( 2 );
-			glDisableVertexAttribArray( 3 );
-			glDisableVertexAttribArray( 4 );
-
-			glBindBuffer( GL_ARRAY_BUFFER, 0 );
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
-
-			for( uint32_t v = 0; v < materials[s]->textures.size(); v++)
-			{
-				CGparameter cgTexture = materials[s]->textures[v].first;
-				cgGLDisableTextureParameter( cgTexture );
-			}
+		CGtechnique tech = cgGetFirstTechnique( materials[s]->shaderProgram->effect );
+		CGpass pass;
+		pass = cgGetFirstPass(tech);
+		while (pass)
+		{
+			cgSetPassState(pass);
+			int BufferSize;
+			glGetBufferParameteriv( GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &BufferSize);
+			glDrawElements( GL_TRIANGLES, BufferSize / sizeof( uint32_t ), GL_UNSIGNED_INT, 0 );
+			cgResetPassState(pass);
+			pass = cgGetNextPass(pass);
 		}
-}
+
+		// Disable vertex attributes
+		glDisableVertexAttribArray( 0 );
+		glDisableVertexAttribArray( 1 );
+		glDisableVertexAttribArray( 2 );
+		glDisableVertexAttribArray( 3 );
+		glDisableVertexAttribArray( 4 );
+
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+		for( uint32_t v = 0; v < materials[s]->textures.size(); v++)
+		{
+			CGparameter cgTexture = materials[s]->textures[v].first;
+			cgGLDisableTextureParameter( cgTexture );
+		}
+	}
 */
+}
 
 void Prop::update( Bone* bone, Matrix44* matrix )
 {
