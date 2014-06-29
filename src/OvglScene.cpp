@@ -471,7 +471,7 @@ Matrix44 Actor::getPose()
 	ghostObject->getWorldTransform().getOpenGLMatrix( (float*)&matrix );
 	return matrix;
 }
-
+/*
 void Light::renderShadow( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::vector< Matrix44 >& pose, bool PostRender )
 {
 	Matrix44 viewProj = (matrixInverse( Vector4( 0.0f, 0.0f, 0.0f, 0.0f ), getPose() ) * view->projMat);
@@ -594,6 +594,7 @@ void Light::renderShadow( const Ovgl::Mesh& mesh, const Matrix44& matrix, std::v
 			}
 		}
 }
+*/
 
 void Prop::update( Bone* bone, Matrix44* matrix )
 {
