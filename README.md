@@ -5,6 +5,9 @@ Open Video Game Library( http://ovgl.org )
 
 OVGL offers a light weight cross platform framework for 3D video game development.
 
+## Primary goal:
+Super easy to use game engine which will allow users to construct entire video game universes with a few lines of code. 
+
 ## Dependencies:
 * SDL 2.0.3
 * FreeImage 3.16.0
@@ -32,5 +35,3 @@ OVGL offers a light weight cross platform framework for 3D video game developmen
 * AI path finding
 * Automatic character rigging
 * Procedural planets, stars/galaxies, cities/buildings, and foliage
-
-Primary goal: Super easy to use game engine which will allow users to construct entire video game universes with a few lines of code. 
