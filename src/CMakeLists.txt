@@ -53,53 +53,79 @@ add_library( Ovgl SHARED
 "OvglWindow.cpp"
 "OvglSkeleton.cpp")
 
+add_library( Ovgl_Static STATIC
+"../include/OvglAudio.h"
+"../include/OvglGraphics.h"
+"../include/OvglContext.h"
+"../include/OvglMath.h"
+"../include/OvglResource.h"
+"../include/OvglMesh.h"
+"../include/OvglScene.h"
+"../include/OvglWindow.h"
+"../include/OvglSkeleton.h"
+"OvglAudio.cpp"
+"OvglGraphics.cpp"
+"OvglContext.cpp"
+"OvglMath.cpp"
+"OvglResource.cpp"
+"OvglMesh.cpp"
+"OvglScene.cpp"
+"OvglWindow.cpp"
+"OvglSkeleton.cpp")
+
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
 
-set_target_properties(Ovgl PROPERTIES INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
+set_target_properties(Ovgl Ovgl_Static PROPERTIES INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
 
 IF(WIN32)
-target_link_libraries( Ovgl
-optimized "SDL2"
-debug "SDL2_d"
-"OpenGL32"
-"OpenAL32"
-"Cg"
-"CgGL"
-"glew32"
-optimized "BulletDynamics"
-debug "BulletDynamics_d"
-optimized "BulletCollision"
-debug "BulletCollision_d"
-optimized "LinearMath"
-debug "LinearMath_d"
-"assimp"
-"freetype"
-"freeimage"
-"avcodec"
-"avformat"
-"avutil")
+	target_link_libraries( Ovgl Ovgl_Static
+	optimized "SDL2"
+	debug "SDL2_d"
+	"OpenGL32"
+	"OpenAL32"
+	"Cg"
+	"CgGL"
+	"glew32"
+	optimized "BulletDynamics"
+	debug "BulletDynamics_d"
+	optimized "BulletCollision"
+	debug "BulletCollision_d"
+	optimized "LinearMath"
+	debug "LinearMath_d"
+	"assimp"
+	"freetype"
+	"freeimage"
+	"avcodec"
+	"avformat"
+	"avutil")
 ELSEIF(UNIX)
-target_link_libraries( Ovgl
-"SDL2"
-"GL"
-"openal"
-"Cg"
-"CgGL"
-"GLEW"
-"BulletDynamics"
-"BulletCollision"
-"LinearMath"
-"assimp"
-"freetype"
-"freeimage"
-"avcodec"
-"avformat"
-"avutil")
+	target_link_libraries( Ovgl Ovgl_Static
+	"SDL2"
+	"GL"
+	"openal"
+	"Cg"
+	"CgGL"
+	"GLEW"
+	"BulletDynamics"
+	"BulletCollision"
+	"LinearMath"
+	"assimp"
+	"freetype"
+	"freeimage"
+	"avcodec"
+	"avformat"
+	"avutil")
 ENDIF(WIN32)
 
 add_definitions( -DNOMINMAX )
 
+IF(UNIX)
+INSTALL(FILES ./../include/Ovgl.h DESTINATION ${INCLUDE_INSTALL_DIR})
+INSTALL(FILES ./../bin/libOvgl_Static.a DESTINATION ${LIB_DESTINATION})
+INSTALL(FILES ./../bin/libOvgl.so DESTINATION ${LIB_DESTINATION})
+ENDIF(UNIX)
+
 if(OVGL_BUILD_DOC)
 	find_package( Doxygen )
-	add_custom_command( TARGET Ovgl POST_BUILD COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/ovgl/Doxyfile" )
+	add_custom_command( TARGET Ovgl Ovgl_Static POST_BUILD COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/ovgl/Doxyfile" )
 endif(OVGL_BUILD_DOC)	

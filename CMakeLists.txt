@@ -1,12 +1,31 @@
-cmake_minimum_required(VERSION 2.8.7)
+cmake_minimum_required (VERSION 2.8.7)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
+set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules")
 
-set(OVGL_VERSION 0.8.0)
+set (OVGL_VERSION 0.8.0)
 
-option(OVGL_BUILD_DOC "Auto build documentation evertime Ovgl is compiled?" OFF)
-option(OVGL_BUILD_EDITOR "Build Ovgl examples" ON)
-option(OVGL_BUILD_EXAMPLES "Build Ovgl examples" ON)
+# uninstall target
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY)
+
+add_custom_target(uninstall
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+
+SET (LIB_SUFFIX "" CACHE STRING "Define suffix of directory name (32/64)" )
+
+SET (LIB_DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE STRING "Library directory name")
+
+SET (BIN_DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ovgl/bin" CACHE STRING "Directory to install examples and editor")
+
+SET (INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include/ovgl/" CACHE PATH "The subdirectory to the header prefix")
+
+SET (PKGCONFIG_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}/pkgconfig/" CACHE STRING "Base directory for pkgconfig files")
+
+option (OVGL_BUILD_DOC "Auto build documentation evertime Ovgl is compiled?" OFF)
+option (OVGL_BUILD_EDITOR "Build Ovgl examples" ON)
+option (OVGL_BUILD_EXAMPLES "Build Ovgl examples" ON)
 
 IF(WIN32)
 	set(SDL_DIR "./../dependencies/SDL" CACHE PATH "Path to the SDL library.")
@@ -29,6 +48,9 @@ IF(WIN32)
 	string( REGEX REPLACE "/" "\\\\" MS_FREEIMAGE_DIR ${FREEIMAGE_DIR} )
 	string( REGEX REPLACE "/" "\\\\" MS_FFMPEG_DIR ${FFMPEG_DIR} )
 	string( REGEX REPLACE "/" "\\\\" MS_ZLIB_DIR ${ZLIB_DIR} )
+ELSE(WIN32)
+	CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/ovgl.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/ovgl.pc @ONLY)
+	INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/ovgl.pc DESTINATION ${PKGCONFIG_INSTALL_PREFIX})
 ENDIF(WIN32)
 
 add_subdirectory(src)
@@ -41,3 +63,9 @@ if(OVGL_BUILD_EXAMPLES)
 	add_subdirectory(examples/HelloWorld)
 	add_subdirectory(examples/FPS)
 endif(OVGL_BUILD_EXAMPLES)
+
+if(UNIX AND OVGL_BUILD_EDITOR OR OVGL_BUILD_EXAMPLES)
+	install(DIRECTORY media DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ovgl)
+endif(UNIX AND OVGL_BUILD_EDITOR OR OVGL_BUILD_EXAMPLES)
+
+include(CPack)

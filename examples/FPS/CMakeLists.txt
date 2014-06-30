@@ -15,3 +15,9 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
 set_target_properties(FPS PROPERTIES INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
 
 target_link_libraries( FPS Ovgl)
+
+IF(UNIX)
+	INSTALL(FILES ./../../bin/FPS DESTINATION ${BIN_DESTINATION})
+ENDIF(UNIX)
+
+
