@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(Ovgl)
 
-SET(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
-
-SET_TARGET_PROPERTIES(Ovgl PROPERTIES INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
-
 set(LIBRARY_OUTPUT_PATH "./../bin")
 
 IF(WIN32)
@@ -56,6 +52,10 @@ add_library( Ovgl SHARED
 "OvglScene.cpp"
 "OvglWindow.cpp"
 "OvglSkeleton.cpp")
+
+set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
+
+set_target_properties(Ovgl PROPERTIES INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
 
 IF(WIN32)
 target_link_libraries( Ovgl

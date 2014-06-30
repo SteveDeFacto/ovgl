@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(editor)
 
-SET(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
-
-SET_TARGET_PROPERTIES(Ovgl PROPERTIES INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
-
 set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/../bin")
 
 include_directories( "./../include" )
@@ -13,6 +9,10 @@ include_directories( "./../include" )
 link_directories( "./../lib" )
 
 add_executable( editor WIN32 editor.cpp)
+
+set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
+
+set_target_properties(editor PROPERTIES INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
 
 target_link_libraries( editor Ovgl)
 
