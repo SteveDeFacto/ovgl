@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(Ovgl)
 
+set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} ".")
+
 set(LIBRARY_OUTPUT_PATH "./../bin")
 
 IF(WIN32)
