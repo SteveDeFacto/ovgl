@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(Ovgl)
 
-
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
 
 set(LIBRARY_OUTPUT_PATH "./../bin")
 

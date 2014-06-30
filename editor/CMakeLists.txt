@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.7)
 
 project(editor)
 
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
 
 set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/../bin")
 
