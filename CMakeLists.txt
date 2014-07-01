@@ -74,5 +74,6 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OVGL offers a light weight cross platform
 set(CPACK_PACKAGE_VERSION ${OVGL_VERSION} )
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Steven Batchelor <admin@ovgl.org>")
 set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl2-2.0-0, libassimp3, libbulletdynamics2.81, libbulletcollision2.81, liblinearmath2.81, libfreeimage3, libfreetype6, libav-tools, libglew1.10, libopenal1, nvidia-cg-toolkit")
 set(CPACK_SET_DESTDIR "ON")
 include(CPack)

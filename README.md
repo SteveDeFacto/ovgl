@@ -19,7 +19,6 @@ Super easy to use game engine which will allow users to construct entire video g
 * Bullet 2.82
 * Assimp 3.1
 * FreeType 2.5.3
-* FreeImage 3.16.0
 
 ## Implemented features:
 * Ragdoll physics
