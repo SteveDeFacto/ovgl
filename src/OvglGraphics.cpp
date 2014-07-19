@@ -867,7 +867,6 @@ void RenderTarget::render()
 		glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
 
-
 		if( autoLuminance )
 		{
 			renderAutoLuminance();
@@ -986,16 +985,20 @@ void RenderTarget::update()
 	glBindFramebuffer( GL_FRAMEBUFFER, multiSampleFrameBuffer );
 
 	// Multi sample colorbuffer
-	glGenRenderbuffers( 1, &colorBuffer );
-	glBindRenderbuffer( GL_RENDERBUFFER, colorBuffer );
-	glRenderbufferStorageMultisample( GL_RENDERBUFFER, 4, GL_RGBA16F, width, height );
-	glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorBuffer );
+	glGenTextures( 1, &colorBuffer );
+	glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, colorBuffer );
+	glTexImage2DMultisample( GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA, width, height, 0 );
+	glTexParameteri( GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+	glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, colorBuffer, 0 );
 
 	// Multi sample depthbuffer
-	glGenRenderbuffers( 1, &depthBuffer );
-	glBindRenderbuffer( GL_RENDERBUFFER, depthBuffer );
-	glRenderbufferStorageMultisample( GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT32, width, height );
-	glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer );
+	glGenTextures( 1, &depthBuffer );
+	glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, depthBuffer );
+	glTexImage2DMultisample( GL_TEXTURE_2D_MULTISAMPLE, 4, GL_DEPTH_COMPONENT32, width, height, 0 );
+	glTexParameteri( GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+	glTexParameteri( GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+	glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, depthBuffer, 0 );
 
 	glBindRenderbuffer( GL_RENDERBUFFER, 0 );
 

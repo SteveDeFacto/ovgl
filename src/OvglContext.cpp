@@ -615,7 +615,8 @@ Context::Context( uint32_t flags )
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 24 );
 	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
-	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY );
 	contextWindow = SDL_CreateWindow( "ContextWindow", 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN );
 	glContext = SDL_GL_CreateContext( contextWindow );
 	SDL_GL_MakeCurrent(contextWindow, glContext);
@@ -625,7 +626,7 @@ Context::Context( uint32_t flags )
 	}
 
 	// Initialize GLEW
-//	glewExperimental = GL_TRUE;
+	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
 	if (GLEW_OK != err)
 	{
